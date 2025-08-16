@@ -1,6 +1,6 @@
 backend:
     functions:
-        - entry: index.py
+        - entry: main.py
           handler: app
           name: fast-api
           path: ./
@@ -9,6 +9,6 @@ backend:
         name: python
         packageManager: pip
     path: ./
-name: agexport-smart-directory
+name: wais-gxprt-mdrq
 region: us-east-1
 yamlVersion: 2
