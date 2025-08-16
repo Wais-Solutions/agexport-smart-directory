@@ -9,6 +9,6 @@ backend:
         name: python
         packageManager: pip
     path: ./
-name: fastapi-getting-started
+name: agexport-smart-directory
 region: us-east-1
 yamlVersion: 2
