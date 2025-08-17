@@ -17,7 +17,7 @@ WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages
 # "https://graph.facebook.com/v18.0/739443625915932/messages"
 
 
-headers = {J
+headers = {
     "Authorization": f"Bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
 }
