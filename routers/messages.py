@@ -91,7 +91,7 @@ async def get_completition(prompt):
 
     return response.choices[0].message.content 
     
-@app.post("/webhook")
+@router.post("/webhook")
 async def callback(request: Request): 
     # print("callback is beign called")
     data = await request.json()
