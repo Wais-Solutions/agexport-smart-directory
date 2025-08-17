@@ -95,7 +95,7 @@ async def get_completition(prompt):
 async def callback(request: Request): 
     # print("callback is beign called")
     data = await request.json()
-    print("Incoming data:", data)
+    # print("Incoming data:", data)
 
     try:
         entry = data["entry"][0]
@@ -133,7 +133,7 @@ async def callback(request: Request):
             # Send message back to the user
             async with httpx.AsyncClient() as client:
                 resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-                print("Response from WhatsApp:", resp.status_code, resp.text)
+                # print("Response from WhatsApp:", resp.status_code, resp.text)
 
     except Exception as e:
         print("Error:", e)
