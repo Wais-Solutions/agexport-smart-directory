@@ -40,10 +40,11 @@ async def verify_webhook(request: Request):
 mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
 mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
 mongo_host = os.getenv('GENEZ_MONGO_DB_HOST')
+mongo_db = os.getenv('GENEZ_MONGO_DB_NAME')
 
-# client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retryWrites=true&w=majority")
-client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}")
-db = client["agexport_medrec"]
+client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retryWrites=true&w=majority")
+db = client[mongo_db]
+
 ongoing_conversations = db["ongoing_conversations"]
 
 headers = {
