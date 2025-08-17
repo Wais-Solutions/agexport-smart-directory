@@ -37,9 +37,9 @@ async def verify_webhook(request: Request):
 
 # Connect to MongoDB
 
-mongo_user = os.getenv('MONGO_DB_USER')
-mongo_psw = os.getenv('MONGO_DB_PSW')
-mongo_host = os.getenv('MONGO_DB_HOST')
+mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
+mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
+mongo_host = os.getenv('GENEZ_MONGO_DB_HOST')
 
 client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retryWrites=true&w=majority")
 db = client["agexport_medrec"]
@@ -106,9 +106,6 @@ async def callback(request: Request):
         if messages:
             message = messages[0]
             sender_id = message["from"]
-
-            # Get the current hour
-            current_hour = datetime.now().strftime("%H:%M:%S")
 
             # Get the message text
             text = message.get("text", {}).get("body", "")
