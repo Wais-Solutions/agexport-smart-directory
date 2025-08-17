@@ -41,7 +41,8 @@ mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
 mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
 mongo_host = os.getenv('GENEZ_MONGO_DB_HOST')
 
-client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retryWrites=true&w=majority")
+# client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retryWrites=true&w=majority")
+client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}")
 db = client["agexport_medrec"]
 ongoing_conversations = db["ongoing_conversations"]
 
