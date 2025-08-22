@@ -80,11 +80,11 @@ async def callback(request: Request):
                 location = message.get("location", {})
                 latitude = location.get("latitude")
                 longitude = location.get("longitude")
-                name = location.get("name", "")
-                address = location.get("address", "")
+                # name = location.get("name", "")
+                # address = location.get("address", "")
                 
                 # Create text descripcion of location
-                location_description = f"{name} - {address}" if name and address else (name or address or "Ubicación compartida")
+                location_description = f"{location}" 
                 
                 location_data = {
                     "lat": latitude,
