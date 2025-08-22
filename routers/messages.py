@@ -57,16 +57,49 @@ async def callback(request: Request):
         if messages:
             message = messages[0]
             sender_id = message["from"]
+            message_type = message.get("type", "text")
 
-            # Get the message text
-            text = message.get("text", {}).get("body", "")
+            text = ""
+            location_data = None
+            chat_response = ""
 
-            # Handle conversation (insert message into MongoDB)
-            handle_conversation(sender_id, sender_id, text)
+            # Normal text message
+            if message_type == "text":
+                # Get the message text
+                text = message.get("text", {}).get("body", "")
 
-            chat_response = await get_completition(text)
+                # Handle conversation without location data (insert message into MongoDB)
+                handle_conversation(sender_id, sender_id, text)
 
-            handle_conversation(sender_id, "botsito", chat_response)
+                chat_response = await get_completition(text)
+
+                handle_conversation(sender_id, "botsito", chat_response)
+
+            elif message_type == "location":
+                # Location message
+                location = message.get("location", {})
+                latitude = location.get("latitude")
+                longitude = location.get("longitude")
+                name = location.get("name", "")
+                address = location.get("address", "")
+                
+                # Create text descripcion of location
+                location_description = f"{name} - {address}" if name and address else (name or address or "Ubicación compartida")
+                
+                location_data = {
+                    "lat": latitude,
+                    "lon": longitude,
+                    "text_description": location_description
+                }
+                
+                # Manage conversation with location data (insert message into MongoDB)
+                text = f"Location received: {location_description}"
+                
+                handle_conversation(sender_id, sender_id, text, location_data)
+
+                chat_response = await get_completition(text)
+
+                handle_conversation(sender_id, "botsito", chat_response)
 
             # Prepare response message payload
             payload = {

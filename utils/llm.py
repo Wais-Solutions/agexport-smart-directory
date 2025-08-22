@@ -14,28 +14,39 @@ db = client[mongo_db]
 
 ongoing_conversations = db["ongoing_conversations"]
 
-def handle_conversation(convo_id, sender_id, text):
+def handle_conversation(convo_id, sender_id, text, location_data=None):
     # Look for the sender in the ongoing_conversations collection
     conversation = ongoing_conversations.find_one({"sender_id": convo_id})
     
     if conversation:
         # If the sender exists, add the text to the messages array
-        ongoing_conversations.update_one(
-            {"sender_id": convo_id},
-            {"$push": {"messages": {"sender": sender_id, "text": text}}}
-        )
+        message_data = {"sender": sender_id, "text": text}
+
+        # If theres location data, update the location in the document
+        if location_data:
+            ongoing_conversations.update_one(
+                {"sender_id": convo_id},
+                {
+                    "$push": {"messages": message_data},
+                    "$set": {"location": location_data}
+                }
+            )
+        else:
+            ongoing_conversations.update_one(
+                {"sender_id": convo_id},
+                {"$push": {"messages": message_data}}
+            )
     else:
         # If the sender doesn't exist, create a new document
         new_conversation = {
             "sender_id": convo_id,
             "symptoms": [],
-            "location": {"lat": None, "lon": None, "text_description": None},
+            "location": location_data if location_data else {"lat": None, "lon": None, "text_description": None},
             "language": None,
             "messages": [{"sender": sender_id, "text": text}],
             "recommendation": None
         }
         ongoing_conversations.insert_one(new_conversation)
-
 
 
 groq_api = os.getenv('GROQ_API_KEY')
