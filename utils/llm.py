@@ -48,6 +48,13 @@ def handle_conversation(convo_id, sender_id, text, location_data=None):
         }
         ongoing_conversations.insert_one(new_conversation)
 
+def user_has_location(sender_id):
+    # Check if user has already provided location
+    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+    if conversation and conversation.get("location"):
+        location = conversation["location"]
+        return location.get("lat") is not None and location.get("lon") is not None
+    return False
 
 groq_api = os.getenv('GROQ_API_KEY')
 client = AsyncGroq(api_key = groq_api)
@@ -64,4 +71,4 @@ async def get_completition(prompt):
         , top_p= 1 
     )
 
-    return response.choices[0].message.content 
+    return response.choices[0].message.content

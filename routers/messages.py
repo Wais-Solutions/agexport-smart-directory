@@ -5,8 +5,7 @@ from datetime import datetime
 from pymongo import MongoClient
 import httpx
 
-from utils.llm import handle_conversation, get_completition
-
+from utils.llm import handle_conversation, get_completition, user_has_location
 
 router = APIRouter() 
 
@@ -16,11 +15,47 @@ WHATSAPP_HOOK_TOKEN = os.environ.get("WHATSAPP_HOOK_TOKEN")
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 # "https://graph.facebook.com/v18.0/739443625915932/messages"
 
-
 headers = {
     "Authorization": f"Bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
 }
+
+async def send_location_request(sender_id):
+    # Send a location request message using Whatsapps location request feature
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": sender_id,
+        "type": "interactive",
+        "interactive": {
+            "type": "location_request_message",
+            "body": {
+                "text": "To provide you with better medical referrals, I need to know your location. Please share yours."
+            },
+            "action": {
+                "name": "send_location"
+            }
+        }
+    }
+    
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        print(f"Location request sent: {resp.status_code}")
+        return resp
+
+async def send_text_message(sender_id, message):
+    # Send a normal text message
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": sender_id,
+        "type": "text",
+        "text": {
+            "body": message
+        }
+    }
+    
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        return resp
 
 @router.get("/")
 def home(): 
@@ -61,30 +96,41 @@ async def callback(request: Request):
 
             text = ""
             location_data = None
-            chat_response = ""
 
-            # Normal text message
             if message_type == "text":
                 # Get the message text
                 text = message.get("text", {}).get("body", "")
-
-                # Handle conversation without location data (insert message into MongoDB)
-                handle_conversation(sender_id, sender_id, text)
-
-                chat_response = await get_completition(text)
-
-                handle_conversation(sender_id, "botsito", chat_response)
+                
+                # Check if user has already provided location
+                if not user_has_location(sender_id):
+                    # Save the user's message first
+                    handle_conversation(sender_id, sender_id, text)
+                    
+                    # Send location request instead of processing the message
+                    await send_location_request(sender_id)
+                    
+                    # Send explanatory message
+                    location_explanation = "Hello! Before I can help you with medical referrals, I need your location. Please share yours using the button above."
+                    handle_conversation(sender_id, "botsito", location_explanation)
+                    
+                else:
+                    # User has location, proceed with normal conversation
+                    handle_conversation(sender_id, sender_id, text)
+                    chat_response = await get_completition(text)
+                    handle_conversation(sender_id, "botsito", chat_response)
+                    
+                    await send_text_message(sender_id, chat_response)
 
             elif message_type == "location":
-                # Location message
+                # Location message received
                 location = message.get("location", {})
                 latitude = location.get("latitude")
                 longitude = location.get("longitude")
                 # name = location.get("name", "")
                 # address = location.get("address", "")
                 
-                # Create text descripcion of location
-                location_description = f"{location}" 
+                # Create text description of location
+                location_description = f"Coordinates: {latitude}, {longitude}"
                 
                 location_data = {
                     "lat": latitude,
@@ -92,31 +138,35 @@ async def callback(request: Request):
                     "text_description": location_description
                 }
                 
-                # Manage conversation with location data (insert message into MongoDB)
-                text = f"Location received: {location_description}"
-                
+                # Save location message
+                text = f"Location sended: {location_description}"
                 handle_conversation(sender_id, sender_id, text, location_data)
 
-                chat_response = await get_completition(text)
+                # Confirm location received and start normal conversation
+                confirmation_message = f"Great! I've registered your location: {location_description}. I can now help you with medical referrals in your area. How can I help you?"
+                handle_conversation(sender_id, "botsito", confirmation_message)
+                
+                await send_text_message(sender_id, confirmation_message)
 
-                handle_conversation(sender_id, "botsito", chat_response)
-
-            # Prepare response message payload
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": sender_id,
-                "type": "text",
-                "text": {
-                    "body": chat_response
-                }
-            }
-
-            # Send message back to the user
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-                # print("Response from WhatsApp:", resp.status_code, resp.text)
+            elif message_type == "interactive":
+                # Handle interactive message responses (like location request responses)
+                interactive = message.get("interactive", {})
+                interactive_type = interactive.get("type", "")
+                
+                if interactive_type == "location_request_message":
+                    # User clicked on location request but didn't send location yet
+                    reminder_message = "Please share your location to continue. I need this information to provide you with the best medical referrals."
+                    handle_conversation(sender_id, "botsito", reminder_message)
+                    await send_text_message(sender_id, reminder_message)
 
     except Exception as e:
         print("Error:", e)
+        # Send error message to user if possible
+        try:
+            if 'sender_id' in locals():
+                error_message = "Sorry, there was an error processing your message. Please try again."
+                await send_text_message(sender_id, error_message)
+        except:
+            pass
 
     return {"status": "received"}
