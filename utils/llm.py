@@ -53,9 +53,15 @@ def handle_conversation(convo_id, sender_id, text, location_data=None):
 def user_has_location(sender_id):
     # Check if user has already provided location
     conversation = ongoing_conversations.find_one({"sender_id": sender_id})
-    if conversation and conversation.get("location"):
-        location = conversation["location"]
-        return location.get("lat") is not None and location.get("lon") is not None
+    if conversation:
+        location = conversation.get("location")
+        # Check if location object exists and has any valid data
+        if location:
+            lat = location.get("lat")
+            lon = location.get("lon")
+            # User has location if lat AND lon are not None
+            return lat is not None and lon is not None
+        return False
     return False
 
 def user_has_selected_location_method(sender_id):
