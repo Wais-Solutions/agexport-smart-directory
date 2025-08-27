@@ -44,7 +44,9 @@ def handle_conversation(convo_id, sender_id, text, location_data=None):
             "location": location_data if location_data else {"lat": None, "lon": None, "text_description": None},
             "language": None,
             "messages": [{"sender": sender_id, "text": text}],
-            "recommendation": None
+            "recommendation": None,
+            "location_method_selected": None,  # Track which location method user chose
+            "waiting_for_text_location": False  # Flag to know if we're waiting for text location
         }
         ongoing_conversations.insert_one(new_conversation)
 
@@ -54,6 +56,34 @@ def user_has_location(sender_id):
     if conversation and conversation.get("location"):
         location = conversation["location"]
         return location.get("lat") is not None and location.get("lon") is not None
+    return False
+
+def user_has_selected_location_method(sender_id):
+    # Check if user has selected a location method
+    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+    if conversation:
+        return conversation.get("location_method_selected") is not None
+    return False
+
+def set_location_method(sender_id, method):
+    # Set the selected location method for the user
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$set": {"location_method_selected": method}}
+    )
+
+def set_waiting_for_text_location(sender_id, waiting=True):
+    # Set flag to indicate we're waiting for text location reference
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$set": {"waiting_for_text_location": waiting}}
+    )
+
+def is_waiting_for_text_location(sender_id):
+    # Check if we're waiting for text location reference
+    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+    if conversation:
+        return conversation.get("waiting_for_text_location", False)
     return False
 
 groq_api = os.getenv('GROQ_API_KEY')
