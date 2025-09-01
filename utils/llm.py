@@ -1,4 +1,5 @@
 import os 
+import httpx
 from pymongo import MongoClient
 from groq import AsyncGroq
 
@@ -45,8 +46,7 @@ def handle_conversation(convo_id, sender_id, text, location_data=None):
             "language": None,
             "messages": [{"sender": sender_id, "text": text}],
             "recommendation": None,
-            "location_method_selected": None,  # Track which location method user chose
-            "waiting_for_text_location": False  # Flag to know if we're waiting for text location
+            "waiting_for_location_reference": False  # Flag to know if we're waiting for location reference
         }
         ongoing_conversations.insert_one(new_conversation)
 
@@ -64,33 +64,73 @@ def user_has_location(sender_id):
         return False
     return False
 
-def user_has_selected_location_method(sender_id):
-    # Check if user has selected a location method
-    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
-    if conversation:
-        return conversation.get("location_method_selected") is not None
-    return False
-
-def set_location_method(sender_id, method):
-    # Set the selected location method for the user
+def set_waiting_for_location_reference(sender_id, waiting=True):
+    # Set flag to indicate we're waiting for location reference
     ongoing_conversations.update_one(
         {"sender_id": sender_id},
-        {"$set": {"location_method_selected": method}}
+        {"$set": {"waiting_for_location_reference": waiting}}
     )
 
-def set_waiting_for_text_location(sender_id, waiting=True):
-    # Set flag to indicate we're waiting for text location reference
-    ongoing_conversations.update_one(
-        {"sender_id": sender_id},
-        {"$set": {"waiting_for_text_location": waiting}}
-    )
-
-def is_waiting_for_text_location(sender_id):
-    # Check if we're waiting for text location reference
+def is_waiting_for_location_reference(sender_id):
+    # Check if we're waiting for location reference
     conversation = ongoing_conversations.find_one({"sender_id": sender_id})
     if conversation:
-        return conversation.get("waiting_for_text_location", False)
+        return conversation.get("waiting_for_location_reference", False)
     return False
+
+async def geocode_location(location_text):
+    # Use Google Maps Geocoding API to get coordinates from location text
+    # Returns tuple (lat, lon, formatted_address) or (None, None, None) if not found in Guatemala
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+    
+    if not api_key:
+        print("Google Maps API key not found")
+        return None, None, None
+    
+    # Add "Guatemala" to the search to bias results towards Guatemala
+    search_query = f"{location_text}, Guatemala"
+    
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {
+        'address': search_query,
+        'key': api_key,
+        'region': 'gt',  # Bias towards Guatemala
+        'components': 'country:GT'  # Restrict to Guatemala only
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+            data = response.json()
+            
+            if data['status'] == 'OK' and data['results']:
+                result = data['results'][0]
+                
+                # Check if the result is actually in Guatemala
+                country_found = False
+                for component in result['address_components']:
+                    if 'country' in component['types'] and component['short_name'] == 'GT':
+                        country_found = True
+                        break
+                
+                if country_found:
+                    location = result['geometry']['location']
+                    lat = location['lat']
+                    lon = location['lng']
+                    formatted_address = result['formatted_address']
+                    
+                    print(f"Geocoded location: {formatted_address} -> {lat}, {lon}")
+                    return lat, lon, formatted_address
+                else:
+                    print(f"Location not found in Guatemala: {location_text}")
+                    return None, None, None
+            else:
+                print(f"Geocoding failed: {data.get('status', 'Unknown error')}")
+                return None, None, None
+                
+    except Exception as e:
+        print(f"Error in geocoding: {e}")
+        return None, None, None
 
 groq_api = os.getenv('GROQ_API_KEY')
 client = AsyncGroq(api_key = groq_api)
