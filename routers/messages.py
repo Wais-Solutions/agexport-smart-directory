@@ -11,7 +11,8 @@ from utils.llm import (
     user_has_location,
     set_waiting_for_location_reference,
     is_waiting_for_location_reference,
-    geocode_location
+    geocode_location,
+    log_to_db
 )
 
 router = APIRouter() 
@@ -118,7 +119,12 @@ async def verify_webhook(request: Request):
     challenge = params.get("hub.challenge")
 
     if mode and token:
-        print(f"Comparing {WHATSAPP_HOOK_TOKEN} with {token}")
+        log_to_db("INFO", "Webhook verification attempt", {
+            "mode": mode,
+            "token_provided": token,
+            "expected_token": WHATSAPP_HOOK_TOKEN
+        })
+        
         if mode == "subscribe" and token == WHATSAPP_HOOK_TOKEN:
             return PlainTextResponse(content=challenge, status_code=200)
         else:
@@ -129,7 +135,7 @@ async def verify_webhook(request: Request):
 @router.post("/webhook")
 async def callback(request: Request): 
     data = await request.json()
-    print("Incoming data:", data)
+    # print("Incoming data:", data)
 
     try:
         entry = data["entry"][0]

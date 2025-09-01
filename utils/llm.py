@@ -2,6 +2,7 @@ import os
 import httpx
 from pymongo import MongoClient
 from groq import AsyncGroq
+from datetime import datetime
 
 # Connect to MongoDB
 
@@ -14,6 +15,27 @@ client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retr
 db = client[mongo_db]
 
 ongoing_conversations = db["ongoing_conversations"]
+debugging_logs = db["debugging-logs"]
+
+def log_to_db(level, message, extra_data=None):
+    # Save log messages to MongoDB debugging-logs collection
+    # level: "INFO", "ERROR", "WARNING", "DEBUG"
+    # message: string with the log message
+    # extra_data: optional dict with additional data
+    try:
+        log_entry = {
+            "timestamp": datetime.utcnow(),
+            "level": level,
+            "message": message,
+            "extra_data": extra_data if extra_data else {}
+        }
+        debugging_logs.insert_one(log_entry)
+    except Exception as e:
+        # Fallback to print if database logging fails
+        print(f"Failed to log to database: {e}")
+        print(f"Original log - {level}: {message}")
+        if extra_data:
+            print(f"Extra data: {extra_data}")
 
 def handle_conversation(convo_id, sender_id, text, location_data=None):
     # Look for the sender in the ongoing_conversations collection
@@ -84,53 +106,104 @@ async def geocode_location(location_text):
     api_key = os.getenv('GOOGLE_MAPS_API_KEY')
     
     if not api_key:
-        print("Google Maps API key not found")
+        log_to_db("ERROR", "Google Maps API key not found")
         return None, None, None
     
-    # Add "Guatemala" to the search to bias results towards Guatemala
-    search_query = f"{location_text}, Guatemala"
+    log_to_db("INFO", f"Trying to geocode location", {"location_text": location_text})
+    
+    # Try multiple search variations
+    search_queries = [
+        f"{location_text}, Guatemala",
+        location_text,
+        f"{location_text}, GT"
+    ]
     
     url = "https://maps.googleapis.com/maps/api/geocode/json"
-    params = {
-        'address': search_query,
-        'key': api_key,
-        'region': 'gt',  # Bias towards Guatemala
-        'components': 'country:GT'  # Restrict to Guatemala only
-    }
     
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            data = response.json()
-            
-            if data['status'] == 'OK' and data['results']:
-                result = data['results'][0]
+    for search_query in search_queries:
+        log_to_db("DEBUG", f"Searching for location", {"search_query": search_query})
+        
+        params = {
+            'address': search_query,
+            'key': api_key,
+            'region': 'gt',  # Bias towards Guatemala
+        }
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params)
+                data = response.json()
                 
-                # Check if the result is actually in Guatemala
-                country_found = False
-                for component in result['address_components']:
-                    if 'country' in component['types'] and component['short_name'] == 'GT':
-                        country_found = True
-                        break
+                api_status = data.get('status')
+                results_count = len(data.get('results', []))
                 
-                if country_found:
-                    location = result['geometry']['location']
-                    lat = location['lat']
-                    lon = location['lng']
-                    formatted_address = result['formatted_address']
+                log_to_db("DEBUG", "Geocoding API response", {
+                    "search_query": search_query,
+                    "api_status": api_status,
+                    "results_count": results_count
+                })
+                
+                if data['status'] == 'OK' and data['results']:
+                    result = data['results'][0]
                     
-                    print(f"Geocoded location: {formatted_address} -> {lat}, {lon}")
-                    return lat, lon, formatted_address
+                    # Check if the result is actually in Guatemala
+                    country_found = False
+                    country_short = ""
+                    for component in result['address_components']:
+                        if 'country' in component['types']:
+                            country_short = component['short_name']
+                            if component['short_name'] == 'GT':
+                                country_found = True
+                            break
+                    
+                    log_to_db("DEBUG", "Country check in geocoding result", {
+                        "search_query": search_query,
+                        "country_found": country_found,
+                        "country_short": country_short
+                    })
+                    
+                    if country_found:
+                        location = result['geometry']['location']
+                        lat = location['lat']
+                        lon = location['lng']
+                        formatted_address = result['formatted_address']
+                        
+                        log_to_db("INFO", "Successfully geocoded location", {
+                            "location_text": location_text,
+                            "formatted_address": formatted_address,
+                            "lat": lat,
+                            "lon": lon
+                        })
+                        
+                        return lat, lon, formatted_address
+                    else:
+                        log_to_db("DEBUG", "Result not in Guatemala, trying next variation", {
+                            "search_query": search_query,
+                            "country_short": country_short
+                        })
+                        continue
                 else:
-                    print(f"Location not found in Guatemala: {location_text}")
-                    return None, None, None
-            else:
-                print(f"Geocoding failed: {data.get('status', 'Unknown error')}")
-                return None, None, None
-                
-    except Exception as e:
-        print(f"Error in geocoding: {e}")
-        return None, None, None
+                    error_detail = data.get('error_message', 'No error message')
+                    log_to_db("WARNING", "Geocoding failed for search query", {
+                        "search_query": search_query,
+                        "api_status": api_status,
+                        "error_detail": error_detail
+                    })
+                    continue
+                    
+        except Exception as e:
+            log_to_db("ERROR", "Exception in geocoding", {
+                "search_query": search_query,
+                "error": str(e)
+            })
+            continue
+    
+    log_to_db("WARNING", "Could not find location in Guatemala after trying all variations", {
+        "location_text": location_text,
+        "search_queries_tried": search_queries
+    })
+    
+    return None, None, None
 
 groq_api = os.getenv('GROQ_API_KEY')
 client = AsyncGroq(api_key = groq_api)
