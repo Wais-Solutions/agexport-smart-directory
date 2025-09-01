@@ -181,8 +181,9 @@ async def callback(request: Request):
                         # Set flag that we are now waiting for location reference
                         set_waiting_for_location_reference(sender_id, True)
                         
-                        # Try to process this message as location reference
-                        await process_location_reference(sender_id, text)
+                        # Log that we sent the location request so NO procesamos el mensaje como ubicacion todavía
+                        initial_request_message = "Initial location request sent to user"
+                        handle_conversation(sender_id, "system", initial_request_message)
 
                 elif message_type == "location":
                     # GPS location message received
@@ -233,6 +234,7 @@ async def callback(request: Request):
                     await send_initial_location_request(sender_id)
                     explanation = "I need your location so I can help you. Please share your GPS location using the button above, or type in your city name."
                     handle_conversation(sender_id, "botsito", explanation)
+                    await send_text_message(sender_id, explanation)
                     
                     # Set waiting flag
                     set_waiting_for_location_reference(sender_id, True)
