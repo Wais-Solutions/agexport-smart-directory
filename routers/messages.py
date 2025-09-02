@@ -6,7 +6,7 @@ from pymongo import MongoClient
 
 
 from utils.chat import handle_message, send_text_message, echo_message
-from utils.db import log_to_db
+from utils.db_tools import log_to_db
 
 router = APIRouter() 
 WHATSAPP_HOOK_TOKEN = os.environ.get("WHATSAPP_HOOK_TOKEN")
