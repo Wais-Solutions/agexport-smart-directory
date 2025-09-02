@@ -1,6 +1,14 @@
 import os 
 import httpx
 
+from db import (
+    get_conversation
+    , new_conversation 
+)
+
+from llm import (
+    extract_data
+)
 ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
 PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
 WHATSAPP_HOOK_TOKEN = os.environ.get("WHATSAPP_HOOK_TOKEN")
@@ -10,6 +18,74 @@ headers = {
     "Authorization": f"Bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
 }
+
+async def echo_message(message): 
+    send_text_message(message["from"], message.get("text", {}).get("body", ""))
+    pass 
+
+
+async def handle_message(message): 
+    # ID Pacient 
+    sender_id = message["from"]
+    message_type = message.get("type", "text")
+
+    # Retrieve existing conversation or create a new one
+    conversation = get_conversation(sender_id = sender_id)
+    
+    if not conversation: 
+        conversation = new_conversation(sender_id = sender_id)
+
+    # Check for data (symptoms, location) if any is missing, ask for it 
+    
+    if message_type == "text": 
+        message_text = message.get("text", {}).get("body", "")
+        message_data = extract_data(message_text)
+    
+    if message_type == "location": 
+        location = message.get("location", {})
+        latitude = location.get("latitude")
+        longitude = location.get("longitude")
+    
+        location_data = {
+            "lat": latitude,
+            "lon": longitude,
+            "text_description": f"Coordinates {latitude} - {longitude}"
+        }
+
+    if not has_symptoms(conversation) and message_data['symptoms']: 
+        conversation['symptoms'] = message_data['symptoms']
+        # Extract lat/lon from description and save in new location 
+    else:
+        # SEND MESSAGE ASKING FOR SYMPTOMS
+        pass 
+
+    if not has_location(conversation) and message_data['loaction']:
+        conversation['location']['text_description'] = message_data['location']
+    elif not has_location(conversation) and location_data: 
+        conversation['location'] = location_data
+    else: 
+        # SEND MESSAGE ASKING FOR LOCATION
+        pass 
+
+    # Suggestion 
+    pass 
+
+def has_symptoms(conversation): 
+    symptoms = conversation.get("symptoms")
+    # Check if location object exists and has any valid data
+    if symptoms:
+        return len(symptoms) > 1
+    return False 
+
+def has_location(conversation): 
+    location = conversation.get("location")
+    # Check if location object exists and has any valid data
+    if location:
+        lat = location.get("lat")
+        lon = location.get("lon")
+        # User has location if lat AND lon are not None
+        return lat is not None and lon is not None
+    return False
 
 async def send_text_message(sender_id, message):
     # Send a normal text message
@@ -26,21 +102,7 @@ async def send_text_message(sender_id, message):
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
         return resp
 
-async def handle_message(message): 
-    # Send a normal text message
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": message["from"],
-        "type": "text",
-        "text": {
-            "body": message.get("text", {}).get("body", "") 
-        }
-    }
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-        return resp
-    
 #     async with httpx.AsyncClient() as client:
 #         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
 #         return resp

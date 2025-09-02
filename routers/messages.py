@@ -5,7 +5,7 @@ from datetime import datetime
 from pymongo import MongoClient
 
 
-from utils.chat import handle_message, send_text_message
+from utils.chat import handle_message, send_text_message, echo_message
 from utils.db import log_to_db
 
 router = APIRouter() 
@@ -52,7 +52,7 @@ async def callback(request: Request):
 
         if messages:
             message = messages[0]
-            await handle_message(message)
+            await echo_message(message)
 
     except Exception as e:
         print("Error:", e)

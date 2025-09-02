@@ -33,3 +33,23 @@ def log_to_db(level, message, extra_data=None):
         print(f"Original log - {level}: {message}")
         if extra_data:
             print(f"Extra data: {extra_data}")
+
+def get_conversation(sender_id): 
+    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+    return conversation
+    
+def new_conversation(sender_id): 
+    # If the sender doesn't exist, create a new document
+    new_conversation = {
+        "sender_id": sender_id,
+        "symptoms": [],
+        "location": {"lat": None, "lon": None, "text_description": None},
+        "language": None,
+        "messages": [],
+        "recommendation": None,
+        "waiting_for_location_reference": False  # Flag to know if we're waiting for location reference
+    }
+    
+    ongoing_conversations.insert_one(new_conversation)
+
+    return new_conversation

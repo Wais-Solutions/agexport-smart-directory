@@ -4,6 +4,46 @@ import httpx
 from groq import AsyncGroq
 from datetime import datetime
 
+from groq import AsyncGroq
+import json 
+import asyncio 
+
+
+groq_client = AsyncGroq()
+async def extract_data(message): 
+    completion = await groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile"
+        , messages=[
+        {
+            "role": "system",
+            "content": "You are an information extraction assistant. Given a text message, extract the following fields and return them strictly in JSON format:\n\n{\n  \"location\": string | None,\n  \"symptoms\": array of strings | None,\n  \"language\": string | None\n}\n\nRules:\n- \"location\" must be a clear geographical entity: city, state, country, neighborhood, or publicly known place (e.g., \"Times Square\", \"Central Park\", \"Fifth Avenue\").\n- Do NOT use vague places (e.g., \"my hotel\", \"a pool\", \"a park\", \"the mall\"). Only accept a park if it is a specifically named, publicly recognized one.\n- Patients might use popular landmarks or well-known places as location references—these should be included.\n- correct mispellings\n- separate distinct symptoms into an array\n- \"language\" must be extracted as the full language name in English (e.g.,\"English\",  \"Spanish\", \"French\", \"Mandarin Chinese\"), not abbreviations or codes.\n- If any field is not present in the text, set it to None.\n- translate all results to english.\n- Return only the JSON, with no extra commentary.\n"
+        },
+        {
+            "role": "user",
+            "content": message
+        }
+        ],
+        temperature=0,
+        max_completion_tokens=8192,
+        top_p=1,
+        stream=True,
+        stop=None
+    )
+
+    response = ""
+    
+    async for chunk in completion:
+        response += chunk.choices[0].delta.content or ""
+
+    try:
+        data = json.loads(response)
+    except Exception:
+        data = {"location": None, "symptoms": [], "language": None}
+
+    return data
+
+
+
 
 def handle_conversation(convo_id, sender_id, text, location_data=None):
     # Look for the sender in the ongoing_conversations collection
