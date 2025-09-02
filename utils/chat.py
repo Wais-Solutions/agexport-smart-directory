@@ -6,7 +6,7 @@ from utils.db_tools import (
     , new_conversation 
 )
 
-from llm import (
+from utils.llm import (
     extract_data
 )
 ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
