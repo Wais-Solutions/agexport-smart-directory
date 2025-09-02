@@ -20,8 +20,18 @@ headers = {
 }
 
 async def echo_message(message): 
-    send_text_message(message["from"], message.get("text", {}).get("body", ""))
-    pass 
+    # Send a normal text message
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": message["from"],
+        "type": "text",
+        "text": {
+            "body": message.get("text", {}).get("body", "")
+        }
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        return resp
 
 
 async def handle_message(message): 
