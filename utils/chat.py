@@ -36,6 +36,10 @@ async def handle_message(message):
             "body": message.get("text", {}).get("body", "") 
         }
     }
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        return resp
     
 #     async with httpx.AsyncClient() as client:
 #         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
