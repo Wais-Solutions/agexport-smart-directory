@@ -1,57 +1,37 @@
-import os 
-import httpx
-
-from utils.db_tools import (
-    get_conversation
-    , new_conversation 
-)
-
-from utils.llm import (
-    extract_data
-)
-ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
-PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
-WHATSAPP_HOOK_TOKEN = os.environ.get("WHATSAPP_HOOK_TOKEN")
-WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
-
-headers = {
-    "Authorization": f"Bearer {ACCESS_TOKEN}",
-    "Content-Type": "application/json"
-}
-
-async def echo_message(message): 
-    # Send a normal text message
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": message["from"],
-        "type": "text",
-        "text": {
-            "body": message.get("text", {}).get("body", "")
-        }
-    }
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-        return resp
-
+import os
+from utils.db_tools import get_conversation, new_conversation, log_to_db
+from utils.llm import extract_data
+from utils.location import process_location_message, request_location
+from utils.symptoms import process_symptoms_message, request_symptoms
+from utils.medical_referral import provide_medical_referral
+from utils.whatsapp import send_text_message
 
 async def handle_message(message): 
-    # ID Pacient 
     sender_id = message["from"]
     message_type = message.get("type", "text")
 
     # Retrieve existing conversation or create a new one
-    conversation = get_conversation(sender_id = sender_id)
+    conversation = get_conversation(sender_id=sender_id)
     
     if not conversation: 
-        conversation = new_conversation(sender_id = sender_id)
+        conversation = new_conversation(sender_id=sender_id)
+        log_to_db("INFO", "New conversation created", {"sender_id": sender_id})
 
-    # Check for data (symptoms, location) if any is missing, ask for it 
-    
+    # Initialize variables
+    message_data = {"location": None, "symptoms": None, "language": None}
+    location_data = None
+
+    # Extract data based on message type
     if message_type == "text": 
         message_text = message.get("text", {}).get("body", "")
-        message_data = extract_data(message_text)
+        message_data = await extract_data(message_text)
+        log_to_db("DEBUG", "Data extracted from text", {
+            "sender_id": sender_id,
+            "message_text": message_text,
+            "extracted_data": message_data
+        })
     
-    if message_type == "location": 
+    elif message_type == "location": 
         location = message.get("location", {})
         latitude = location.get("latitude")
         longitude = location.get("longitude")
@@ -59,59 +39,43 @@ async def handle_message(message):
         location_data = {
             "lat": latitude,
             "lon": longitude,
-            "text_description": f"Coordinates {latitude} - {longitude}"
+            "text_description": f"Coordinates {latitude}, {longitude}"
         }
+        log_to_db("INFO", "GPS location received", {
+            "sender_id": sender_id,
+            "location_data": location_data
+        })
 
-    if not has_symptoms(conversation) and message_data['symptoms']: 
-        conversation['symptoms'] = message_data['symptoms']
-        # Extract lat/lon from description and save in new location 
+    # Process symptoms
+    await process_symptoms_message(sender_id, conversation, message_data)
+    
+    # Process location  
+    await process_location_message(sender_id, conversation, message_data, location_data)
+    
+    # Check if we have all required data and provide referral
+    conversation = get_conversation(sender_id=sender_id)  # Refresh conversation
+    if has_symptoms(conversation) and has_location(conversation):
+        await provide_medical_referral(sender_id, conversation)
     else:
-        # SEND MESSAGE ASKING FOR SYMPTOMS
-        pass 
-
-    if not has_location(conversation) and message_data['loaction']:
-        conversation['location']['text_description'] = message_data['location']
-    elif not has_location(conversation) and location_data: 
-        conversation['location'] = location_data
-    else: 
-        # SEND MESSAGE ASKING FOR LOCATION
-        pass 
-
-    # Suggestion 
-    pass 
+        # Missing data - ask for what's missing
+        if not has_symptoms(conversation):
+            await request_symptoms(sender_id)
+        elif not has_location(conversation):
+            await request_location(sender_id)
 
 def has_symptoms(conversation): 
     symptoms = conversation.get("symptoms")
-    # Check if location object exists and has any valid data
     if symptoms:
-        return len(symptoms) > 1
+        return len(symptoms) > 0
     return False 
 
 def has_location(conversation): 
     location = conversation.get("location")
-    # Check if location object exists and has any valid data
     if location:
         lat = location.get("lat")
         lon = location.get("lon")
-        # User has location if lat AND lon are not None
         return lat is not None and lon is not None
     return False
-
-async def send_text_message(sender_id, message):
-    # Send a normal text message
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": sender_id,
-        "type": "text",
-        "text": {
-            "body": message
-        }
-    }
-    
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-        return resp
-
 
 #     async with httpx.AsyncClient() as client:
 #         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
