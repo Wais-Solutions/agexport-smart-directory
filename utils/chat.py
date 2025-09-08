@@ -5,6 +5,7 @@ from utils.location import process_location_message, request_location
 from utils.symptoms import process_symptoms_message, request_symptoms
 from utils.medical_referral import provide_medical_referral
 from utils.whatsapp import send_text_message
+from utils.language import process_language_message
 
 async def handle_message(message): 
     sender_id = message["from"]
@@ -52,6 +53,9 @@ async def handle_message(message):
     # Process location  
     await process_location_message(sender_id, conversation, message_data, location_data)
     
+    # Process language
+    await process_language_message(sender_id, conversation, message_data)
+    
     # Check if we have all required data and provide referral
     conversation = get_conversation(sender_id=sender_id)  # Refresh conversation
     if has_symptoms(conversation) and has_location(conversation):
@@ -76,6 +80,7 @@ def has_location(conversation):
         lon = location.get("lon")
         return lat is not None and lon is not None
     return False
+
 
 #     async with httpx.AsyncClient() as client:
 #         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
