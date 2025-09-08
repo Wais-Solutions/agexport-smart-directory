@@ -8,6 +8,8 @@ from groq import AsyncGroq
 import json 
 import asyncio 
 
+from utils.db_tools import log_to_db, ongoing_conversations
+
 
 groq_client = AsyncGroq()
 async def extract_data(message): 
