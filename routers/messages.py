@@ -4,7 +4,6 @@ from fastapi.responses import PlainTextResponse
 from datetime import datetime
 from pymongo import MongoClient
 
-
 from utils.chat import handle_message, send_text_message, echo_message
 from utils.db_tools import log_to_db
 
@@ -52,7 +51,7 @@ async def callback(request: Request):
 
         if messages:
             message = messages[0]
-            await echo_message(message)
+            await handle_message(message)
 
     except Exception as e:
         print("Error:", e)
