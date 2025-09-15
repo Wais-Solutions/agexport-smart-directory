@@ -1,24 +1,20 @@
 import os 
 import httpx
-
 from groq import AsyncGroq
 from datetime import datetime
-
-from groq import AsyncGroq
 import json 
 import asyncio 
-
 from utils.db_tools import log_to_db, ongoing_conversations
 
-
 groq_client = AsyncGroq()
+
 async def extract_data(message): 
     completion = await groq_client.chat.completions.create(
         model="llama-3.3-70b-versatile"
         , messages=[
         {
             "role": "system",
-            "content": "You are an information extraction assistant. Given a text message, extract the following fields and return them strictly in JSON format:\n\n{\n  \"location\": string | None,\n  \"symptoms\": array of strings | None,\n  \"language\": string | None\n}\n\nRules:\n- \"location\" must be a clear geographical entity: city, state, country, neighborhood, or publicly known place (e.g., \"Times Square\", \"Central Park\", \"Fifth Avenue\").\n- Do NOT use vague places (e.g., \"my hotel\", \"a pool\", \"a park\", \"the mall\"). Only accept a park if it is a specifically named, publicly recognized one.\n- Patients might use popular landmarks or well-known places as location references—these should be included.\n- correct mispellings\n- separate distinct symptoms into an array\n- \"language\" must be extracted as the full language name in English (e.g.,\"English\",  \"Spanish\", \"French\", \"Mandarin Chinese\"), not abbreviations or codes.\n- If any field is not present in the text, set it to None.\n- translate all results to english.\n- Return only the JSON, with no extra commentary.\n"
+            "content": "You are an information extraction assistant. Given a text message, extract the following fields and return them strictly in JSON format:\n\n{\n  \"location\": string | None,\n  \"symptoms\": array of strings | None,\n  \"language\": string | None\n}\n\nRules:\n- \"location\" must be a clear geographical entity: city, state, country, neighborhood, or publicly known place (e.g., \"Times Square\", \"Central Park\", \"Fifth Avenue\").\n- Do NOT use vague places (e.g., \"my hotel\", \"a pool\", \"a park\", \"the mall\"). Only accept a park if it is a specifically named, publicly recognized one.\n- Patients might use popular landmarks or well-known places as location referencesâ€"these should be included.\n- correct mispellings\n- separate distinct symptoms into an array\n- \"language\" must be extracted as the full language name in English (e.g.,\"English\",  \"Spanish\", \"French\", \"Mandarin Chinese\"), not abbreviations or codes.\n- If any field is not present in the text, set it to None.\n- translate all results to english.\n- Return only the JSON, with no extra commentary.\n"
         },
         {
             "role": "user",
@@ -44,8 +40,53 @@ async def extract_data(message):
 
     return data
 
+async def detect_confirmation(message_text):
+    """
+    Detect if a message contains confirmation (yes/no) intent
+    Returns: {'is_confirmation': bool, 'confirmed': bool}
+    """
+    completion = await groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "system",
+                "content": """You are a confirmation detection assistant. Analyze the message and determine if the user is confirming or denying something.
 
+                Return strictly in JSON format:
+                {
+                "is_confirmation": boolean,
+                "confirmed": boolean
+                }
 
+                Rules:
+                - "is_confirmation" should be true if the message clearly expresses agreement/disagreement, confirmation/denial
+                - "confirmed" should be true for positive confirmations (yes, correct, si, exacto, perfecto, etc.)
+                - "confirmed" should be false for negative confirmations (no, incorrect, wrong, etc.)
+                - Consider different languages (Spanish: sí/no, English: yes/no, etc.)
+                - Look for phrases like "that's right", "exactly", "no, that's wrong", etc.
+                - Return only the JSON, no commentary."""
+            },
+            {
+                "role": "user", 
+                "content": message_text
+            }
+        ],
+        temperature=0,
+        max_completion_tokens=256,
+        top_p=1,
+        stream=False
+    )
+    
+    try:
+        response = completion.choices[0].message.content.strip()
+        data = json.loads(response)
+        return data
+    except Exception as e:
+        log_to_db("ERROR", "Error detecting confirmation", {
+            "message_text": message_text,
+            "error": str(e)
+        })
+        return {"is_confirmation": False, "confirmed": False}
 
 def handle_conversation(convo_id, sender_id, text, location_data=None):
     # Look for the sender in the ongoing_conversations collection
@@ -78,7 +119,9 @@ def handle_conversation(convo_id, sender_id, text, location_data=None):
             "language": None,
             "messages": [{"sender": sender_id, "text": text}],
             "recommendation": None,
-            "waiting_for_location_reference": False  # Flag to know if we're waiting for location reference
+            "waiting_for_location_reference": False,  # Flag to know if we're waiting for location reference
+            "pending_location_confirmation": None,  # Stores location data waiting for confirmation
+            "location_confirmation_attempts": 0  # Track failed confirmation attempts
         }
         ongoing_conversations.insert_one(new_conversation)
 

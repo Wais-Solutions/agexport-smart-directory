@@ -47,9 +47,46 @@ def new_conversation(sender_id):
         "language": None,
         "messages": [],
         "recommendation": None,
-        "waiting_for_location_reference": False  # Flag to know if we're waiting for location reference
+        "waiting_for_location_reference": False,  # Flag to know if we're waiting for location reference
+        "pending_location_confirmation": None,  # Stores location data waiting for confirmation
+        "location_confirmation_attempts": 0  # Track failed confirmation attempts
     }
     
     ongoing_conversations.insert_one(new_conversation)
 
     return new_conversation
+
+def set_pending_location_confirmation(sender_id, location_data):
+    # Store location data that needs user confirmation
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$set": {"pending_location_confirmation": location_data}}
+    )
+
+def get_pending_location_confirmation(sender_id):
+    # Get location data pending confirmation
+    conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+    if conversation:
+        return conversation.get("pending_location_confirmation")
+    return None
+
+def clear_pending_location_confirmation(sender_id):
+    # Clear pending location confirmation
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$unset": {"pending_location_confirmation": ""}}
+    )
+
+def increment_location_confirmation_attempts(sender_id):
+    # Increment the number of failed location confirmation attempts
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$inc": {"location_confirmation_attempts": 1}}
+    )
+
+def reset_location_confirmation_attempts(sender_id):
+    # Reset location confirmation attempts counter
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$set": {"location_confirmation_attempts": 0}}
+    )

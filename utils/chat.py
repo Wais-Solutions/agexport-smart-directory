@@ -21,6 +21,7 @@ async def handle_message(message):
     # Initialize variables
     message_data = {"location": None, "symptoms": None, "language": None}
     location_data = None
+    message_text = ""
 
     # Extract data based on message type
     if message_type == "text": 
@@ -31,6 +32,13 @@ async def handle_message(message):
             "message_text": message_text,
             "extracted_data": message_data
         })
+        
+        # Store the message in conversation for reference
+        from utils.db_tools import ongoing_conversations
+        ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$push": {"messages": {"sender": sender_id, "text": message_text}}}
+        )
     
     elif message_type == "location": 
         location = message.get("location", {})
@@ -46,11 +54,18 @@ async def handle_message(message):
             "sender_id": sender_id,
             "location_data": location_data
         })
+        
+        # Store the GPS message
+        from utils.db_tools import ongoing_conversations
+        ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$push": {"messages": {"sender": sender_id, "text": f"GPS location: {latitude}, {longitude}"}}}
+        )
 
     # Process symptoms
     await process_symptoms_message(sender_id, conversation, message_data)
     
-    # Process location  
+    # Process location with the message text for confirmation handling
     await process_location_message(sender_id, conversation, message_data, location_data)
     
     # Process language
@@ -61,11 +76,13 @@ async def handle_message(message):
     if has_symptoms(conversation) and has_location(conversation):
         await provide_medical_referral(sender_id, conversation)
     else:
-        # Missing data - ask for what's missing
-        if not has_symptoms(conversation):
-            await request_symptoms(sender_id)
-        elif not has_location(conversation):
-            await request_location(sender_id)
+        # Missing data - ask for what's missing (only if not waiting for confirmation)
+        pending_location = conversation.get("pending_location_confirmation")
+        if not pending_location:  # Only ask for missing data if not waiting for confirmation
+            if not has_symptoms(conversation):
+                await request_symptoms(sender_id)
+            elif not has_location(conversation):
+                await request_location(sender_id)
 
 def has_symptoms(conversation): 
     symptoms = conversation.get("symptoms")
