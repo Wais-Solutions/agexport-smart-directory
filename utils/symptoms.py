@@ -1,5 +1,5 @@
 from utils.db_tools import log_to_db
-from utils.whatsapp import send_text_message
+from utils.translation import send_translated_message
 
 async def process_symptoms_message(sender_id, conversation, message_data):
     # Process symptoms from extracted message data
@@ -13,7 +13,7 @@ async def process_symptoms_message(sender_id, conversation, message_data):
 async def request_symptoms(sender_id):
     # Ask user for symptoms
     message = "Hello! In order to help you with a medical referral, I need to know what symptoms you're experiencing. Please describe any discomfort or symptoms you're experiencing."
-    await send_text_message(sender_id, message)
+    await send_translated_message(sender_id, message)
     log_to_db("INFO", "Requested symptoms from user", {"sender_id": sender_id})
 
 async def update_conversation_symptoms(sender_id, symptoms):

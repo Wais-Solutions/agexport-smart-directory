@@ -5,7 +5,7 @@ from datetime import datetime
 from pymongo import MongoClient
 
 from utils.chat import handle_message
-from utils.whatsapp import send_text_message
+from utils.translation import send_translated_message
 from utils.db_tools import log_to_db
 
 
@@ -59,9 +59,10 @@ async def callback(request: Request):
         print("Error:", e)
         # Send error message to user if possible
         try:
-            if 'sender_id' in locals():
+            if 'message' in locals() and message:
+                sender_id = message["from"]
                 error_message = "Sorry, there was an error processing your message. Please try again."
-                await send_text_message(message["from"], error_message)
+                await send_translated_message(sender_id, error_message)
         except:
             pass
 

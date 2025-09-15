@@ -1,6 +1,7 @@
 from utils.db_tools import log_to_db, get_conversation
 from utils.llm import geocode_location
-from utils.whatsapp import send_text_message, send_initial_location_request
+from utils.whatsapp import send_initial_location_request
+from utils.translation import send_translated_message
 
 async def process_location_message(sender_id, conversation, message_data, location_data):
     # Process location from message data or GPS coordinates
@@ -40,7 +41,7 @@ async def process_location_reference(sender_id, location_text):
             
             # Send confirmation
             confirmation_message = f"Perfect! I've found your location: {formatted_address}. I can now help you with medical referrals in your area."
-            await send_text_message(sender_id, confirmation_message)
+            await send_translated_message(sender_id, confirmation_message)
             
             log_to_db("INFO", "Location successfully geocoded and saved", {
                 "sender_id": sender_id,
@@ -51,7 +52,7 @@ async def process_location_reference(sender_id, location_text):
         else:
             # Location not found in Guatemala
             error_message = "I couldn't find that location in Guatemala. Please try the name of your city or municipality (e.g., 'Guatemala City,' 'Antigua Guatemala,' 'Quetzaltenango.')."
-            await send_text_message(sender_id, error_message)
+            await send_translated_message(sender_id, error_message)
             
             log_to_db("WARNING", "Location not found in geocoding", {
                 "sender_id": sender_id,
@@ -66,7 +67,7 @@ async def process_location_reference(sender_id, location_text):
         })
         
         error_message = "There was an error processing your location. Please try again."
-        await send_text_message(sender_id, error_message)
+        await send_translated_message(sender_id, error_message)
 
 async def request_location(sender_id):
     # Send interactive location request
