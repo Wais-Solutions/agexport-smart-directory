@@ -1,69 +1,48 @@
-import os 
-from fastapi import FastAPI, Request, Response, Query, HTTPException, APIRouter
-from fastapi.responses import PlainTextResponse
-from datetime import datetime
-from pymongo import MongoClient
-
-from utils.chat import handle_message
-from utils.translation import send_translated_message
 from utils.db_tools import log_to_db
+from utils.llm import get_completition
+from utils.translation import send_translated_message
 
-
-router = APIRouter() 
-WHATSAPP_HOOK_TOKEN = os.environ.get("WHATSAPP_HOOK_TOKEN")
-
-#### API PING
-@router.get("/")
-def home(): 
-    return "Messages router is live"
-
-#### META VERIFICATION ENDPOINT 
-@router.get("/webhook")
-async def verify_webhook(request: Request):
-    params = dict(request.query_params)
-    mode = params.get("hub.mode")
-    token = params.get("hub.verify_token")
-    challenge = params.get("hub.challenge")
-
-    if mode and token:
-        log_to_db("INFO", "Webhook verification attempt", {
-            "mode": mode,
-            "token_provided": token,
-            "expected_token": WHATSAPP_HOOK_TOKEN
+async def provide_medical_referral(sender_id, conversation):
+    # Generate and send medical referral based on symptoms and location
+    symptoms = conversation.get('symptoms', [])
+    location = conversation.get('location', {})
+    
+    # Create prompt for medical referral
+    symptoms_text = ", ".join(symptoms)
+    location_text = location.get('text_description', 'ubicación no especificada')
+    
+    prompt = f"A patient at {location_text} presents with the following symptoms: {symptoms_text}. Provide an appropriate medical referral and suggest which type of specialist they should see."
+    
+    try:
+        # Get medical recommendation
+        recommendation = await get_completition(prompt)
+        
+        # Send recommendation to user (will be translated automatically)
+        await send_translated_message(sender_id, recommendation)
+        
+        # Update conversation with recommendation
+        await update_conversation_recommendation(sender_id, recommendation)
+        
+        log_to_db("INFO", "Medical referral provided", {
+            "sender_id": sender_id,
+            "symptoms": symptoms,
+            "location": location_text,
+            "recommendation": recommendation
         })
         
-        if mode == "subscribe" and token == WHATSAPP_HOOK_TOKEN:
-            return PlainTextResponse(content=challenge, status_code=200)
-        else:
-            raise HTTPException(status_code=403, detail="Verification failed")
-    else:
-        raise HTTPException(status_code=400, detail="Missing parameters")
-
-#### MAIN     
-@router.post("/webhook")
-async def callback(request: Request): 
-    data = await request.json()
-    # print("Incoming data:", data)
-
-    try:
-        entry = data["entry"][0]
-        changes = entry["changes"][0]
-        value = changes["value"]
-        messages = value.get("messages")
-
-        if messages:
-            message = messages[0]
-            await handle_message(message)
-
     except Exception as e:
-        print("Error:", e)
-        # Send error message to user if possible
-        try:
-            if 'message' in locals() and message:
-                sender_id = message["from"]
-                error_message = "Sorry, there was an error processing your message. Please try again."
-                await send_translated_message(sender_id, error_message)
-        except:
-            pass
+        log_to_db("ERROR", "Error generating medical referral", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        
+        error_message = "Sorry, there was an error generating your medical referral. Please try again."
+        await send_translated_message(sender_id, error_message)
 
-    return {"status": "received"}
+async def update_conversation_recommendation(sender_id, recommendation):
+    # Update conversation with medical recommendation
+    from utils.db_tools import ongoing_conversations
+    ongoing_conversations.update_one(
+        {"sender_id": sender_id},
+        {"$set": {"recommendation": recommendation}}
+    )
