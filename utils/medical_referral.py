@@ -1,6 +1,7 @@
 from utils.db_tools import log_to_db
 from utils.llm import get_completition
 from utils.translation import send_translated_message
+from datetime import datetime
 
 async def provide_medical_referral(sender_id, conversation):
     # Generate and send medical referral based on symptoms and location
@@ -19,6 +20,9 @@ async def provide_medical_referral(sender_id, conversation):
             # Found matching partners - send their information
             referral_message = await format_partner_referrals(matching_partners)
             await send_translated_message(sender_id, referral_message)
+            
+            # Save referrals to the referrals table
+            await save_referrals(sender_id, matching_partners, symptoms, location)
             
             log_to_db("INFO", "Medical referral provided with partners", {
                 "sender_id": sender_id,
@@ -62,7 +66,7 @@ async def find_matching_partners(symptoms, location):
         if location and location.get('text_description'):
             patient_department = await extract_department_from_location(location['text_description'])
         
-        # Get all partners (we'll filter programmatically for better control)
+        # Get all partners (well filter programmatically for better control)
         all_partners = list(partners.find({}))
         
         matching_partners = []
@@ -113,7 +117,7 @@ async def find_matching_partners(symptoms, location):
         })
         return []
 
-# Extract department from location text using LLM
+# Extract department from location text using LL
 async def extract_department_from_location(location_text):
     try:
         from utils.llm import groq_client
@@ -243,12 +247,12 @@ async def format_partner_referrals(partners):
         
         partner_info = f"""
         {i}. {name}
-        * Location: {direccion}
-        * Schedule: {schedule_info}
-        * Price range: {escala_precios}
-        * Languages: {languages}
-        * Phone: {phone}
-        * WhatsApp: {whatsapp}
+        - Location: {direccion}
+        - Schedule: {schedule_info}
+        - Price range: {escala_precios}
+        - Languages: {languages}
+        - Phone: {phone}
+        - WhatsApp: {whatsapp}
         """
         message_parts.append(partner_info)
     
@@ -294,3 +298,61 @@ async def update_conversation_recommendation(sender_id, recommendation):
         {"sender_id": sender_id},
         {"$set": {"recommendation": recommendation_text}}
     )
+
+# Save referrals to the referrals collection
+async def save_referrals(sender_id, partners, symptoms, location):
+    try:
+        from utils.db_tools import db
+        
+        referrals = db["referrals"]
+        
+        # Extract department from location for department match tracking
+        patient_department = None
+        if location and location.get('text_description'):
+            patient_department = await extract_department_from_location(location['text_description'])
+        
+        # Create a referral record for each partner
+        referral_records = []
+        
+        for partner in partners:
+            # Check if partner is in same department
+            department_match = False
+            if patient_department and partner.get('ubicaciones'):
+                for ubicacion in partner['ubicaciones']:
+                    if ubicacion.get('departamento', '').upper() == patient_department.upper():
+                        department_match = True
+                        break
+            
+            referral_record = {
+                "patient_phone_number": sender_id,
+                "partner_id": partner.get('_id'),
+                "partner_name": partner.get('nombre_comercial'),
+                "symptoms_matched": symptoms,
+                "department_match": patient_department if department_match else None,
+                "referred_at": datetime.utcnow(),
+                "status": "sent"
+            }
+            
+            referral_records.append(referral_record)
+        
+        # Insert all referral records
+        if referral_records:
+            result = referrals.insert_many(referral_records)
+            
+            log_to_db("INFO", "Referrals saved to database", {
+                "patient_phone_number": sender_id,
+                "referrals_count": len(referral_records),
+                "partner_names": [r["partner_name"] for r in referral_records],
+                "inserted_ids": [str(id) for id in result.inserted_ids]
+            })
+            
+        return True
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error saving referrals", {
+            "patient_phone_number": sender_id,
+            "error": str(e),
+            "symptoms": symptoms,
+            "partners_count": len(partners) if partners else 0
+        })
+        return False

@@ -14,6 +14,7 @@ ongoing_conversations = db["ongoing_conversations"]
 debugging_logs = db["debugging-logs"]
 patients = db["patients"]
 partners = db["partners"]
+referrals = db["referrals"]
 
 def log_to_db(level, message, extra_data=None):
     # Save log messages to MongoDB debugging-logs collection
@@ -199,3 +200,32 @@ def get_patient_data(phone_number):
             "error": str(e)
         })
         return None
+
+# Get referrals for a specific patient
+def get_patient_referrals(phone_number):
+    try:
+        patient_referrals = list(referrals.find({"patient_phone_number": phone_number}).sort("referred_at", -1))
+        return patient_referrals
+    except Exception as e:
+        log_to_db("ERROR", "Error getting patient referrals", {
+            "phone_number": phone_number,
+            "error": str(e)
+        })
+        return []
+
+# Update referral status
+def update_referral_status(referral_id, new_status):
+    try:
+        from bson import ObjectId
+        result = referrals.update_one(
+            {"_id": ObjectId(referral_id)},
+            {"$set": {"status": new_status, "status_updated_at": datetime.utcnow()}}
+        )
+        return result.modified_count > 0
+    except Exception as e:
+        log_to_db("ERROR", "Error updating referral status", {
+            "referral_id": referral_id,
+            "new_status": new_status,
+            "error": str(e)
+        })
+        return False
