@@ -1,5 +1,5 @@
 import os
-from utils.db_tools import get_conversation, new_conversation, log_to_db
+from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data
 from utils.llm import extract_data
 from utils.location import process_location_message, request_location
 from utils.symptoms import process_symptoms_message, request_symptoms
@@ -33,6 +33,9 @@ async def handle_message(message):
             "extracted_data": message_data
         })
         
+        # Save patient data if any information was extracted
+        await save_patient_data_from_extraction(sender_id, conversation, message_data)
+        
         # Store the message in conversation for reference
         from utils.db_tools import ongoing_conversations
         ongoing_conversations.update_one(
@@ -54,6 +57,9 @@ async def handle_message(message):
             "sender_id": sender_id,
             "location_data": location_data
         })
+        
+        # Save GPS location to patient data
+        await save_patient_data_from_gps(sender_id, conversation, location_data)
         
         # Store the GPS message
         from utils.db_tools import ongoing_conversations
@@ -83,6 +89,85 @@ async def handle_message(message):
                 await request_symptoms(sender_id)
             elif not has_location(conversation):
                 await request_location(sender_id)
+
+# Saves the patient data extracted from the text message
+async def save_patient_data_from_extraction(sender_id, conversation, message_data):
+    try:
+        # Obtain current patient data (if any)
+        current_symptoms = conversation.get("symptoms", [])
+        current_location = conversation.get("location")
+        current_language = conversation.get("language")
+        
+        # Combine new and existing data
+        new_symptoms = message_data.get("symptoms", [])
+        new_location_text = message_data.get("location")
+        new_language = message_data.get("language")
+        
+        # Symptoms: Adding new ones to existing ones (no duplicates)
+        all_symptoms = list(set(current_symptoms + new_symptoms)) if new_symptoms else current_symptoms
+        
+        # Location: Keep existing if there is no new one
+        location_to_save = current_location
+        if new_location_text and not current_location:
+            # We only save the location text if we dont have coordinates yet
+            location_to_save = {
+                "lat": None,
+                "lon": None,
+                "text_description": new_location_text
+            }
+        
+        # Language: use new if exists, otherwise keep current
+        language_to_save = new_language if new_language else current_language
+        
+        # Save only if there is new information worth saving
+        if new_symptoms or new_location_text or new_language:
+            save_patient_data(
+                phone_number=sender_id,
+                symptoms=all_symptoms,
+                location=location_to_save,
+                language=language_to_save,
+                urgency=None  # Always None (for now)
+            )
+            
+            log_to_db("INFO", "Patient data updated from text extraction", {
+                "sender_id": sender_id,
+                "new_symptoms": new_symptoms,
+                "new_location": new_location_text,
+                "new_language": new_language
+            })
+            
+    except Exception as e:
+        log_to_db("ERROR", "Error saving patient data from extraction", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+
+# Saves patient data when GPS location is received
+async def save_patient_data_from_gps(sender_id, conversation, location_data):
+    try:
+        # Obtain current patient data
+        current_symptoms = conversation.get("symptoms", [])
+        current_language = conversation.get("language")
+        
+        # Save with the new GPS location
+        save_patient_data(
+            phone_number=sender_id,
+            symptoms=current_symptoms,
+            location=location_data,
+            language=current_language,
+            urgency=None  # Always None (for now)
+        )
+        
+        log_to_db("INFO", "Patient data updated with GPS location", {
+            "sender_id": sender_id,
+            "location": location_data
+        })
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error saving patient data from GPS", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
 
 def has_symptoms(conversation): 
     symptoms = conversation.get("symptoms")

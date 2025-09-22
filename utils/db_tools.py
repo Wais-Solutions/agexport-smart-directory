@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import os 
 import datetime 
+import phonenumbers
+from phonenumbers import geocoder
 
 mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
 mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
@@ -90,3 +92,106 @@ def reset_location_confirmation_attempts(sender_id):
         {"sender_id": sender_id},
         {"$set": {"location_confirmation_attempts": 0}}
     )
+
+# Patient collection
+patients = db["patients"]
+
+# Extract country code from phone number
+def get_country_from_phone(phone_number):
+    try:
+        # Add + if you don't have it
+        if not phone_number.startswith('+'):
+            phone_number = '+' + phone_number
+        
+        # Parse the number
+        parsed_number = phonenumbers.parse(phone_number, None)
+        
+        # Get country code
+        country_code = parsed_number.country_code
+        
+        # Get country name
+        country_name = geocoder.description_for_number(parsed_number, "en")
+        
+        return {
+            "country_code": country_code,
+            "country_name": country_name
+        }
+    except Exception as e:
+        log_to_db("ERROR", "Error extracting country from phone", {
+            "phone_number": phone_number,
+            "error": str(e)
+        })
+        return {
+            "country_code": None,
+            "country_name": None
+        }
+
+# Save or update patient information in the patients collection
+def save_patient_data(phone_number, symptoms=None, location=None, language=None, urgency=None):    
+    try:
+        # Get country information
+        country_info = get_country_from_phone(phone_number)
+        
+        # Prepare patient data
+        patient_data = {
+            "phone_number": phone_number,
+            "symptoms": symptoms or [],
+            "location": location,
+            "language": language,
+            "country_code": country_info["country_code"],
+            "country_name": country_info["country_name"],
+            "urgency": urgency,  # Siempre None por ahora
+            "updated_at": datetime.utcnow(),
+            "created_at": datetime.utcnow()
+        }
+        
+        # Use upsert to update if exists or create if not exists
+        result = patients.update_one(
+            {"phone_number": phone_number},
+            {
+                "$set": {
+                    "symptoms": symptoms or [],
+                    "location": location,
+                    "language": language,
+                    "country_code": country_info["country_code"],
+                    "country_name": country_info["country_name"],
+                    "urgency": urgency,
+                    "updated_at": datetime.utcnow()
+                },
+                "$setOnInsert": {
+                    "phone_number": phone_number,
+                    "created_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        log_to_db("INFO", "Patient data saved", {
+            "phone_number": phone_number,
+            "symptoms": symptoms,
+            "location": location,
+            "language": language,
+            "country": country_info["country_name"],
+            "was_insert": result.upserted_id is not None
+        })
+        
+        return True
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error saving patient data", {
+            "phone_number": phone_number,
+            "error": str(e)
+        })
+        return False
+
+# Obtain patient information by phone number
+def get_patient_data(phone_number):
+    try:
+        patient = patients.find_one({"phone_number": phone_number})
+        return patient
+    except Exception as e:
+        log_to_db("ERROR", "Error getting patient data", {
+            "phone_number": phone_number,
+            "error": str(e)
+        })
+        return None

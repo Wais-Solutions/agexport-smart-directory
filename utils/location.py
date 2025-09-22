@@ -1,7 +1,8 @@
 from utils.db_tools import (
     log_to_db, get_conversation, set_pending_location_confirmation, 
     get_pending_location_confirmation, clear_pending_location_confirmation,
-    increment_location_confirmation_attempts, reset_location_confirmation_attempts
+    increment_location_confirmation_attempts, reset_location_confirmation_attempts,
+    save_patient_data
 )
 from utils.llm import geocode_location, detect_confirmation
 from utils.whatsapp import send_initial_location_request
@@ -28,6 +29,10 @@ async def process_location_message(sender_id, conversation, message_data, locati
         if location_data:
             # Direct GPS location received - save immediately (no confirmation needed for GPS)
             await update_conversation_location(sender_id, location_data)
+            
+            # Update also in the patient collection
+            await update_patient_location(sender_id, conversation, location_data)
+            
             reset_location_confirmation_attempts(sender_id)
             log_to_db("INFO", "Location updated from GPS", {
                 "sender_id": sender_id,
@@ -62,6 +67,10 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
         if confirmation_result.get('confirmed', False):
             # User confirmed the location
             await update_conversation_location(sender_id, pending_location)
+            
+            # Update also in the patient collection
+            await update_patient_location(sender_id, conversation, pending_location)
+            
             clear_pending_location_confirmation(sender_id)
             reset_location_confirmation_attempts(sender_id)
             
@@ -189,6 +198,33 @@ async def update_conversation_location(sender_id, location_data):
         {"sender_id": sender_id},
         {"$set": {"location": location_data}}
     )
+
+# Update the patient's location in the patients collection
+async def update_patient_location(sender_id, conversation, location_data):
+    try:
+        # Get current conversation data
+        current_symptoms = conversation.get("symptoms", [])
+        current_language = conversation.get("language")
+        
+        # Save/update to patient collection
+        save_patient_data(
+            phone_number=sender_id,
+            symptoms=current_symptoms,
+            location=location_data,
+            language=current_language,
+            urgency=None  # Always None (for now)
+        )
+        
+        log_to_db("INFO", "Patient location updated in patients collection", {
+            "sender_id": sender_id,
+            "location": location_data
+        })
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error updating patient location", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
 
 def has_location(conversation): 
     location = conversation.get("location")
