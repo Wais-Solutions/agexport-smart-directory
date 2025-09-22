@@ -1,8 +1,6 @@
 from pymongo import MongoClient
 import os 
-import datetime 
-import phonenumbers
-from phonenumbers import geocoder
+from datetime import datetime
 
 mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
 mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
@@ -14,7 +12,7 @@ db = client[mongo_db]
 
 ongoing_conversations = db["ongoing_conversations"]
 debugging_logs = db["debugging-logs"]
-
+patients = db["patients"]
 
 def log_to_db(level, message, extra_data=None):
     # Save log messages to MongoDB debugging-logs collection
@@ -93,38 +91,43 @@ def reset_location_confirmation_attempts(sender_id):
         {"$set": {"location_confirmation_attempts": 0}}
     )
 
-# Patient collection
-patients = db["patients"]
-
-# Extract country code from phone number
+# [TEMP] Extract country code from phone number (simplified)
 def get_country_from_phone(phone_number):
     try:
         # Add + if you don't have it
         if not phone_number.startswith('+'):
             phone_number = '+' + phone_number
         
-        # Parse the number
-        parsed_number = phonenumbers.parse(phone_number, None)
-        
-        # Get country code
-        country_code = parsed_number.country_code
-        
-        # Get country name
-        country_name = geocoder.description_for_number(parsed_number, "en")
-        
-        return {
-            "country_code": country_code,
-            "country_name": country_name
+        # Basic mapping of common country codes (you can expand this)
+        country_codes = {
+            '+502': {'country_code': 502, 'country_name': 'Guatemala'},
+            '+1': {'country_code': 1, 'country_name': 'United States'},
+            '+52': {'country_code': 52, 'country_name': 'Mexico'},
+            '+503': {'country_code': 503, 'country_name': 'El Salvador'},
+            '+504': {'country_code': 504, 'country_name': 'Honduras'},
+            '+505': {'country_code': 505, 'country_name': 'Nicaragua'},
+            '+506': {'country_code': 506, 'country_name': 'Costa Rica'},
+            '+507': {'country_code': 507, 'country_name': 'Panama'}
         }
+        
+        # Search for country code matches
+        for code, info in country_codes.items():
+            if phone_number.startswith(code):
+                return info
+        
+        # If Guatemala code not found, try to extract first digits
+        if phone_number.startswith('+502'):
+            return {'country_code': 502, 'country_name': 'Guatemala'}
+        
+        # Generic fallback
+        return {'country_code': None, 'country_name': 'Unknown'}
+        
     except Exception as e:
         log_to_db("ERROR", "Error extracting country from phone", {
             "phone_number": phone_number,
             "error": str(e)
         })
-        return {
-            "country_code": None,
-            "country_name": None
-        }
+        return {'country_code': None, 'country_name': 'Unknown'}
 
 # Save or update patient information in the patients collection
 def save_patient_data(phone_number, symptoms=None, location=None, language=None, urgency=None):    
@@ -140,7 +143,7 @@ def save_patient_data(phone_number, symptoms=None, location=None, language=None,
             "language": language,
             "country_code": country_info["country_code"],
             "country_name": country_info["country_name"],
-            "urgency": urgency,  # Siempre None por ahora
+            "urgency": urgency,  # Always None for now
             "updated_at": datetime.utcnow(),
             "created_at": datetime.utcnow()
         }
