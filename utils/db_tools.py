@@ -13,6 +13,7 @@ db = client[mongo_db]
 ongoing_conversations = db["ongoing_conversations"]
 debugging_logs = db["debugging-logs"]
 patients = db["patients"]
+partners = db["partners"]
 
 def log_to_db(level, message, extra_data=None):
     # Save log messages to MongoDB debugging-logs collection
