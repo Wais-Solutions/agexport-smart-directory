@@ -1,7 +1,8 @@
-fastapi
 uvicorn
 httpx
 pymongo
 groq
-pydantic>=2.4
-typing-extensions>=4.12.0,<5
+fastapi==0.115.0
+pydantic==2.9.0
+pydantic-core==2.23.0
+typing_extensions==4.12.2
