@@ -3,3 +3,5 @@ uvicorn
 httpx
 pymongo
 groq
+pydantic>=2.4
+typing-extensions>=4.12.0,<5
