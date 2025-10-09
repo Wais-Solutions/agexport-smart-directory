@@ -26,6 +26,7 @@ async def send_text_message(sender_id, message):
     
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        print(f"resp - {resp}")
         return resp
 
 async def send_initial_location_request(sender_id):
