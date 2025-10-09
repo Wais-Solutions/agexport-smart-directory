@@ -21,6 +21,8 @@ async def send_text_message(sender_id, message):
             "body": message
         }
     }
+
+    print(f'Sending text to {sender_id}')
     
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
