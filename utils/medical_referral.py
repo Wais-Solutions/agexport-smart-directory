@@ -139,7 +139,7 @@ async def extract_department_from_location(location_text):
                 }
             ],
             temperature=0,
-            max_completion_tokens=50,
+            # max_completion_tokens=50,
             stream=False
         )
         
@@ -189,7 +189,7 @@ async def check_specialty_match(symptoms, specialties):
                 }
             ],
             temperature=0,
-            max_completion_tokens=150,
+            # max_completion_tokens=150,
             stream=False
         )
         

@@ -33,7 +33,7 @@ async def translate_message(message_text, target_language, sender_id=None):
                 }
             ],
             temperature=0,
-            max_completion_tokens=1024,
+            # max_completion_tokens=1024,
             top_p=1,
             stream=False
         )
