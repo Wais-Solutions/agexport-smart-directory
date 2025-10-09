@@ -22,7 +22,7 @@ async def extract_data(message):
         }
         ],
         temperature=0,
-        max_completion_tokens=8192,
+        # max_completion_tokens=8192,
         top_p=1,
         stream=True,
         stop=None
