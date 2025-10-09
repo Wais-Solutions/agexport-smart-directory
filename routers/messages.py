@@ -43,7 +43,7 @@ async def verify_webhook(request: Request):
 @router.post("/webhook")
 async def callback(request: Request): 
     data = await request.json()
-    # print("Incoming data:", data)
+    print("Incoming data:", data)
 
     try:
         entry = data["entry"][0]
