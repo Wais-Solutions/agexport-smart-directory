@@ -3,3 +3,4 @@ httpx
 pymongo
 groq
 fastapi
+typing_extensions==4.7.1
