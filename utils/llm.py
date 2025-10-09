@@ -72,7 +72,7 @@ async def detect_confirmation(message_text):
             }
         ],
         temperature=0,
-        max_completion_tokens=256,
+        # max_completion_tokens=256,
         top_p=1,
         stream=False
     )
@@ -269,7 +269,7 @@ async def get_completition(prompt):
             , {"role" : "user", "content": prompt}
         ]
         , temperature = 0.8 
-        , max_completion_tokens = 120
+        # , max_completion_tokens = 120
         , top_p= 1 
     )
 
