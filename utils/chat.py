@@ -90,18 +90,32 @@ async def handle_message(message):
     # Check if referral was already provided (use .get() with default False for old documents)
     referral_provided = conversation.get("referral_provided", False)
     
-    # If location was just obtained in this message, send "searching" message
-    if not had_location_before and has_location_now and has_symptoms(conversation) and not referral_provided:
-        # Send "searching" message ONLY when location is just confirmed
+    # Determine if location was JUST obtained in this message
+    location_just_obtained = not had_location_before and has_location_now
+    
+    log_to_db("DEBUG", "Checking referral conditions", {
+        "sender_id": sender_id,
+        "had_location_before": had_location_before,
+        "has_location_now": has_location_now,
+        "location_just_obtained": location_just_obtained,
+        "has_symptoms": has_symptoms(conversation),
+        "referral_provided": referral_provided
+    })
+    
+    # Only provide referral if:
+    # 1. Referral not already provided
+    # 2. Has symptoms
+    # 3. Has location now
+    # 4. Location was JUST obtained (prevents double execution)
+    if not referral_provided and has_symptoms(conversation) and has_location_now and location_just_obtained:
+        # Send "searching" message ONLY ONCE when location is just confirmed
         searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
         await send_translated_message(sender_id, searching_message)
         
         log_to_db("INFO", "Sent searching message after location confirmation", {
             "sender_id": sender_id
         })
-    
-    # Check if we have all required data and provide referral (only once)
-    if not referral_provided and has_symptoms(conversation) and has_location_now:
+        
         # Provide the referral
         await provide_medical_referral(sender_id, conversation)
         

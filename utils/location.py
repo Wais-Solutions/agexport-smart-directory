@@ -35,17 +35,11 @@ async def process_location_message(sender_id, conversation, message_data, locati
             
             reset_location_confirmation_attempts(sender_id)
             
-            # Send "searching for recommendations" message ONLY if user also has symptoms
-            from utils.chat import has_symptoms
-            conversation_refreshed = get_conversation(sender_id)
-            if has_symptoms(conversation_refreshed):
-                searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
-                await send_translated_message(sender_id, searching_message)
-            
             log_to_db("INFO", "Location updated from GPS", {
                 "sender_id": sender_id,
                 "location": location_data
             })
+            # NOTE: "searching" message is sent by chat.py after this returns
         elif message_data.get('location'):
             # Text reference to location - need to geocode and confirm
             await process_location_reference(sender_id, message_data['location'])
@@ -80,21 +74,11 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
             clear_pending_location_confirmation(sender_id)
             reset_location_confirmation_attempts(sender_id)
             
-            # Send searching message ONLY if user also has symptoms
-            from utils.chat import has_symptoms
-            conversation_refreshed = get_conversation(sender_id)
-            if has_symptoms(conversation_refreshed):
-                searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
-                await send_translated_message(sender_id, searching_message)
-            else:
-                # Just confirm location saved
-                confirmation_message = f"Perfect! I've saved your location: {pending_location['text_description']}."
-                await send_translated_message(sender_id, confirmation_message)
-            
             log_to_db("INFO", "Location confirmed and saved", {
                 "sender_id": sender_id,
                 "location": pending_location
             })
+            # NOTE: "searching" message will be sent by chat.py after this returns
         else:
             # User rejected the location
             clear_pending_location_confirmation(sender_id)
