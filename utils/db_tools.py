@@ -49,6 +49,7 @@ def new_conversation(sender_id):
         "language": None,
         "messages": [],
         "recommendation": None,
+        "referral_provided": False,  # Flag to track if referral was already sent
         "waiting_for_location_reference": False,  # Flag to know if we're waiting for location reference
         "pending_location_confirmation": None,  # Stores location data waiting for confirmation
         "location_confirmation_attempts": 0  # Track failed confirmation attempts
