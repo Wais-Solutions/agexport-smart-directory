@@ -266,7 +266,7 @@ async def format_partner_referrals(partners):
         else:
             # Fallback to first location if closest not available
             locations = partner.get('location', [])
-            direccion = locations[0].get('direccion', 'Address not available') if locations else 'Address not available'
+            direccion = locations[0].get('direccion', 'Address not available.') if locations else 'Address not available'
         
         # Distance
         distance = partner.get('distance_km')
