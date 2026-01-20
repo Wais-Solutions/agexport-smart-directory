@@ -39,6 +39,7 @@ async def process_location_message(sender_id, conversation, message_data, locati
                 "sender_id": sender_id,
                 "location": location_data
             })
+            # NOTE: "searching" message is sent by chat.py after this returns
         elif message_data.get('location'):
             # Text reference to location - need to geocode and confirm
             await process_location_reference(sender_id, message_data['location'])
@@ -77,6 +78,7 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
                 "sender_id": sender_id,
                 "location": pending_location
             })
+            # NOTE: "searching" message will be sent by chat.py after this returns
         else:
             # User rejected the location
             clear_pending_location_confirmation(sender_id)

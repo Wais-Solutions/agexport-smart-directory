@@ -6,6 +6,7 @@ from utils.symptoms import process_symptoms_message, request_symptoms
 from utils.medical_referral import provide_medical_referral
 from utils.whatsapp import send_text_message
 from utils.language import process_language_message
+from utils.translation import send_translated_message
 
 async def handle_message(message): 
     sender_id = message["from"]
@@ -74,46 +75,69 @@ async def handle_message(message):
     # Process symptoms
     await process_symptoms_message(sender_id, conversation, message_data)
     
-    # Process location
+    # Process location with the message text for confirmation handling
     await process_location_message(sender_id, conversation, message_data, location_data)
     
     # Process language
     await process_language_message(sender_id, conversation, message_data)
     
-    # Refresh conversation
+    # Refresh conversation to get updated data
     conversation = get_conversation(sender_id=sender_id)
     
-    # Check conditions
+    # Check if user now has location (after processing)
     has_location_now = has_location(conversation)
+    
+    # Check if referral was already provided (use .get() with default False for old documents)
     referral_provided = conversation.get("referral_provided", False)
+    
+    # Determine if location was JUST obtained in this message
     location_just_obtained = not had_location_before and has_location_now
     
-    log_to_db("DEBUG", "Referral check", {
+    log_to_db("DEBUG", "Checking referral conditions", {
         "sender_id": sender_id,
-        "has_symptoms": has_symptoms(conversation),
+        "had_location_before": had_location_before,
         "has_location_now": has_location_now,
         "location_just_obtained": location_just_obtained,
+        "has_symptoms": has_symptoms(conversation),
         "referral_provided": referral_provided
     })
     
-    # Provide referral ONCE when location is just obtained
+    # Only provide referral if:
+    # 1. Referral not already provided
+    # 2. Has symptoms
+    # 3. Has location now
+    # 4. Location was JUST obtained (prevents double execution)
     if not referral_provided and has_symptoms(conversation) and has_location_now and location_just_obtained:
+        # Send "searching" message ONLY ONCE when location is just confirmed
+        searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+        await send_translated_message(sender_id, searching_message)
+        
+        log_to_db("INFO", "Sent searching message after location confirmation", {
+            "sender_id": sender_id
+        })
+        
+        # Provide the referral
         await provide_medical_referral(sender_id, conversation)
         
-        # Mark as provided
+        # Mark referral as provided
         from utils.db_tools import ongoing_conversations
         ongoing_conversations.update_one(
             {"sender_id": sender_id},
             {"$set": {"referral_provided": True}}
         )
         
-        log_to_db("INFO", "Referral provided", {"sender_id": sender_id})
+        log_to_db("INFO", "Referral provided and marked as complete", {
+            "sender_id": sender_id
+        })
     elif referral_provided:
-        log_to_db("DEBUG", "Referral already provided", {"sender_id": sender_id})
+        # Referral already provided - don't send again
+        log_to_db("DEBUG", "Referral already provided, skipping", {
+            "sender_id": sender_id
+        })
     else:
-        # Ask for missing data
+        # Missing data - ask for what's missing (only if not waiting for confirmation)
         pending_location = conversation.get("pending_location_confirmation")
-        if not pending_location:
+        if not pending_location:  # Only ask for missing data if not waiting for confirmation
             if not has_symptoms(conversation):
                 await request_symptoms(sender_id)
             elif not has_location_now:
@@ -122,36 +146,43 @@ async def handle_message(message):
 # Saves the patient data extracted from the text message
 async def save_patient_data_from_extraction(sender_id, conversation, message_data):
     try:
+        # Obtain current patient data (if any)
         current_symptoms = conversation.get("symptoms", [])
         current_location = conversation.get("location")
         current_language = conversation.get("language")
         
+        # Combine new and existing data
         new_symptoms = message_data.get("symptoms", [])
         new_location_text = message_data.get("location")
         new_language = message_data.get("language")
         
+        # Symptoms: Adding new ones to existing ones (no duplicates)
         all_symptoms = list(set(current_symptoms + new_symptoms)) if new_symptoms else current_symptoms
         
+        # Location: Keep existing if there is no new one
         location_to_save = current_location
         if new_location_text and not current_location:
+            # We only save the location text if we dont have coordinates yet
             location_to_save = {
                 "lat": None,
                 "lon": None,
                 "text_description": new_location_text
             }
         
+        # Language: use new if exists, otherwise keep current
         language_to_save = new_language if new_language else current_language
         
+        # Save only if there is new information worth saving
         if new_symptoms or new_location_text or new_language:
             save_patient_data(
                 phone_number=sender_id,
                 symptoms=all_symptoms,
                 location=location_to_save,
                 language=language_to_save,
-                urgency=None
+                urgency=None  # Always None (for now)
             )
             
-            log_to_db("INFO", "Patient data updated", {
+            log_to_db("INFO", "Patient data updated from text extraction", {
                 "sender_id": sender_id,
                 "new_symptoms": new_symptoms,
                 "new_location": new_location_text,
@@ -159,7 +190,7 @@ async def save_patient_data_from_extraction(sender_id, conversation, message_dat
             })
             
     except Exception as e:
-        log_to_db("ERROR", "Error saving patient data", {
+        log_to_db("ERROR", "Error saving patient data from extraction", {
             "sender_id": sender_id,
             "error": str(e)
         })
@@ -167,24 +198,26 @@ async def save_patient_data_from_extraction(sender_id, conversation, message_dat
 # Saves patient data when GPS location is received
 async def save_patient_data_from_gps(sender_id, conversation, location_data):
     try:
+        # Obtain current patient data
         current_symptoms = conversation.get("symptoms", [])
         current_language = conversation.get("language")
         
+        # Save with the new GPS location
         save_patient_data(
             phone_number=sender_id,
             symptoms=current_symptoms,
             location=location_data,
             language=current_language,
-            urgency=None
+            urgency=None  # Always None (for now)
         )
         
-        log_to_db("INFO", "GPS data saved", {
+        log_to_db("INFO", "Patient data updated with GPS location", {
             "sender_id": sender_id,
             "location": location_data
         })
         
     except Exception as e:
-        log_to_db("ERROR", "Error saving GPS data", {
+        log_to_db("ERROR", "Error saving patient data from GPS", {
             "sender_id": sender_id,
             "error": str(e)
         })
