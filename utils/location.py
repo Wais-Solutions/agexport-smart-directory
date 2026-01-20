@@ -34,6 +34,14 @@ async def process_location_message(sender_id, conversation, message_data, locati
             await update_patient_location(sender_id, conversation, location_data)
             
             reset_location_confirmation_attempts(sender_id)
+            
+            # Send "searching for recommendations" message ONLY if user also has symptoms
+            from utils.chat import has_symptoms
+            conversation_refreshed = get_conversation(sender_id)
+            if has_symptoms(conversation_refreshed):
+                searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+                await send_translated_message(sender_id, searching_message)
+            
             log_to_db("INFO", "Location updated from GPS", {
                 "sender_id": sender_id,
                 "location": location_data
@@ -47,8 +55,6 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
     message_text = ""
     
     # Extract text from message_data if available
-    # Note: You might need to pass the original message text here
-    # For now, we'll check if there are symptoms or other data that might indicate text
     conversation = get_conversation(sender_id)
     if conversation and conversation.get('messages'):
         # Get the last message text
@@ -74,8 +80,16 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
             clear_pending_location_confirmation(sender_id)
             reset_location_confirmation_attempts(sender_id)
             
-            confirmation_message = f"Perfect! I've saved your location: {pending_location['text_description']}. I can now help you with medical referrals in your area."
-            await send_translated_message(sender_id, confirmation_message)
+            # Send searching message ONLY if user also has symptoms
+            from utils.chat import has_symptoms
+            conversation_refreshed = get_conversation(sender_id)
+            if has_symptoms(conversation_refreshed):
+                searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+                await send_translated_message(sender_id, searching_message)
+            else:
+                # Just confirm location saved
+                confirmation_message = f"Perfect! I've saved your location: {pending_location['text_description']}."
+                await send_translated_message(sender_id, confirmation_message)
             
             log_to_db("INFO", "Location confirmed and saved", {
                 "sender_id": sender_id,

@@ -18,9 +18,6 @@ async def handle_message(message):
     if not conversation: 
         conversation = new_conversation(sender_id=sender_id)
         log_to_db("INFO", "New conversation created", {"sender_id": sender_id})
-    
-    # Check if referral was already provided
-    referral_provided = conversation.get("referral_provided", False)
 
     # Initialize variables
     message_data = {"location": None, "symptoms": None, "language": None}
@@ -72,6 +69,9 @@ async def handle_message(message):
             {"$push": {"messages": {"sender": sender_id, "text": f"GPS location: {latitude}, {longitude}"}}}
         )
 
+    # Check if user had location before processing
+    had_location_before = has_location(conversation)
+    
     # Process symptoms
     await process_symptoms_message(sender_id, conversation, message_data)
     
@@ -81,15 +81,27 @@ async def handle_message(message):
     # Process language
     await process_language_message(sender_id, conversation, message_data)
     
-    # Check if we have all required data and provide referral (only once)
-    conversation = get_conversation(sender_id=sender_id)  # Refresh conversation
+    # Refresh conversation to get updated data
+    conversation = get_conversation(sender_id=sender_id)
     
-    # Only provide referral if we haven't already
-    if not referral_provided and has_symptoms(conversation) and has_location(conversation):
-        # Send "searching" message before starting the search
+    # Check if user now has location (after processing)
+    has_location_now = has_location(conversation)
+    
+    # Check if referral was already provided (use .get() with default False for old documents)
+    referral_provided = conversation.get("referral_provided", False)
+    
+    # If location was just obtained in this message, send "searching" message
+    if not had_location_before and has_location_now and has_symptoms(conversation) and not referral_provided:
+        # Send "searching" message ONLY when location is just confirmed
         searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
         await send_translated_message(sender_id, searching_message)
         
+        log_to_db("INFO", "Sent searching message after location confirmation", {
+            "sender_id": sender_id
+        })
+    
+    # Check if we have all required data and provide referral (only once)
+    if not referral_provided and has_symptoms(conversation) and has_location_now:
         # Provide the referral
         await provide_medical_referral(sender_id, conversation)
         
@@ -114,7 +126,7 @@ async def handle_message(message):
         if not pending_location:  # Only ask for missing data if not waiting for confirmation
             if not has_symptoms(conversation):
                 await request_symptoms(sender_id)
-            elif not has_location(conversation):
+            elif not has_location_now:
                 await request_location(sender_id)
 
 # Saves the patient data extracted from the text message

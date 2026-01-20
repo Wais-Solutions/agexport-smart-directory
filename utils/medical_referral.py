@@ -3,6 +3,9 @@ from utils.llm import get_completition
 from utils.translation import send_translated_message
 from datetime import datetime
 
+# Maximum distance in kilometers to consider a partner
+MAX_DISTANCE_KM = 15
+
 async def provide_medical_referral(sender_id, conversation):
     # Generate and send medical referral based on symptoms and location
     symptoms = conversation.get('symptoms', [])
@@ -11,6 +14,12 @@ async def provide_medical_referral(sender_id, conversation):
     # Create prompt for medical referral
     symptoms_text = ", ".join(symptoms)
     location_text = location.get('text_description', 'ubicación no especificada')
+    
+    log_to_db("INFO", "Starting medical referral search", {
+        "sender_id": sender_id,
+        "symptoms": symptoms,
+        "location": location_text
+    })
     
     try:
         # Search for partners that match the patient's needs
@@ -33,13 +42,14 @@ async def provide_medical_referral(sender_id, conversation):
             })
         else:
             # No matching partners found - send apology
-            apology_message = "I apologize, but I couldn't find medical partners in your area that specialize in your specific symptoms at this time. Please consider contacting your local hospital or health center for assistance."
+            apology_message = f"I apologize, but I couldn't find medical partners within {MAX_DISTANCE_KM} km of your location that specialize in your symptoms. Please consider contacting your local hospital or health center for assistance."
             await send_translated_message(sender_id, apology_message)
             
             log_to_db("INFO", "No matching partners found", {
                 "sender_id": sender_id,
                 "symptoms": symptoms,
-                "location": location_text
+                "location": location_text,
+                "max_distance_km": MAX_DISTANCE_KM
             })
         
         # Update conversation with recommendation
@@ -117,23 +127,26 @@ async def find_matching_partners(symptoms, location):
                             closest_distance = distance
                             closest_location = partner_location
                 
+                # CRITICAL: Only include partners within MAX_DISTANCE_KM
+                if closest_distance > MAX_DISTANCE_KM:
+                    log_to_db("DEBUG", "Partner excluded - too far", {
+                        "partner_name": partner.get('partner_name'),
+                        "distance_km": round(closest_distance, 2),
+                        "max_allowed": MAX_DISTANCE_KM
+                    })
+                    continue  # Skip this partner
+                
                 # Add distance score (closer = higher score)
-                # Within 5km: +10 points, 5-10km: +8 points, 10-20km: +5 points, 20-50km: +3 points, >50km: +1 point
+                # Within 5km: +10 points, 5-10km: +8 points, 10-15km: +5 points
                 if closest_distance < 5:
                     match_score += 10
                     reasons.append("very_close")
                 elif closest_distance < 10:
                     match_score += 8
                     reasons.append("close")
-                elif closest_distance < 20:
+                elif closest_distance <= MAX_DISTANCE_KM:
                     match_score += 5
                     reasons.append("nearby")
-                elif closest_distance < 50:
-                    match_score += 3
-                    reasons.append("same_region")
-                else:
-                    match_score += 1
-                    reasons.append("far")
             
             # If we have a reasonable match, include the partner
             if match_score >= 3:  # Minimum threshold (at least some specialty match or nearby location)
@@ -151,6 +164,7 @@ async def find_matching_partners(symptoms, location):
             "symptoms": symptoms,
             "total_partners_checked": len(all_partners),
             "matches_found": len(matching_partners),
+            "max_distance_km": MAX_DISTANCE_KM,
             "top_matches": [
                 {
                     "name": p.get("partner_name"),
@@ -207,7 +221,6 @@ async def check_specialty_match(symptoms, specialties):
                 }
             ],
             temperature=0,
-            # max_completion_tokens=150,
             stream=False
         )
         
