@@ -76,7 +76,6 @@ async def handle_message(message):
     await process_symptoms_message(sender_id, conversation, message_data)
     
     # Process location with the message text for confirmation handling
-    # NOTE: location.py sends the "searching" message immediately when location is obtained
     await process_location_message(sender_id, conversation, message_data, location_data)
     
     # Process language
@@ -109,8 +108,15 @@ async def handle_message(message):
     # 3. Has location now
     # 4. Location was JUST obtained (prevents double execution)
     if not referral_provided and has_symptoms(conversation) and has_location_now and location_just_obtained:
-        # NOTE: "searching" message was already sent by location.py
-        # Just provide the referral
+        # Send "searching" message ONLY ONCE when location is just confirmed
+        searching_message = "Thank you for providing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+        await send_translated_message(sender_id, searching_message)
+        
+        log_to_db("INFO", "Sent searching message after location confirmation", {
+            "sender_id": sender_id
+        })
+        
+        # Provide the referral
         await provide_medical_referral(sender_id, conversation)
         
         # Mark referral as provided
