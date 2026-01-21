@@ -60,8 +60,36 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
         await ask_location_confirmation(sender_id, pending_location)
         return
     
-    # Detect if this is a confirmation
-    confirmation_result = await detect_confirmation(message_text)
+    # First do a simple keyword check as a fast path
+    message_lower = message_text.lower().strip()
+    simple_yes_words = ['yes', 'si', 'sí', 'correct', 'correcto', 'exacto', 'perfecto', 'ok', 'okay']
+    simple_no_words = ['no', 'nope', 'wrong', 'incorrect', 'incorrecto', 'mal']
+    
+    is_simple_yes = any(word == message_lower or message_lower.startswith(word + ' ') or message_lower.endswith(' ' + word) for word in simple_yes_words)
+    is_simple_no = any(word == message_lower or message_lower.startswith(word + ' ') or message_lower.endswith(' ' + word) for word in simple_no_words)
+    
+    if is_simple_yes or is_simple_no:
+        # Simple confirmation detected - handle immediately without LLM
+        log_to_db("DEBUG", "Simple confirmation detected", {
+            "sender_id": sender_id,
+            "message_text": message_text,
+            "is_yes": is_simple_yes,
+            "is_no": is_simple_no
+        })
+        
+        confirmation_result = {
+            "is_confirmation": True,
+            "confirmed": is_simple_yes
+        }
+    else:
+        # Use LLM for more complex messages
+        confirmation_result = await detect_confirmation(message_text)
+        
+        log_to_db("DEBUG", "LLM confirmation detection result", {
+            "sender_id": sender_id,
+            "message_text": message_text,
+            "confirmation_result": confirmation_result
+        })
     
     if confirmation_result.get('is_confirmation', False):
         if confirmation_result.get('confirmed', False):
@@ -115,7 +143,12 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
                 "attempts": attempts + 1
             })
     else:
-        # Not a clear confirmation - ask again
+        # Not a clear confirmation - log and ask again
+        log_to_db("WARNING", "No clear confirmation detected, asking again", {
+            "sender_id": sender_id,
+            "message_text": message_text,
+            "confirmation_result": confirmation_result if 'confirmation_result' in locals() else None
+        })
         await ask_location_confirmation(sender_id, pending_location)
 
 async def process_location_reference(sender_id, location_text):

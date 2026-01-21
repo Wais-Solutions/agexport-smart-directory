@@ -17,15 +17,17 @@ async def translate_message(message_text, target_language, sender_id=None):
             messages=[
                 {
                     "role": "system",
-                    "content": f"""You are a professional medical translator. Translate the following medical/healthcare message to {target_language}. 
+                    "content": f"""You are a professional medical translator. Translate the COMPLETE message to {target_language}. 
 
-                    Rules:
+                    CRITICAL RULES:
+                    - Translate the ENTIRE message - never shorten or summarize
                     - Maintain the exact meaning and tone
                     - Keep medical terminology accurate
-                    - Preserve any formatting (line breaks, etc.)
-                    - If the message is already in {target_language}, return it unchanged
-                    - Return ONLY the translated text, no additional commentary
-                    - Be culturally appropriate for the target language"""
+                    - Preserve ALL formatting (line breaks, punctuation, etc.)
+                    - If the message is already in {target_language}, return it COMPLETELY unchanged
+                    - Return ONLY the FULL translated text, no additional commentary
+                    - Be culturally appropriate for the target language
+                    - NEVER respond with just a single word unless the original is a single word"""
                 },
                 {
                     "role": "user",
@@ -40,10 +42,24 @@ async def translate_message(message_text, target_language, sender_id=None):
         
         translated_text = completion.choices[0].message.content.strip()
         
+        # Validation: if translation is suspiciously short compared to original, log warning
+        if len(translated_text) < len(message_text) * 0.3:  # Less than 30% of original
+            log_to_db("WARNING", "Translation seems too short, possible error", {
+                "sender_id": sender_id,
+                "original_message": message_text,
+                "translated_message": translated_text,
+                "original_length": len(message_text),
+                "translated_length": len(translated_text),
+                "target_language": target_language
+            })
+            # Still use it, but log the warning
+        
         log_to_db("INFO", "Message translated successfully", {
             "sender_id": sender_id,
             "original_language": "English",
             "target_language": target_language,
+            "original_message": message_text[:100],  # Log first 100 chars
+            "translated_message": translated_text[:100],
             "original_length": len(message_text),
             "translated_length": len(translated_text)
         })
@@ -79,6 +95,14 @@ async def get_user_language(sender_id):
 async def send_translated_message(sender_id, message_text, force_language=None):
     from utils.whatsapp import send_text_message
     
+    # Log original message before translation
+    log_to_db("DEBUG", "Preparing to send translated message", {
+        "sender_id": sender_id,
+        "original_message": message_text,
+        "message_length": len(message_text),
+        "force_language": force_language
+    })
+    
     # Determine target language
     target_language = force_language or await get_user_language(sender_id)
     
@@ -87,6 +111,23 @@ async def send_translated_message(sender_id, message_text, force_language=None):
         translated_message = await translate_message(message_text, target_language, sender_id)
     else:
         translated_message = message_text
+    
+    # Final validation before sending
+    if len(translated_message) < 3:
+        log_to_db("ERROR", "Message too short, using original instead", {
+            "sender_id": sender_id,
+            "original_message": message_text,
+            "translated_message": translated_message,
+            "target_language": target_language
+        })
+        translated_message = message_text
+    
+    # Log what will actually be sent
+    log_to_db("DEBUG", "Sending final message", {
+        "sender_id": sender_id,
+        "final_message": translated_message,
+        "message_length": len(translated_message)
+    })
     
     # Send the translated message
     return await send_text_message(sender_id, translated_message)
