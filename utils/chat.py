@@ -74,11 +74,11 @@ async def handle_message(message):
     # Process symptoms
     await process_symptoms_message(sender_id, conversation, message_data)
     
-    # Process location
-    await process_location_message(sender_id, conversation, message_data, location_data)
-    
-    # Process language
+    # Process language FIRST (before location) so translations work correctly
     await process_language_message(sender_id, conversation, message_data)
+    
+    # Process location (after language is saved)
+    await process_location_message(sender_id, conversation, message_data, location_data)
     
     # Refresh conversation
     conversation = get_conversation(sender_id=sender_id)
