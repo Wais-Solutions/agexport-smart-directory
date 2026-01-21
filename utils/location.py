@@ -78,7 +78,17 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
                 "sender_id": sender_id,
                 "location": pending_location
             })
-            # NOTE: "searching" message will be sent by chat.py after this returns
+            
+            # Send "searching for recommendations" message if user also has symptoms
+            from utils.chat import has_symptoms
+            conversation_refreshed = get_conversation(sender_id)
+            if has_symptoms(conversation_refreshed):
+                searching_message = "Thank you for confirming your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+                await send_translated_message(sender_id, searching_message)
+            else:
+                # Just confirm location was saved
+                confirmation_message = "Perfect! Your location has been saved."
+                await send_translated_message(sender_id, confirmation_message)
         else:
             # User rejected the location
             clear_pending_location_confirmation(sender_id)

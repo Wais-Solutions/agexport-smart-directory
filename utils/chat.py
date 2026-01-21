@@ -86,12 +86,19 @@ async def handle_message(message):
     # Check conditions
     has_location_now = has_location(conversation)
     referral_provided = conversation.get("referral_provided", False)
-    location_just_obtained = not had_location_before and has_location_now
+    pending_location = conversation.get("pending_location_confirmation")
+    
+    # Location is "just obtained" if:
+    # 1. User didn't have location before AND has it now (direct GPS or confirmed text location)
+    # 2. User has location now AND doesn't have pending_location (means it was just confirmed)
+    location_just_obtained = (not had_location_before and has_location_now) or (has_location_now and not pending_location and not had_location_before)
     
     log_to_db("DEBUG", "Referral check", {
         "sender_id": sender_id,
         "has_symptoms": has_symptoms(conversation),
         "has_location_now": has_location_now,
+        "had_location_before": had_location_before,
+        "pending_location": pending_location is not None,
         "location_just_obtained": location_just_obtained,
         "referral_provided": referral_provided
     })
@@ -111,8 +118,7 @@ async def handle_message(message):
     elif referral_provided:
         log_to_db("DEBUG", "Referral already provided", {"sender_id": sender_id})
     else:
-        # Ask for missing data
-        pending_location = conversation.get("pending_location_confirmation")
+        # Ask for missing data - but don't ask if they have pending_location (waiting for confirmation)
         if not pending_location:
             if not has_symptoms(conversation):
                 await request_symptoms(sender_id)
