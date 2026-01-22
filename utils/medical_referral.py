@@ -1,13 +1,54 @@
 from utils.db_tools import log_to_db
-from utils.llm import get_completition
 from utils.translation import send_translated_message
 from datetime import datetime
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
 # Maximum distance in kilometers to consider a partner
 MAX_DISTANCE_KM = 15
 
+# Initialize the sentence transformer model (lazy loading)
+_model = None
+
+def get_embedding_model():
+    """Lazy load the sentence transformer model"""
+    global _model
+    if _model is None:
+        log_to_db("INFO", "Loading sentence transformer model")
+        _model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+        log_to_db("INFO", "Sentence transformer model loaded successfully")
+    return _model
+
+def generate_embeddings(query: str):
+    """Generate embeddings for a given text query"""
+    model = get_embedding_model()
+    return model.encode(query)
+
+def calculate_similarity(query_embedding, partner_embeddings):
+    """
+    Calculate cosine similarity between query embedding and partner embeddings
+    Returns similarity score (0-1, where 1 is perfect match)
+    """
+    try:
+        # Ensure embeddings are numpy arrays
+        query_embedding = np.array(query_embedding, dtype=np.float32).reshape(-1)
+        partner_embeddings = np.array(partner_embeddings, dtype=np.float32).reshape(-1)
+        
+        # Calculate cosine similarity
+        similarity = np.dot(query_embedding, partner_embeddings) / (
+            np.linalg.norm(query_embedding) * np.linalg.norm(partner_embeddings)
+        )
+        
+        return float(similarity)
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error calculating similarity", {
+            "error": str(e)
+        })
+        return 0.0
+
 async def provide_medical_referral(sender_id, conversation):
-    # Generate and send medical referral based on symptoms and location
+    """Generate and send medical referral based on symptoms and location"""
     symptoms = conversation.get('symptoms', [])
     location = conversation.get('location', {})
     
@@ -58,13 +99,13 @@ async def provide_medical_referral(sender_id, conversation):
     except Exception as e:
         log_to_db("ERROR", "Error generating medical referral", {
             "sender_id": sender_id,
-            "error": str(e)
+            "error": str(e),
+            "traceback": str(e.__traceback__)
         })
         
         error_message = "Sorry, there was an error processing your medical referral request. Please try again."
         await send_translated_message(sender_id, error_message)
 
-# Calculate distance between two geographic points using Haversine formula
 def calculate_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points 
@@ -87,8 +128,11 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     
     return c * r
 
-# Find partners that match the patients symptoms and location
 async def find_matching_partners(symptoms, location):
+    """
+    Find partners that match the patient's symptoms and location
+    Uses embedding-based similarity scoring instead of LLM
+    """
     from utils.db_tools import db
     
     try:
@@ -96,23 +140,82 @@ async def find_matching_partners(symptoms, location):
         patient_lat = location.get('lat')
         patient_lon = location.get('lon')
         
-        # Get all partners from the new collection structure
+        # Create query from symptoms
+        symptoms_query = ", ".join(symptoms)
+        
+        log_to_db("INFO", "Generating embeddings for symptoms query", {
+            "symptoms_query": symptoms_query
+        })
+        
+        # Generate embeddings for the symptoms query
+        query_embedding = generate_embeddings(symptoms_query)
+        
+        # Get all partners from the database
         all_partners = list(partners.find({}))
         
-        matching_partners = []
+        log_to_db("INFO", "Starting partner matching", {
+            "total_partners": len(all_partners),
+            "symptoms_query": symptoms_query
+        })
+        
+        # Step 1: Filter by specialty similarity (embedding-based)
+        partners_with_similarity = []
         
         for partner in all_partners:
-            match_score = 0
-            reasons = []
+            # Check if partner has embeddings
+            embeddings = partner.get('embeddings')
+            
+            if not embeddings:
+                # Generate embeddings if not present
+                log_to_db("WARNING", "Partner missing embeddings, generating on the fly", {
+                    "partner_name": partner.get('partner_name')
+                })
+                
+                # Create descriptor from partner data
+                category = partner.get('category', '')
+                partner_name = partner.get('partner_name', '')
+                services = partner.get('available_services', [])
+                services_text = " - ".join(services) if services else ""
+                
+                str_descriptor = f"{category} - {partner_name} - {services_text}"
+                embeddings = generate_embeddings(str_descriptor)
+                
+                # Optionally save embeddings back to database
+                partners.update_one(
+                    {"_id": partner.get('_id')},
+                    {"$set": {"embeddings": embeddings.tolist()}}
+                )
+            
+            # Calculate similarity score
+            similarity_score = calculate_similarity(query_embedding, embeddings)
+            
+            partner['similarity_score'] = similarity_score
+            partners_with_similarity.append(partner)
+            
+            log_to_db("DEBUG", "Similarity calculated for partner", {
+                "partner_name": partner.get('partner_name'),
+                "similarity_score": round(similarity_score, 4)
+            })
+        
+        # Sort by similarity (highest first)
+        partners_with_similarity.sort(key=lambda x: x['similarity_score'], reverse=True)
+        
+        log_to_db("INFO", "Partners sorted by similarity", {
+            "top_3_similarities": [
+                {
+                    "name": p.get('partner_name'),
+                    "similarity": round(p.get('similarity_score'), 4)
+                }
+                for p in partners_with_similarity[:3]
+            ]
+        })
+        
+        # Step 2: Filter by distance (max 15km)
+        matching_partners = []
+        
+        for partner in partners_with_similarity:
             closest_distance = float('inf')
             closest_location = None
-            
-            # Check specialty match using LLM
-            if symptoms and partner.get('available_services'):
-                specialty_match = await check_specialty_match(symptoms, partner['available_services'])
-                if specialty_match:
-                    match_score += specialty_match  # LLM returns confidence score (0-10)
-                    reasons.append("specialty_match")
             
             # Calculate distance to each location of the partner
             if patient_lat and patient_lon and partner.get('location'):
@@ -131,124 +234,64 @@ async def find_matching_partners(symptoms, location):
                 if closest_distance > MAX_DISTANCE_KM:
                     log_to_db("DEBUG", "Partner excluded - too far", {
                         "partner_name": partner.get('partner_name'),
+                        "similarity_score": round(partner.get('similarity_score'), 4),
                         "distance_km": round(closest_distance, 2),
                         "max_allowed": MAX_DISTANCE_KM
                     })
                     continue  # Skip this partner
                 
-                # Add distance score (closer = higher score)
-                # Within 5km: +10 points, 5-10km: +8 points, 10-15km: +5 points
-                if closest_distance < 5:
-                    match_score += 10
-                    reasons.append("very_close")
-                elif closest_distance < 10:
-                    match_score += 8
-                    reasons.append("close")
-                elif closest_distance <= MAX_DISTANCE_KM:
-                    match_score += 5
-                    reasons.append("nearby")
-            
-            # If we have a reasonable match, include the partner
-            if match_score >= 3:  # Minimum threshold (at least some specialty match or nearby location)
-                partner['match_score'] = match_score
-                partner['match_reasons'] = reasons
-                partner['distance_km'] = closest_distance if closest_distance != float('inf') else None
+                # Partner is within range - add to matching list
+                partner['distance_km'] = closest_distance
                 partner['closest_location'] = closest_location
                 matching_partners.append(partner)
+                
+                log_to_db("DEBUG", "Partner within range", {
+                    "partner_name": partner.get('partner_name'),
+                    "similarity_score": round(partner.get('similarity_score'), 4),
+                    "distance_km": round(closest_distance, 2)
+                })
+            else:
+                log_to_db("DEBUG", "Partner has no location data", {
+                    "partner_name": partner.get('partner_name')
+                })
         
-        # Sort by match score (highest first), then by distance (closest first)
-        matching_partners.sort(key=lambda x: (x['match_score'], -x.get('distance_km', float('inf')) if x.get('distance_km') else 0), reverse=True)
+        # Step 3: Sort by similarity (distance filtering already done)
+        # Partners are already sorted by similarity from Step 1
+        matching_partners.sort(key=lambda x: x['similarity_score'], reverse=True)
+        
+        # Return only top 2 matches
+        top_matches = matching_partners[:2]
         
         log_to_db("INFO", "Partner search completed", {
             "patient_location": {"lat": patient_lat, "lon": patient_lon},
             "symptoms": symptoms,
             "total_partners_checked": len(all_partners),
-            "matches_found": len(matching_partners),
+            "partners_within_range": len(matching_partners),
+            "top_matches_returned": len(top_matches),
             "max_distance_km": MAX_DISTANCE_KM,
             "top_matches": [
                 {
                     "name": p.get("partner_name"),
-                    "score": p.get("match_score"),
+                    "similarity_score": round(p.get("similarity_score"), 4),
                     "distance_km": round(p.get("distance_km"), 2) if p.get("distance_km") else None
                 } 
-                for p in matching_partners[:3]
+                for p in top_matches
             ]
         })
         
-        return matching_partners[:3]  # Return top 3 matches
+        return top_matches
         
     except Exception as e:
         log_to_db("ERROR", "Error searching for partners", {
             "error": str(e),
+            "error_type": type(e).__name__,
             "symptoms": symptoms,
             "location": location
         })
         return []
 
-# Check if partners specialties match patients symptoms using LLM
-# Returns confidence score (0-10)
-async def check_specialty_match(symptoms, specialties):
-    try:
-        from utils.llm import groq_client
-        
-        symptoms_text = ", ".join(symptoms)
-        specialties_text = ", ".join(specialties)
-        
-        completion = await groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a medical specialty matcher. Given patient symptoms and medical specialties, determine how well they match.
-
-                    Return a JSON with:
-                    {
-                        "confidence_score": number (0-10, where 10 is perfect match),
-                        "reasoning": "brief explanation"
-                    }
-
-                    Consider:
-                    - Direct specialty matches (e.g., dental symptoms → dental specialties)
-                    - General medicine can handle many common symptoms
-                    - Emergency/hospital services for urgent symptoms
-                    - Specialist referrals for specific conditions
-
-                    Return only the JSON, no extra text."""
-                },
-                {
-                    "role": "user",
-                    "content": f"Patient symptoms: {symptoms_text}\nAvailable specialties: {specialties_text}"
-                }
-            ],
-            temperature=0,
-            stream=False
-        )
-        
-        import json
-        response = completion.choices[0].message.content.strip()
-        result = json.loads(response)
-        
-        confidence_score = result.get('confidence_score', 0)
-        
-        log_to_db("DEBUG", "Specialty match check", {
-            "symptoms": symptoms_text,
-            "specialties": specialties_text,
-            "confidence_score": confidence_score,
-            "reasoning": result.get('reasoning', '')
-        })
-        
-        return confidence_score
-        
-    except Exception as e:
-        log_to_db("ERROR", "Error checking specialty match", {
-            "symptoms": symptoms,
-            "specialties": specialties,
-            "error": str(e)
-        })
-        return 0
-
-# Format the partner information into a WhatsApp-friendly message
 async def format_partner_referrals(partners):
+    """Format the partner information into a WhatsApp-friendly message"""
     if not partners:
         return "No medical partners found for your needs."
     
@@ -263,10 +306,16 @@ async def format_partner_referrals(partners):
         closest_location = partner.get('closest_location')
         if closest_location:
             direccion = closest_location.get('direccion', 'Address not available')
+            maps_url = closest_location.get('maps_url', '')
         else:
             # Fallback to first location if closest not available
             locations = partner.get('location', [])
-            direccion = locations[0].get('direccion', 'Address not available.') if locations else 'Address not available'
+            if locations:
+                direccion = locations[0].get('direccion', 'Address not available')
+                maps_url = locations[0].get('maps_url', '')
+            else:
+                direccion = 'Address not available'
+                maps_url = ''
         
         # Distance
         distance = partner.get('distance_km')
@@ -288,11 +337,17 @@ async def format_partner_referrals(partners):
         
         # Build partner info section
         partner_info = f"""
-━━━━━━━━━━━━━━━━━
-*{i}. {name}*{distance_text}
+━━━━━━━━━━━━━━━
+*{i}. {name}*
 
 📍 *Address:*
-{direccion}
+{direccion}"""
+        
+        # Add Google Maps link if available
+        if maps_url and maps_url.strip():
+            partner_info += f"\n🗺️ *Google Maps:* {maps_url.strip()}"
+        
+        partner_info += f"""
 
 📞 *Phone:* {phone_text}
 🚨 *Emergency:* {emergency_text}
@@ -301,13 +356,13 @@ async def format_partner_referrals(partners):
         message_parts.append(partner_info)
     
     # Footer message
-    footer = "\n━━━━━━━━━━━━━━━━━\n\n💡 Please contact them directly to schedule an appointment."
+    footer = "\n━━━━━━━━━━━━━━━\n\n💡 Please contact them directly to schedule an appointment."
     message_parts.append(footer)
     
     return "\n".join(message_parts)
 
 async def update_conversation_recommendation(sender_id, recommendation):
-    # Update conversation with medical recommendation
+    """Update conversation with medical recommendation"""
     from utils.db_tools import ongoing_conversations
     
     # Convert recommendation to string if it's a list of partners
@@ -324,8 +379,8 @@ async def update_conversation_recommendation(sender_id, recommendation):
         {"$set": {"recommendation": recommendation_text}}
     )
 
-# Save referrals to the referrals collection
 async def save_referrals(sender_id, partners, symptoms, location):
+    """Save referrals to the referrals collection"""
     try:
         from utils.db_tools import db
         
@@ -338,6 +393,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
             # Get distance and closest location info
             distance_km = partner.get('distance_km')
             closest_location = partner.get('closest_location')
+            similarity_score = partner.get('similarity_score')
             
             referral_record = {
                 "patient_phone_number": sender_id,
@@ -346,8 +402,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "symptoms_matched": symptoms,
                 "distance_km": distance_km,
                 "location_matched": closest_location.get('direccion') if closest_location else None,
-                "match_score": partner.get('match_score'),
-                "match_reasons": partner.get('match_reasons', []),
+                "similarity_score": similarity_score,  # New field - embedding similarity
                 "referred_at": datetime.utcnow(),
                 "status": "sent"
             }
@@ -363,6 +418,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "referrals_count": len(referral_records),
                 "partner_names": [r["partner_name"] for r in referral_records],
                 "distances": [r.get("distance_km") for r in referral_records],
+                "similarity_scores": [r.get("similarity_score") for r in referral_records],
                 "inserted_ids": [str(id) for id in result.inserted_ids]
             })
             

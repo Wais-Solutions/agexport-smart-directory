@@ -3,3 +3,6 @@ httpx
 pymongo
 groq
 fastapi
+sentence-transformers
+numpy
+torch
