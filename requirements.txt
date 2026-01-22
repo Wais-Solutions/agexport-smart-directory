@@ -1,18 +1,8 @@
-# Core dependencies
-uvicorn==0.24.0
-httpx==0.25.0
-pymongo==4.5.0
-groq==0.4.1
-fastapi==0.104.1
-
-# Sentence transformers - optimized versions for deployment
-# Using CPU-only torch to reduce size
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.1.0+cpu
-sentence-transformers==2.2.2
-numpy==1.24.3
-
-# Additional ML dependencies that sentence-transformers needs
-transformers==4.35.0
-tokenizers==0.15.0
-huggingface-hub==0.19.4
+uvicorn
+httpx
+pymongo
+groq
+fastapi
+sentence-transformers
+numpy
+torch
