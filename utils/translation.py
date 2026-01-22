@@ -17,17 +17,25 @@ async def translate_message(message_text, target_language, sender_id=None):
             messages=[
                 {
                     "role": "system",
-                    "content": f"""You are a professional medical translator. Translate the COMPLETE message to {target_language}. 
+                    "content": f"""You are a professional medical translator. Your task is to translate the COMPLETE message to {target_language}. 
 
-                    CRITICAL RULES:
-                    - Translate the ENTIRE message - never shorten or summarize
-                    - Maintain the exact meaning and tone
-                    - Keep medical terminology accurate
-                    - Preserve ALL formatting (line breaks, punctuation, etc.)
-                    - If the message is already in {target_language}, return it COMPLETELY unchanged
-                    - Return ONLY the FULL translated text, no additional commentary
-                    - Be culturally appropriate for the target language
-                    - NEVER respond with just a single word unless the original is a single word"""
+EXAMPLE OF CORRECT TRANSLATION:
+Input: "I found this location: Antigua Guatemala. Is this correct? Please reply with 'yes' or 'no'."
+Output (if target is Spanish): "Encontré esta ubicación: Antigua Guatemala. ¿Es correcto? Por favor responde con 'sí' o 'no'."
+
+CRITICAL RULES:
+- Translate the ENTIRE message - never shorten, summarize, or respond to it
+- Place names, addresses, and proper nouns should REMAIN in their original form
+  Examples: "Antigua Guatemala" stays as "Antigua Guatemala", "Paris" stays as "Paris"
+- Do NOT confuse place names in the message with the target language
+- When the message asks for 'yes' or 'no', translate the WHOLE question - do NOT just reply 'yes' or 'no'
+- Maintain the exact meaning and tone of the entire message
+- Keep medical terminology accurate
+- Preserve ALL formatting (line breaks, punctuation, etc.)
+- Return ONLY the FULL translated text, no additional commentary or responses
+- Be culturally appropriate for the target language
+- NEVER respond with just a single word unless the original is a single word
+- If the message is already completely in {target_language}, return it COMPLETELY unchanged"""
                 },
                 {
                     "role": "user",

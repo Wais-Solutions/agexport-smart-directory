@@ -39,17 +39,7 @@ async def process_location_message(sender_id, conversation, message_data, locati
                 "sender_id": sender_id,
                 "location": location_data
             })
-            
-            # Send "searching for recommendations" message if user also has symptoms
-            from utils.chat import has_symptoms
-            conversation_refreshed = get_conversation(sender_id)
-            if has_symptoms(conversation_refreshed):
-                searching_message = "Thank you for sharing your location! I'm now finding the best medical recommendations for you. This may take a moment..."
-                await send_translated_message(sender_id, searching_message)
-            else:
-                # Just confirm location was saved
-                confirmation_message = "Perfect! Your location has been saved."
-                await send_translated_message(sender_id, confirmation_message)
+            # NOTE: "searching" message is sent by chat.py after this returns
         elif message_data.get('location'):
             # Text reference to location - need to geocode and confirm
             await process_location_reference(sender_id, message_data['location'])
@@ -138,12 +128,12 @@ async def handle_location_confirmation(sender_id, message_data, pending_location
             
             if attempts >= 2:
                 # After 2 failed attempts, only accept GPS location
-                rejection_message = "I understand the location wasn't correct. Please use the button below to share your exact GPS location."
+                rejection_message = "I understand the location wasn't correct. Please use the button below to share your exact GPS location, or I won't be able to help you with location-based referrals."
                 await send_translated_message(sender_id, rejection_message)
                 await send_initial_location_request(sender_id)
             else:
                 # Allow them to try again with text
-                rejection_message = "I understand that location wasn't correct. Please try again with the name of your city or municipality (e.g., 'Guatemala City', 'Antigua Guatemala')."
+                rejection_message = "I understand that location wasn't correct. Please try again with the name of your city or municipality, or use the GPS button below."
                 await send_translated_message(sender_id, rejection_message)
                 await send_initial_location_request(sender_id)
             
@@ -230,14 +220,6 @@ async def process_location_reference(sender_id, location_text):
 async def ask_location_confirmation(sender_id, location_data):
     """Ask user to confirm if the found location is correct"""
     confirmation_message = f"I found this location: {location_data['text_description']}. Is this correct? Please reply with 'yes' or 'no'."
-    
-    # Log the message we're about to send
-    log_to_db("DEBUG", "Sending location confirmation request", {
-        "sender_id": sender_id,
-        "original_message": confirmation_message,
-        "message_length": len(confirmation_message)
-    })
-    
     await send_translated_message(sender_id, confirmation_message)
     
     log_to_db("INFO", "Asked user for location confirmation", {
