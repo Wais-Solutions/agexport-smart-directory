@@ -39,7 +39,17 @@ async def process_location_message(sender_id, conversation, message_data, locati
                 "sender_id": sender_id,
                 "location": location_data
             })
-            # NOTE: "searching" message is sent by chat.py after this returns
+            
+            # Send "searching for recommendations" message if user also has symptoms
+            from utils.chat import has_symptoms
+            conversation_refreshed = get_conversation(sender_id)
+            if has_symptoms(conversation_refreshed):
+                searching_message = "Thank you for confirming your location! I'm now finding the best medical recommendations for you. This may take a moment..."
+                await send_translated_message(sender_id, searching_message)
+            else:
+                # Just confirm location was saved
+                confirmation_message = "Perfect! Your location has been saved."
+                await send_translated_message(sender_id, confirmation_message)
         elif message_data.get('location'):
             # Text reference to location - need to geocode and confirm
             await process_location_reference(sender_id, message_data['location'])
