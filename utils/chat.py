@@ -1,5 +1,5 @@
 import os
-from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data
+from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data, reset_conversation
 from utils.llm import extract_data
 from utils.location import process_location_message, request_location
 from utils.symptoms import process_symptoms_message, request_symptoms
@@ -26,6 +26,25 @@ async def handle_message(message):
     # Extract data based on message type
     if message_type == "text": 
         message_text = message.get("text", {}).get("body", "")
+        
+        # Check if message is the reset command
+        if message_text.strip() == "/reset":
+            log_to_db("INFO", "Reset command received", {"sender_id": sender_id})
+            
+            # Reset conversation
+            success = reset_conversation(sender_id)
+            
+            # Send confirmation message
+            if success:
+                from utils.translation import send_translated_message
+                confirmation_msg = "Your conversation has been reset. All your previous information (symptoms, location, language) has been cleared. You can start fresh now!"
+                await send_translated_message(sender_id, confirmation_msg)
+            else:
+                await send_text_message(sender_id, "There was an issue resetting your conversation. Please try again.")
+            
+            # Return early - don't process the message further
+            return
+        
         message_data = await extract_data(message_text)
         log_to_db("DEBUG", "Data extracted from text", {
             "sender_id": sender_id,

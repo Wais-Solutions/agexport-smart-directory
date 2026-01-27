@@ -94,6 +94,43 @@ def reset_location_confirmation_attempts(sender_id):
         {"$set": {"location_confirmation_attempts": 0}}
     )
 
+
+def reset_conversation(sender_id):
+    """Reset conversation fields to initial state when user sends /reset command"""
+    try:
+        result = ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {
+                "$set": {
+                    "symptoms": [],
+                    "location": {"lat": None, "lon": None, "text_description": None},
+                    "language": None,
+                    "recommendation": None,
+                    "referral_provided": False,
+                    "pending_location_confirmation": None,
+                    "location_confirmation_attempts": 0
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            log_to_db("INFO", "Conversation reset successfully", {
+                "sender_id": sender_id
+            })
+            return True
+        else:
+            log_to_db("WARNING", "No conversation found to reset", {
+                "sender_id": sender_id
+            })
+            return False
+            
+    except Exception as e:
+        log_to_db("ERROR", "Error resetting conversation", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+
 # [TEMP] Extract country code from phone number (simplified)
 def get_country_from_phone(phone_number):
     try:
