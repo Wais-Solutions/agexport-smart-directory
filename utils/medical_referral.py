@@ -380,11 +380,19 @@ async def update_conversation_recommendation(sender_id, recommendation):
     )
 
 async def save_referrals(sender_id, partners, symptoms, location):
-    """Save referrals to the referrals collection"""
+    """Save referrals to the referrals collection and notify partners"""
     try:
-        from utils.db_tools import db
+        from utils.db_tools import db, get_conversation
+        from utils.whatsapp import send_template_message
         
         referrals = db["referrals"]
+        
+        # Get patient's language from conversation
+        conversation = get_conversation(sender_id)
+        patient_language = conversation.get('language', 'Unknown') if conversation else 'Unknown'
+        
+        # Format symptoms as comma-separated string
+        symptoms_text = ", ".join(symptoms) if symptoms else "Not specified"
         
         # Create a referral record for each partner
         referral_records = []
@@ -421,6 +429,42 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "similarity_scores": [r.get("similarity_score") for r in referral_records],
                 "inserted_ids": [str(id) for id in result.inserted_ids]
             })
+            
+            # Send notification to each partner
+            for partner in partners:
+                partner_whatsapp = "50258792752" #partner.get('whatsapp_number')
+                
+                if partner_whatsapp:
+                    # Prepare template parameters
+                    # {{1}}: Patient contact
+                    # {{2}}: Symptoms
+                    # {{3}}: Language
+                    template_params = [
+                        sender_id,           # Patient phone number
+                        symptoms_text,       # Symptoms as comma-separated string
+                        patient_language     # Patient's language
+                    ]
+                    
+                    # Send template notification to partner
+                    await send_template_message(
+                        recipient_number=partner_whatsapp,
+                        template_name="patient_referral_notification",
+                        parameters=template_params,
+                        language_code="es"  # Template is in Spanish
+                    )
+                    
+                    log_to_db("INFO", "Partner notification sent", {
+                        "partner_name": partner.get('partner_name'),
+                        "partner_whatsapp": partner_whatsapp,
+                        "patient_phone": sender_id,
+                        "symptoms": symptoms_text,
+                        "language": patient_language
+                    })
+                else:
+                    log_to_db("WARNING", "Partner has no WhatsApp number, notification not sent", {
+                        "partner_name": partner.get('partner_name'),
+                        "partner_id": str(partner.get('_id'))
+                    })
             
         return True
         

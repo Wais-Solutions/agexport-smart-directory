@@ -80,3 +80,81 @@ async def echo_message(message):
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
         return resp
+
+async def send_template_message(recipient_number, template_name, parameters, language_code="es"):
+    """
+    Send a WhatsApp template message
+    
+    Args:
+        recipient_number: Phone number to send the template to (e.g., "50212345678")
+        template_name: Name of the template (e.g., "patient_referral_notification")
+        parameters: List of parameter values for the template (e.g., ["50212345678", "headache, fever", "Spanish"])
+        language_code: Language code for the template (default: "es" for Spanish)
+    
+    Returns:
+        Response from WhatsApp API
+    """
+    try:
+        # Build the components array with parameters
+        components = []
+        
+        if parameters:
+            # Build body component with parameters
+            body_parameters = []
+            for i, param in enumerate(parameters, 1):
+                body_parameters.append({
+                    "type": "text",
+                    "text": str(param)
+                })
+            
+            components.append({
+                "type": "body",
+                "parameters": body_parameters
+            })
+        
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": recipient_number,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {
+                    "code": language_code
+                },
+                "components": components
+            }
+        }
+        
+        log_to_db("INFO", "Sending template message", {
+            "recipient": recipient_number,
+            "template_name": template_name,
+            "parameters": parameters,
+            "language_code": language_code
+        })
+        
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+            
+            if resp.status_code == 200:
+                log_to_db("INFO", "Template message sent successfully", {
+                    "recipient": recipient_number,
+                    "template_name": template_name,
+                    "response": resp.json()
+                })
+            else:
+                log_to_db("ERROR", "Failed to send template message", {
+                    "recipient": recipient_number,
+                    "template_name": template_name,
+                    "status_code": resp.status_code,
+                    "response": resp.text
+                })
+            
+            return resp
+            
+    except Exception as e:
+        log_to_db("ERROR", "Error sending template message", {
+            "recipient": recipient_number,
+            "template_name": template_name,
+            "error": str(e)
+        })
+        return None
