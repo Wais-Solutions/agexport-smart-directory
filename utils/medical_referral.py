@@ -448,7 +448,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
                     # Send template notification to partner
                     await send_template_message(
                         recipient_number=partner_whatsapp,
-                        template_name="partner_referral_notification",
+                        template_name="partners_referral_notification",
                         parameters=template_params,
                         language_code="es"  # Template is in Spanish
                     )
