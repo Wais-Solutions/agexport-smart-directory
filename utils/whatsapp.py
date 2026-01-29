@@ -87,7 +87,7 @@ async def send_template_message(recipient_number, template_name, parameters, lan
     
     Args:
         recipient_number: Phone number to send the template to (e.g., "50212345678")
-        template_name: Name of the template (e.g., "patient_referral_notification")
+        template_name: Name of the template (e.g., "partner_referral_notification")
         parameters: List of parameter values for the template (e.g., ["50212345678", "headache, fever", "Spanish"])
         language_code: Language code for the template (default: "es" for Spanish)
     
