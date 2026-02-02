@@ -45,11 +45,6 @@ async def handle_message(message):
             # Return early - don't process the message further
             return
         
-        # Check if we're waiting for another referral response
-        if conversation.get('waiting_for_another_referral', False):
-            await handle_another_referral_response(sender_id, conversation, message_text)
-            return
-        
         message_data = await extract_data(message_text)
         log_to_db("DEBUG", "Data extracted from text", {
             "sender_id": sender_id,
@@ -95,14 +90,14 @@ async def handle_message(message):
     # Check if user had location before processing
     had_location_before = has_location(conversation)
     
+    # Process language FIRST (before location) so confirmation messages use correct language
+    await process_language_message(sender_id, conversation, message_data)
+    
     # Process symptoms
     await process_symptoms_message(sender_id, conversation, message_data)
     
-    # Process location
+    # Process location (will use language from above for confirmation messages)
     await process_location_message(sender_id, conversation, message_data, location_data)
-    
-    # Process language
-    await process_language_message(sender_id, conversation, message_data)
     
     # Refresh conversation
     conversation = get_conversation(sender_id=sender_id)
@@ -127,10 +122,8 @@ async def handle_message(message):
         "referral_provided": referral_provided
     })
     
-    # Provide referral when:
-    # - Not already provided AND has symptoms AND has location
-    # - Either location was just obtained (first referral) OR location already existed (subsequent referrals)
-    if not referral_provided and has_symptoms(conversation) and has_location_now and (location_just_obtained or had_location_before):
+    # Provide referral ONCE when location is just obtained
+    if not referral_provided and has_symptoms(conversation) and has_location_now and location_just_obtained:
         await provide_medical_referral(sender_id, conversation)
         
         # Mark as provided
@@ -234,88 +227,3 @@ def has_location(conversation):
         lon = location.get("lon")
         return lat is not None and lon is not None
     return False
-async def handle_another_referral_response(sender_id, conversation, message_text):
-    """Handle user response when asked if they need another referral"""
-    from utils.db_tools import (
-        copy_conversation_to_history, reset_symptoms_only, 
-        set_waiting_for_another_referral, get_conversation
-    )
-    from utils.llm import detect_confirmation
-    from utils.symptoms import request_symptoms
-    from utils.translation import send_translated_message
-    
-    # Detect if user wants another referral
-    message_lower = message_text.lower().strip()
-    simple_yes_words = ['yes', 'si', 'sí', 'correct', 'correcto', 'exacto', 'perfecto', 'ok', 'okay', 'claro']
-    simple_no_words = ['no', 'nope', 'wrong', 'incorrect', 'incorrecto', 'mal', 'nop']
-    
-    is_simple_yes = any(word == message_lower or message_lower.startswith(word + ' ') or message_lower.endswith(' ' + word) for word in simple_yes_words)
-    is_simple_no = any(word == message_lower or message_lower.startswith(word + ' ') or message_lower.endswith(' ' + word) for word in simple_no_words)
-    
-    if is_simple_yes or is_simple_no:
-        # Simple response detected
-        confirmation_result = {
-            "is_confirmation": True,
-            "confirmed": is_simple_yes
-        }
-        
-        log_to_db("DEBUG", "Simple yes/no detected for another referral", {
-            "sender_id": sender_id,
-            "message_text": message_text,
-            "is_yes": is_simple_yes,
-            "is_no": is_simple_no
-        })
-    else:
-        # Use LLM for more complex messages
-        confirmation_result = await detect_confirmation(message_text)
-        
-        log_to_db("DEBUG", "LLM confirmation for another referral", {
-            "sender_id": sender_id,
-            "message_text": message_text,
-            "confirmation_result": confirmation_result
-        })
-    
-    if confirmation_result.get('is_confirmation', False):
-        if confirmation_result.get('confirmed', False):
-            # User wants another referral
-            log_to_db("INFO", "User requested another referral", {
-                "sender_id": sender_id,
-                "current_referral_count": conversation.get('referral_count', 0)
-            })
-            
-            # Copy current conversation to history
-            copy_success = copy_conversation_to_history(sender_id)
-            
-            if copy_success:
-                # Reset symptoms (keep location and language)
-                reset_symptoms_only(sender_id)
-                
-                # Ask for new symptoms
-                symptoms_message = "Great! I'll help you with another referral. Please tell me your new symptoms."
-                await send_translated_message(sender_id, symptoms_message)
-                
-                log_to_db("INFO", "Conversation archived and symptoms reset for another referral", {
-                    "sender_id": sender_id
-                })
-            else:
-                error_message = "There was an error processing your request. Please try again."
-                await send_translated_message(sender_id, error_message)
-        else:
-            # User doesn't want another referral
-            set_waiting_for_another_referral(sender_id, False)
-            
-            goodbye_message = "Okay, I'm here if you need another recommendation. Feel free to contact me anytime!"
-            await send_translated_message(sender_id, goodbye_message)
-            
-            log_to_db("INFO", "User declined another referral", {
-                "sender_id": sender_id
-            })
-    else:
-        # Not a clear confirmation - ask again
-        clarification_message = "I didn't understand your response. Do you need another medical referral for different symptoms? Please reply 'yes' or 'no'."
-        await send_translated_message(sender_id, clarification_message)
-        
-        log_to_db("WARNING", "Unclear response for another referral, asking again", {
-            "sender_id": sender_id,
-            "message_text": message_text
-        })

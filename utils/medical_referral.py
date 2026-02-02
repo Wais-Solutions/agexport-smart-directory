@@ -513,7 +513,7 @@ async def format_partner_referrals(partners):
         # Build partner info section
         partner_info = f"""
 ━━━━━━━━━━━━━━━
-*{i}. {name}
+*{i}. {name}*
 
 📍 *Address:*
 {direccion}"""
