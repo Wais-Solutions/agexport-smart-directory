@@ -127,8 +127,10 @@ async def handle_message(message):
         "referral_provided": referral_provided
     })
     
-    # Provide referral ONCE when location is just obtained
-    if not referral_provided and has_symptoms(conversation) and has_location_now and location_just_obtained:
+    # Provide referral when:
+    # - Not already provided AND has symptoms AND has location
+    # - Either location was just obtained (first referral) OR location already existed (subsequent referrals)
+    if not referral_provided and has_symptoms(conversation) and has_location_now and (location_just_obtained or had_location_before):
         await provide_medical_referral(sender_id, conversation)
         
         # Mark as provided
