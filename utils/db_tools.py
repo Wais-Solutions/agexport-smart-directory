@@ -11,6 +11,7 @@ client = MongoClient(f"mongodb+srv://{mongo_user}:{mongo_psw}@{mongo_host}/?retr
 db = client[mongo_db]
 
 ongoing_conversations = db["ongoing_conversations"]
+historical_conversations = db["historical_conversations"]
 debugging_logs = db["debugging-logs"]
 patients = db["patients"]
 partners = db["partners"]
@@ -50,6 +51,8 @@ def new_conversation(sender_id):
         "messages": [],
         "recommendation": None,
         "referral_provided": False,  # Flag to track if referral was already sent
+        "referral_count": 0,  # Track number of referrals provided (max 4)
+        "waiting_for_another_referral": False,  # Flag to track if waiting for user response about another referral
         "waiting_for_location_reference": False,  # Flag to know if we're waiting for location reference
         "pending_location_confirmation": None,  # Stores location data waiting for confirmation
         "location_confirmation_attempts": 0  # Track failed confirmation attempts
@@ -107,6 +110,8 @@ def reset_conversation(sender_id):
                     "language": None,
                     "recommendation": None,
                     "referral_provided": False,
+                    "referral_count": 0,
+                    "waiting_for_another_referral": False,
                     "pending_location_confirmation": None,
                     "location_confirmation_attempts": 0
                 }
@@ -264,6 +269,119 @@ def update_referral_status(referral_id, new_status):
         log_to_db("ERROR", "Error updating referral status", {
             "referral_id": referral_id,
             "new_status": new_status,
+            "error": str(e)
+        })
+        return False
+# Copy current conversation to historical_conversations collection
+def copy_conversation_to_history(sender_id):
+    """Copy current conversation to history before resetting for another referral"""
+    try:
+        # Get current conversation
+        conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+        
+        if not conversation:
+            log_to_db("WARNING", "No conversation found to copy to history", {
+                "sender_id": sender_id
+            })
+            return False
+        
+        # Remove the _id field as it will be different in historical_conversations
+        conversation_copy = {k: v for k, v in conversation.items() if k != '_id'}
+        conversation_copy["archived_at"] = datetime.utcnow()
+        
+        # Check if user already has a history document
+        existing_history = historical_conversations.find_one({"sender_id": sender_id})
+        
+        if existing_history:
+            # Append to existing history array
+            result = historical_conversations.update_one(
+                {"sender_id": sender_id},
+                {"$push": {"history": conversation_copy}}
+            )
+        else:
+            # Create new history document
+            result = historical_conversations.insert_one({
+                "sender_id": sender_id,
+                "history": [conversation_copy],
+                "created_at": datetime.utcnow()
+            })
+        
+        log_to_db("INFO", "Conversation copied to history", {
+            "sender_id": sender_id,
+            "referral_count": conversation.get("referral_count", 0)
+        })
+        
+        return True
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error copying conversation to history", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+
+# Reset only symptoms, keep location and other data
+def reset_symptoms_only(sender_id):
+    """Reset only symptoms to allow for another referral while keeping location"""
+    try:
+        result = ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {
+                "$set": {
+                    "symptoms": [],
+                    "recommendation": None,
+                    "referral_provided": False,
+                    "waiting_for_another_referral": False
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            log_to_db("INFO", "Symptoms reset for another referral", {
+                "sender_id": sender_id
+            })
+            return True
+        else:
+            log_to_db("WARNING", "No conversation found to reset symptoms", {
+                "sender_id": sender_id
+            })
+            return False
+            
+    except Exception as e:
+        log_to_db("ERROR", "Error resetting symptoms", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+
+# Set waiting_for_another_referral flag
+def set_waiting_for_another_referral(sender_id, waiting=True):
+    """Set flag to indicate we're waiting for user response about another referral"""
+    try:
+        ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$set": {"waiting_for_another_referral": waiting}}
+        )
+        return True
+    except Exception as e:
+        log_to_db("ERROR", "Error setting waiting_for_another_referral flag", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+
+# Increment referral count
+def increment_referral_count(sender_id):
+    """Increment the referral count"""
+    try:
+        result = ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$inc": {"referral_count": 1}}
+        )
+        return result.modified_count > 0
+    except Exception as e:
+        log_to_db("ERROR", "Error incrementing referral count", {
+            "sender_id": sender_id,
             "error": str(e)
         })
         return False

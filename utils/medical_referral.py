@@ -178,6 +178,43 @@ async def provide_medical_referral(sender_id, conversation):
         # Update conversation with recommendation
         await update_conversation_recommendation(sender_id, matching_partners if matching_partners else "No partners found")
         
+        # Increment referral count and ask if they need another referral
+        from utils.db_tools import increment_referral_count, set_waiting_for_another_referral, get_conversation
+        
+        increment_referral_count(sender_id)
+        
+        # Get updated conversation to check referral count
+        conversation = get_conversation(sender_id)
+        referral_count = conversation.get('referral_count', 0)
+        
+        log_to_db("INFO", "Referral count updated", {
+            "sender_id": sender_id,
+            "referral_count": referral_count
+        })
+        
+        # Only ask for another referral if they haven't reached the limit (4 total)
+        if referral_count < 4:
+            # Ask if they need another referral
+            another_referral_message = "\n\nDo you need another medical referral for different symptoms? Reply 'yes' or 'no'."
+            await send_translated_message(sender_id, another_referral_message)
+            
+            # Mark that we're waiting for their response
+            set_waiting_for_another_referral(sender_id, True)
+            
+            log_to_db("INFO", "Asked user for another referral", {
+                "sender_id": sender_id,
+                "current_referral_count": referral_count
+            })
+        else:
+            # They've reached the maximum
+            limit_message = "\n\nYou have reached the maximum number of referrals (4) for this session. If you need more assistance, please start a new conversation with /reset."
+            await send_translated_message(sender_id, limit_message)
+            
+            log_to_db("INFO", "User reached referral limit", {
+                "sender_id": sender_id,
+                "referral_count": referral_count
+            })
+        
     except Exception as e:
         log_to_db("ERROR", "Error generating medical referral", {
             "sender_id": sender_id,
@@ -476,7 +513,7 @@ async def format_partner_referrals(partners):
         # Build partner info section
         partner_info = f"""
 ━━━━━━━━━━━━━━━
-*{i}. {name}*{distance_text}
+*{i}. {name}
 
 📍 *Address:*
 {direccion}"""
