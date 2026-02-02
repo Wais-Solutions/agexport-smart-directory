@@ -3,9 +3,18 @@ from utils.translation import send_translated_message
 from datetime import datetime
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import json
 
 # Maximum distance in kilometers to consider a partner
 MAX_DISTANCE_KM = 15
+
+# Weights for combining symptom and specialty similarity
+SYMPTOM_WEIGHT = 0.7
+SPECIALTY_WEIGHT = 0.3
+
+# Minimum similarity threshold
+SIMILARITY_THRESHOLD = 0.4
 
 # Initialize the sentence transformer model (lazy loading)
 _model = None
@@ -24,28 +33,101 @@ def generate_embeddings(query: str):
     model = get_embedding_model()
     return model.encode(query)
 
-def calculate_similarity(query_embedding, partner_embeddings):
+async def extract_symptoms_specialties(message: str) -> tuple:
     """
-    Calculate cosine similarity between query embedding and partner embeddings
-    Returns similarity score (0-1, where 1 is perfect match)
+    Extract symptoms and potential medical specialties from the message using Groq LLM
+    Returns: (result_dict, success_flag)
     """
+    from groq import AsyncGroq
+    
+    groq_client = AsyncGroq()
+    
     try:
-        # Ensure embeddings are numpy arrays
-        query_embedding = np.array(query_embedding, dtype=np.float32).reshape(-1)
-        partner_embeddings = np.array(partner_embeddings, dtype=np.float32).reshape(-1)
-        
-        # Calculate cosine similarity
-        similarity = np.dot(query_embedding, partner_embeddings) / (
-            np.linalg.norm(query_embedding) * np.linalg.norm(partner_embeddings)
+        response = await groq_client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Analiza el siguiente mensaje y extrae una lista de síntomas, enfermedades o condiciones que puedan inferirse directamente de su contenido. No agregues, supongas ni completes información que no esté explícita o implícitamente presente en el texto. A continuación, genera una segunda lista con las especialidades médicas o tipos de atención en salud que podrían abordar dichas condiciones. Si no puedes encontrar nada relevante, retorna el mensaje íntegro y el campo contains_info como False. Mantén todas tus respuestas en español."
+                },
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "specialty_mapping",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "message": {"type": "string"},
+                            "contains_info": {"type": "boolean"},
+                            "symptoms": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                            },
+                            "specialties": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                            }
+                        },
+                        "required": ["message", "contains_info", "symptoms", "specialties"],
+                        "additionalProperties": False
+                    }
+                }
+            }
         )
         
-        return float(similarity)
+        result = json.loads(response.choices[0].message.content or "{}")
+        
+        log_to_db("INFO", "Symptoms and specialties extracted", {
+            "symptoms": result.get("symptoms", []),
+            "specialties": result.get("specialties", []),
+            "contains_info": result.get("contains_info", False)
+        })
+        
+        return result, True
         
     except Exception as e:
-        log_to_db("ERROR", "Error calculating similarity", {
+        log_to_db("ERROR", "Error extracting symptoms and specialties", {
+            "error": str(e),
+            "message": message
+        })
+        result = {
+            'message': message,
+            'contains_info': False,
+            'symptoms': [],
+            'specialties': []
+        }
+        return result, False
+
+def calculate_similarity_scores(query_embedding, partner_embeddings_list):
+    """
+    Calculate cosine similarity between query embedding and multiple partner embeddings
+    Args:
+        query_embedding: 1D numpy array of query embeddings
+        partner_embeddings_list: List of partner embeddings (each is a 1D numpy array)
+    Returns:
+        List of similarity scores
+    """
+    try:
+        # Convert to numpy arrays and ensure proper shape
+        query_embedding = np.array(query_embedding, dtype=np.float32).reshape(1, -1)
+        partner_embeddings_matrix = np.array(partner_embeddings_list, dtype=np.float32)
+        
+        # Calculate cosine similarity for all partners at once
+        similarity_scores = cosine_similarity(query_embedding, partner_embeddings_matrix)[0]
+        
+        return similarity_scores.tolist()
+        
+    except Exception as e:
+        log_to_db("ERROR", "Error calculating similarity scores", {
             "error": str(e)
         })
-        return 0.0
+        return [0.0] * len(partner_embeddings_list)
 
 async def provide_medical_referral(sender_id, conversation):
     """Generate and send medical referral based on symptoms and location"""
@@ -111,6 +193,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     Calculate the great circle distance between two points 
     on the earth (specified in decimal degrees)
     Returns distance in kilometers
+    Uses Haversine formula
     """
     from math import radians, cos, sin, asin, sqrt
     
@@ -131,7 +214,8 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 async def find_matching_partners(symptoms, location):
     """
     Find partners that match the patient's symptoms and location
-    Uses embedding-based similarity scoring instead of LLM
+    Uses embedding-based similarity scoring with separate symptom and specialty embeddings
+    Follows the approach from partner_analysis.ipynb
     """
     from utils.db_tools import db
     
@@ -143,77 +227,123 @@ async def find_matching_partners(symptoms, location):
         # Create query from symptoms
         symptoms_query = ", ".join(symptoms)
         
-        log_to_db("INFO", "Generating embeddings for symptoms query", {
-            "symptoms_query": symptoms_query
+        # Extract symptoms and specialties from the query
+        extraction_result, extraction_success = await extract_symptoms_specialties(symptoms_query)
+        
+        if not extraction_success or not extraction_result.get('contains_info'):
+            log_to_db("WARNING", "Could not extract meaningful symptoms/specialties", {
+                "symptoms_query": symptoms_query,
+                "extraction_result": extraction_result
+            })
+            # Fallback: use original symptoms query
+            query_text = symptoms_query
+        else:
+            # Use the extracted result as query
+            query_text = str(extraction_result)
+        
+        log_to_db("INFO", "Generating embeddings for query", {
+            "query_text": query_text[:100]  # Log first 100 chars
         })
         
-        # Generate embeddings for the symptoms query
-        query_embedding = generate_embeddings(symptoms_query)
+        # Generate embeddings for the query
+        query_embedding = generate_embeddings(query_text)
         
         # Get all partners from the database
         all_partners = list(partners.find({}))
         
-        log_to_db("INFO", "Starting partner matching", {
+        log_to_db("INFO", "Starting partner matching with dual embeddings", {
             "total_partners": len(all_partners),
-            "symptoms_query": symptoms_query
+            "symptom_weight": SYMPTOM_WEIGHT,
+            "specialty_weight": SPECIALTY_WEIGHT,
+            "similarity_threshold": SIMILARITY_THRESHOLD
         })
         
-        # Step 1: Filter by specialty similarity (embedding-based)
-        partners_with_similarity = []
+        # Step 1: Calculate similarity scores using both symptom and service embeddings
+        partners_with_scores = []
         
         for partner in all_partners:
-            # Check if partner has embeddings
-            embeddings = partner.get('embeddings')
+            symptom_embeddings = partner.get('symptom_embeddings')
+            service_embeddings = partner.get('service_embeddings')
             
-            if not embeddings:
-                # Generate embeddings if not present
-                log_to_db("WARNING", "Partner missing embeddings, generating on the fly", {
-                    "partner_name": partner.get('partner_name')
+            # Skip partners that don't have embeddings
+            if not symptom_embeddings or not service_embeddings:
+                log_to_db("DEBUG", "Partner missing embeddings, skipping", {
+                    "partner_name": partner.get('partner_name'),
+                    "has_symptom_embeddings": symptom_embeddings is not None,
+                    "has_service_embeddings": service_embeddings is not None
                 })
-                
-                # Create descriptor from partner data
-                category = partner.get('category', '')
-                partner_name = partner.get('partner_name', '')
-                services = partner.get('available_services', [])
-                services_text = " - ".join(services) if services else ""
-                
-                str_descriptor = f"{category} - {partner_name} - {services_text}"
-                embeddings = generate_embeddings(str_descriptor)
-                
-                # Optionally save embeddings back to database
-                partners.update_one(
-                    {"_id": partner.get('_id')},
-                    {"$set": {"embeddings": embeddings.tolist()}}
-                )
+                continue
             
-            # Calculate similarity score
-            similarity_score = calculate_similarity(query_embedding, embeddings)
+            # Calculate similarity with symptom embeddings
+            symptom_similarity = calculate_similarity_scores(
+                query_embedding,
+                [symptom_embeddings]
+            )[0]
             
-            partner['similarity_score'] = similarity_score
-            partners_with_similarity.append(partner)
+            # Calculate similarity with service embeddings  
+            service_similarity = calculate_similarity_scores(
+                query_embedding,
+                [service_embeddings]
+            )[0]
             
-            log_to_db("DEBUG", "Similarity calculated for partner", {
+            # Calculate weighted overall similarity
+            overall_similarity = (
+                SYMPTOM_WEIGHT * symptom_similarity +
+                SPECIALTY_WEIGHT * service_similarity
+            )
+            
+            # Store all scores
+            partner['symptom_similarity'] = symptom_similarity
+            partner['service_similarity'] = service_similarity
+            partner['overall_similarity'] = overall_similarity
+            
+            partners_with_scores.append(partner)
+            
+            log_to_db("DEBUG", "Similarities calculated", {
                 "partner_name": partner.get('partner_name'),
-                "similarity_score": round(similarity_score, 4)
+                "symptom_sim": round(symptom_similarity, 4),
+                "service_sim": round(service_similarity, 4),
+                "overall_sim": round(overall_similarity, 4)
             })
         
-        # Sort by similarity (highest first)
-        partners_with_similarity.sort(key=lambda x: x['similarity_score'], reverse=True)
+        # Step 2: Filter by similarity threshold
+        partners_above_threshold = [
+            p for p in partners_with_scores
+            if p['overall_similarity'] > SIMILARITY_THRESHOLD
+        ]
         
-        log_to_db("INFO", "Partners sorted by similarity", {
+        log_to_db("INFO", "Partners filtered by similarity threshold", {
+            "total_partners": len(partners_with_scores),
+            "above_threshold": len(partners_above_threshold),
+            "threshold": SIMILARITY_THRESHOLD
+        })
+        
+        if not partners_above_threshold:
+            log_to_db("WARNING", "No partners above similarity threshold", {
+                "threshold": SIMILARITY_THRESHOLD,
+                "highest_similarity": max([p['overall_similarity'] for p in partners_with_scores]) if partners_with_scores else 0
+            })
+            return []
+        
+        # Step 3: Sort by overall similarity (highest first)
+        partners_above_threshold.sort(key=lambda x: x['overall_similarity'], reverse=True)
+        
+        log_to_db("INFO", "Partners sorted by overall similarity", {
             "top_3_similarities": [
                 {
                     "name": p.get('partner_name'),
-                    "similarity": round(p.get('similarity_score'), 4)
+                    "overall_sim": round(p['overall_similarity'], 4),
+                    "symptom_sim": round(p['symptom_similarity'], 4),
+                    "service_sim": round(p['service_similarity'], 4)
                 }
-                for p in partners_with_similarity[:3]
+                for p in partners_above_threshold[:3]
             ]
         })
         
-        # Step 2: Filter by distance (max 15km)
+        # Step 4: Filter by distance (max 15km)
         matching_partners = []
         
-        for partner in partners_with_similarity:
+        for partner in partners_above_threshold:
             closest_distance = float('inf')
             closest_location = None
             
@@ -230,11 +360,11 @@ async def find_matching_partners(symptoms, location):
                             closest_distance = distance
                             closest_location = partner_location
                 
-                # CRITICAL: Only include partners within MAX_DISTANCE_KM
+                # Only include partners within MAX_DISTANCE_KM
                 if closest_distance > MAX_DISTANCE_KM:
                     log_to_db("DEBUG", "Partner excluded - too far", {
                         "partner_name": partner.get('partner_name'),
-                        "similarity_score": round(partner.get('similarity_score'), 4),
+                        "overall_similarity": round(partner['overall_similarity'], 4),
                         "distance_km": round(closest_distance, 2),
                         "max_allowed": MAX_DISTANCE_KM
                     })
@@ -243,11 +373,15 @@ async def find_matching_partners(symptoms, location):
                 # Partner is within range - add to matching list
                 partner['distance_km'] = closest_distance
                 partner['closest_location'] = closest_location
+                # Keep overall_similarity as the main similarity_score for compatibility
+                partner['similarity_score'] = partner['overall_similarity']
                 matching_partners.append(partner)
                 
                 log_to_db("DEBUG", "Partner within range", {
                     "partner_name": partner.get('partner_name'),
-                    "similarity_score": round(partner.get('similarity_score'), 4),
+                    "overall_similarity": round(partner['overall_similarity'], 4),
+                    "symptom_similarity": round(partner['symptom_similarity'], 4),
+                    "service_similarity": round(partner['service_similarity'], 4),
                     "distance_km": round(closest_distance, 2)
                 })
             else:
@@ -255,9 +389,8 @@ async def find_matching_partners(symptoms, location):
                     "partner_name": partner.get('partner_name')
                 })
         
-        # Step 3: Sort by similarity (distance filtering already done)
-        # Partners are already sorted by similarity from Step 1
-        matching_partners.sort(key=lambda x: x['similarity_score'], reverse=True)
+        # Step 5: Sort by overall similarity (already sorted, but re-sort after distance filtering)
+        matching_partners.sort(key=lambda x: x['overall_similarity'], reverse=True)
         
         # Return only top 2 matches
         top_matches = matching_partners[:2]
@@ -266,15 +399,20 @@ async def find_matching_partners(symptoms, location):
             "patient_location": {"lat": patient_lat, "lon": patient_lon},
             "symptoms": symptoms,
             "total_partners_checked": len(all_partners),
+            "partners_with_embeddings": len(partners_with_scores),
+            "partners_above_threshold": len(partners_above_threshold),
             "partners_within_range": len(matching_partners),
             "top_matches_returned": len(top_matches),
             "max_distance_km": MAX_DISTANCE_KM,
+            "similarity_threshold": SIMILARITY_THRESHOLD,
             "top_matches": [
                 {
                     "name": p.get("partner_name"),
-                    "similarity_score": round(p.get("similarity_score"), 4),
-                    "distance_km": round(p.get("distance_km"), 2) if p.get("distance_km") else None
-                } 
+                    "overall_similarity": round(p['overall_similarity'], 4),
+                    "symptom_similarity": round(p['symptom_similarity'], 4),
+                    "service_similarity": round(p['service_similarity'], 4),
+                    "distance_km": round(p['distance_km'], 2)
+                }
                 for p in top_matches
             ]
         })
@@ -401,7 +539,11 @@ async def save_referrals(sender_id, partners, symptoms, location):
             # Get distance and closest location info
             distance_km = partner.get('distance_km')
             closest_location = partner.get('closest_location')
-            similarity_score = partner.get('similarity_score')
+            
+            # Get all similarity scores
+            overall_similarity = partner.get('overall_similarity')
+            symptom_similarity = partner.get('symptom_similarity')
+            service_similarity = partner.get('service_similarity')
             
             referral_record = {
                 "patient_phone_number": sender_id,
@@ -410,7 +552,10 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "symptoms_matched": symptoms,
                 "distance_km": distance_km,
                 "location_matched": closest_location.get('direccion') if closest_location else None,
-                "similarity_score": similarity_score,  # New field - embedding similarity
+                "overall_similarity": overall_similarity,
+                "symptom_similarity": symptom_similarity,
+                "service_similarity": service_similarity,
+                "similarity_score": overall_similarity,  # For backwards compatibility
                 "referred_at": datetime.utcnow(),
                 "status": "sent"
             }
@@ -426,13 +571,13 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "referrals_count": len(referral_records),
                 "partner_names": [r["partner_name"] for r in referral_records],
                 "distances": [r.get("distance_km") for r in referral_records],
-                "similarity_scores": [r.get("similarity_score") for r in referral_records],
+                "overall_similarities": [r.get("overall_similarity") for r in referral_records],
                 "inserted_ids": [str(id) for id in result.inserted_ids]
             })
             
             # Send notification to each partner
             for partner in partners:
-                partner_whatsapp = "50258792752" #partner.get('whatsapp_number')
+                partner_whatsapp = "50258792752"  # partner.get('whatsapp_number')
                 
                 if partner_whatsapp:
                     # Prepare template parameters
@@ -448,7 +593,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
                     # Send template notification to partner
                     await send_template_message(
                         recipient_number=partner_whatsapp,
-                        template_name="partners_referral_notification",
+                        template_name="bot_referral_notification",
                         parameters=template_params,
                         language_code="es"  # Template is in Spanish
                     )

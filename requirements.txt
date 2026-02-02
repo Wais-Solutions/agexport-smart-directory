@@ -7,3 +7,4 @@ sentence-transformers
 numpy
 torch
 requests
+scikit-learn
