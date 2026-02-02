@@ -13,7 +13,7 @@ async def translate_message(message_text, target_language, sender_id=None):
     
     try:
         completion = await groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
                 {
                     "role": "system",

@@ -10,7 +10,7 @@ groq_client = AsyncGroq()
 
 async def extract_data(message): 
     completion = await groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile"
+        model="openai/gpt-oss-120b"
         , messages=[
         {
             "role": "system",
@@ -46,7 +46,7 @@ async def detect_confirmation(message_text):
     Returns: {'is_confirmation': bool, 'confirmed': bool}
     """
     completion = await groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
@@ -263,7 +263,7 @@ client = AsyncGroq(api_key = groq_api)
 
 async def get_completition(prompt): 
     response = await client.chat.completions.create(
-        model = "llama-3.3-70b-versatile"
+        model = "openai/gpt-oss-120b"
         , messages = [
             {"role" : "system", "content": "You are a recommendation engine of good medical professionals. Be concise and respectful."}
             , {"role" : "user", "content": prompt}
