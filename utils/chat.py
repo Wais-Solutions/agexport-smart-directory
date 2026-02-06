@@ -75,7 +75,8 @@ async def handle_message(message):
         location_data = {
             "lat": latitude,
             "lon": longitude,
-            "text_description": f"Coordinates {latitude}, {longitude}"
+            "text_description": f"Coordinates {latitude}, {longitude}",
+            "location_type": "gps"  # GPS location - 30km search radius
         }
         log_to_db("INFO", "GPS location received", {
             "sender_id": sender_id,

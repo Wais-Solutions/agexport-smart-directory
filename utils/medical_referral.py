@@ -6,8 +6,9 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import json
 
-# Maximum distance in kilometers to consider a partner
-MAX_DISTANCE_KM = 15
+# Maximum distance in kilometers based on location type
+MAX_DISTANCE_GPS = 30  # For GPS locations (precise)
+MAX_DISTANCE_TEXT = 60  # For text-based locations (less precise, wider search)
 
 # Weights for combining symptom and specialty similarity
 SYMPTOM_WEIGHT = 0.7
@@ -138,18 +139,24 @@ async def provide_medical_referral(sender_id, conversation):
     symptoms_text = ", ".join(symptoms)
     location_text = location.get('text_description', 'ubicación no especificada')
     
+    # Determine search radius based on location type
+    location_type = location.get('location_type', 'gps')  # Default to GPS if not specified
+    max_distance_km = MAX_DISTANCE_GPS if location_type == 'gps' else MAX_DISTANCE_TEXT
+    
     log_to_db("INFO", "Starting medical referral search", {
         "sender_id": sender_id,
         "symptoms": symptoms,
-        "location": location_text
+        "location": location_text,
+        "location_type": location_type,
+        "max_distance_km": max_distance_km
     })
     
     try:
-        # Search for partners that match the patient's needs
-        matching_partners = await find_matching_partners(symptoms, location)
+        # Search for partners that match the patient's needs within the radius
+        matching_partners = await find_matching_partners(symptoms, location, max_distance_km)
         
         if matching_partners:
-            # Found matching partners - send their information
+            # Found matching partners within radius - send their information
             referral_message = await format_partner_referrals(matching_partners)
             await send_translated_message(sender_id, referral_message)
             
@@ -160,20 +167,46 @@ async def provide_medical_referral(sender_id, conversation):
                 "sender_id": sender_id,
                 "symptoms": symptoms,
                 "location": location_text,
+                "location_type": location_type,
+                "max_distance_km": max_distance_km,
                 "partners_found": len(matching_partners),
                 "partner_names": [p.get("partner_name") for p in matching_partners]
             })
         else:
-            # No matching partners found - send apology
-            apology_message = f"I apologize, but I couldn't find medical partners within {MAX_DISTANCE_KM} km of your location that specialize in your symptoms. Please consider contacting your local hospital or health center for assistance."
-            await send_translated_message(sender_id, apology_message)
-            
-            log_to_db("INFO", "No matching partners found", {
+            # No matching partners found within radius - try to find best match regardless of distance
+            log_to_db("INFO", "No partners within radius, searching for best match anywhere", {
                 "sender_id": sender_id,
-                "symptoms": symptoms,
-                "location": location_text,
-                "max_distance_km": MAX_DISTANCE_KM
+                "max_distance_km": max_distance_km
             })
+            
+            # Search without distance restriction to find the best match
+            best_match = await find_matching_partners(symptoms, location, max_distance_km=None)
+            
+            if best_match:
+                # Found best match outside radius
+                fallback_message = await format_fallback_referral(best_match[0], max_distance_km)
+                await send_translated_message(sender_id, fallback_message)
+                
+                # Save the fallback referral
+                await save_referrals(sender_id, [best_match[0]], symptoms, location, is_fallback=True)
+                
+                log_to_db("INFO", "Fallback referral provided (outside radius)", {
+                    "sender_id": sender_id,
+                    "symptoms": symptoms,
+                    "partner_name": best_match[0].get("partner_name"),
+                    "distance_km": best_match[0].get("distance_km"),
+                    "max_distance_km": max_distance_km
+                })
+            else:
+                # Absolutely no partners found at all
+                apology_message = f"I apologize, but I couldn't find any medical partners that specialize in your symptoms. Please consider contacting your local hospital or health center for assistance."
+                await send_translated_message(sender_id, apology_message)
+                
+                log_to_db("INFO", "No matching partners found anywhere", {
+                    "sender_id": sender_id,
+                    "symptoms": symptoms,
+                    "location": location_text
+                })
         
         # Update conversation with recommendation
         await update_conversation_recommendation(sender_id, matching_partners if matching_partners else "No partners found")
@@ -248,11 +281,16 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     
     return c * r
 
-async def find_matching_partners(symptoms, location):
+async def find_matching_partners(symptoms, location, max_distance_km=MAX_DISTANCE_GPS):
     """
     Find partners that match the patient's symptoms and location
     Uses embedding-based similarity scoring with separate symptom and specialty embeddings
     Follows the approach from partner_analysis.ipynb
+    
+    Args:
+        symptoms: List of patient symptoms
+        location: Patient location dict with lat, lon
+        max_distance_km: Maximum distance in km (None = no distance restriction)
     """
     from utils.db_tools import db
     
@@ -377,8 +415,9 @@ async def find_matching_partners(symptoms, location):
             ]
         })
         
-        # Step 4: Filter by distance (max 15km)
+        # Step 4: Filter by distance
         matching_partners = []
+        partners_outside_radius = []  # Keep track of partners outside radius for fallback
         
         for partner in partners_above_threshold:
             closest_distance = float('inf')
@@ -397,30 +436,39 @@ async def find_matching_partners(symptoms, location):
                             closest_distance = distance
                             closest_location = partner_location
                 
-                # Only include partners within MAX_DISTANCE_KM
-                if closest_distance > MAX_DISTANCE_KM:
+                # Add distance and location info to partner
+                partner['distance_km'] = closest_distance
+                partner['closest_location'] = closest_location
+                partner['similarity_score'] = partner['overall_similarity']
+                
+                # If no distance restriction (max_distance_km is None), include all
+                if max_distance_km is None:
+                    matching_partners.append(partner)
+                    log_to_db("DEBUG", "Partner included (no distance restriction)", {
+                        "partner_name": partner.get('partner_name'),
+                        "overall_similarity": round(partner['overall_similarity'], 4),
+                        "distance_km": round(closest_distance, 2)
+                    })
+                # If within distance restriction, add to matching list
+                elif closest_distance <= max_distance_km:
+                    matching_partners.append(partner)
+                    log_to_db("DEBUG", "Partner within range", {
+                        "partner_name": partner.get('partner_name'),
+                        "overall_similarity": round(partner['overall_similarity'], 4),
+                        "symptom_similarity": round(partner['symptom_similarity'], 4),
+                        "service_similarity": round(partner['service_similarity'], 4),
+                        "distance_km": round(closest_distance, 2),
+                        "max_allowed": max_distance_km
+                    })
+                else:
+                    # Partner is too far but keep for potential fallback
+                    partners_outside_radius.append(partner)
                     log_to_db("DEBUG", "Partner excluded - too far", {
                         "partner_name": partner.get('partner_name'),
                         "overall_similarity": round(partner['overall_similarity'], 4),
                         "distance_km": round(closest_distance, 2),
-                        "max_allowed": MAX_DISTANCE_KM
+                        "max_allowed": max_distance_km
                     })
-                    continue  # Skip this partner
-                
-                # Partner is within range - add to matching list
-                partner['distance_km'] = closest_distance
-                partner['closest_location'] = closest_location
-                # Keep overall_similarity as the main similarity_score for compatibility
-                partner['similarity_score'] = partner['overall_similarity']
-                matching_partners.append(partner)
-                
-                log_to_db("DEBUG", "Partner within range", {
-                    "partner_name": partner.get('partner_name'),
-                    "overall_similarity": round(partner['overall_similarity'], 4),
-                    "symptom_similarity": round(partner['symptom_similarity'], 4),
-                    "service_similarity": round(partner['service_similarity'], 4),
-                    "distance_km": round(closest_distance, 2)
-                })
             else:
                 log_to_db("DEBUG", "Partner has no location data", {
                     "partner_name": partner.get('partner_name')
@@ -549,6 +597,91 @@ async def format_partner_referrals(partners):
     
     return "\n".join(message_parts)
 
+async def format_fallback_referral(partner, max_distance_searched):
+    """Format a fallback referral message when no partners are within radius"""
+    if not partner:
+        return "No medical partners found for your needs."
+    
+    # Intro explaining this is outside the usual radius
+    intro_text = f"⚠️ *I couldn't find any medical partners within {max_distance_searched} km of your location.*\n\n"
+    intro_text += "However, this partner might be helpful for your symptoms:\n"
+    
+    message_parts = [intro_text]
+    
+    # Partner name
+    name = partner.get('partner_name', 'Unknown')
+    
+    # Get closest location details
+    closest_location = partner.get('closest_location')
+    if closest_location:
+        direccion = closest_location.get('direccion', 'Address not available')
+        # Generate mobile-friendly Google Maps URL using coordinates
+        lat = closest_location.get('lat')
+        lon = closest_location.get('lon')
+        if lat and lon:
+            maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+        else:
+            maps_url = closest_location.get('maps_url', '')
+    else:
+        # Fallback to first location if closest not available
+        locations = partner.get('location', [])
+        if locations:
+            direccion = locations[0].get('direccion', 'Address not available')
+            lat = locations[0].get('lat')
+            lon = locations[0].get('lon')
+            if lat and lon:
+                maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+            else:
+                maps_url = locations[0].get('maps_url', '')
+        else:
+            direccion = 'Address not available'
+            maps_url = ''
+    
+    # Distance
+    distance = partner.get('distance_km')
+    distance_text = f" ({round(distance, 1)} km away)" if distance else ""
+    
+    # Phone numbers
+    phone_numbers = partner.get('phone_number', [])
+    phone_text = ", ".join(phone_numbers) if phone_numbers else "Not available"
+    
+    # Emergency numbers
+    emergency_numbers = partner.get('emergency_number', [])
+    emergency_text = ", ".join([num for num in emergency_numbers if num]) if emergency_numbers else "Not available"
+    
+    # Website
+    website = partner.get('website', '').strip()
+    website = website.replace('"', '').replace("'", "")
+    website_text = website if website and website != "" else "Not available"
+    
+    # Build partner info section
+    partner_info = f"""
+━━━━━━━━━━━━━━━
+*{name}*{distance_text}
+
+📍 *Address:*
+{direccion}"""
+    
+    # Add Google Maps link if available
+    if maps_url and maps_url.strip():
+        partner_info += f"\n🗺️ *Google Maps:* {maps_url.strip()}"
+    
+    partner_info += f"""
+
+📞 *Phone:* {phone_text}
+🚨 *Emergency:* {emergency_text}
+🌐 *Website:* {website_text}
+"""
+    message_parts.append(partner_info)
+    
+    # Footer message with note about distance
+    footer = "\n━━━━━━━━━━━━━━━\n\n"
+    footer += "⚠️ *Note:* This partner is outside your search radius but may be able to help with your symptoms.\n\n"
+    footer += "💡 Please contact them to verify they can assist you, or consider contacting your local hospital."
+    message_parts.append(footer)
+    
+    return "\n".join(message_parts)
+
 async def update_conversation_recommendation(sender_id, recommendation):
     """Update conversation with medical recommendation"""
     from utils.db_tools import ongoing_conversations
@@ -567,7 +700,7 @@ async def update_conversation_recommendation(sender_id, recommendation):
         {"$set": {"recommendation": recommendation_text}}
     )
 
-async def save_referrals(sender_id, partners, symptoms, location):
+async def save_referrals(sender_id, partners, symptoms, location, is_fallback=False):
     """Save referrals to the referrals collection and notify partners"""
     try:
         from utils.db_tools import db, get_conversation
@@ -606,6 +739,7 @@ async def save_referrals(sender_id, partners, symptoms, location):
                 "symptom_similarity": symptom_similarity,
                 "service_similarity": service_similarity,
                 "similarity_score": overall_similarity,  # For backwards compatibility
+                "is_fallback": is_fallback,  # Flag to indicate if this is a fallback referral
                 "referred_at": datetime.utcnow(),
                 "status": "sent"
             }

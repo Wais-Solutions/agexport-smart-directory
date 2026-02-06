@@ -188,7 +188,8 @@ async def process_location_reference(sender_id, location_text):
             location_data = {
                 "lat": lat,
                 "lon": lon,
-                "text_description": formatted_address
+                "text_description": formatted_address,
+                "location_type": "text"  # Text-based location - 60km search radius
             }
             
             # Store as pending confirmation
