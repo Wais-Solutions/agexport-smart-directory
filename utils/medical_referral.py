@@ -481,13 +481,26 @@ async def format_partner_referrals(partners):
         closest_location = partner.get('closest_location')
         if closest_location:
             direccion = closest_location.get('direccion', 'Address not available')
-            maps_url = closest_location.get('maps_url', '')
+            # Generate mobile-friendly Google Maps URL using coordinates
+            lat = closest_location.get('lat')
+            lon = closest_location.get('lon')
+            if lat and lon:
+                # This format works on both mobile and desktop
+                maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+            else:
+                maps_url = closest_location.get('maps_url', '')
         else:
             # Fallback to first location if closest not available
             locations = partner.get('location', [])
             if locations:
                 direccion = locations[0].get('direccion', 'Address not available')
-                maps_url = locations[0].get('maps_url', '')
+                # Generate mobile-friendly Google Maps URL using coordinates
+                lat = locations[0].get('lat')
+                lon = locations[0].get('lon')
+                if lat and lon:
+                    maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+                else:
+                    maps_url = locations[0].get('maps_url', '')
             else:
                 direccion = 'Address not available'
                 maps_url = ''
