@@ -382,25 +382,37 @@ async def find_matching_partners(symptoms, location, max_distance_km=MAX_DISTANC
             })
         
         # Step 2: Filter by similarity threshold
-        partners_above_threshold = [
-            p for p in partners_with_scores
-            if p['overall_similarity'] > SIMILARITY_THRESHOLD
-        ]
-        
-        log_to_db("INFO", "Partners filtered by similarity threshold", {
-            "total_partners": len(partners_with_scores),
-            "above_threshold": len(partners_above_threshold),
-            "threshold": SIMILARITY_THRESHOLD
-        })
-        
-        if not partners_above_threshold:
-            log_to_db("WARNING", "No partners above similarity threshold", {
-                "threshold": SIMILARITY_THRESHOLD,
-                "highest_similarity": max([p['overall_similarity'] for p in partners_with_scores]) if partners_with_scores else 0
+        # Step 3: Filter by similarity threshold
+        # If max_distance_km is None (fallback mode), skip threshold and use all partners
+        # Otherwise, apply threshold as normal
+        if max_distance_km is None:
+            # FALLBACK MODE: Use all partners, sorted by similarity
+            partners_above_threshold = partners_with_scores
+            log_to_db("INFO", "Fallback mode: Using all partners (no threshold applied)", {
+                "total_partners": len(partners_with_scores),
+                "best_similarity": max([p['overall_similarity'] for p in partners_with_scores]) if partners_with_scores else 0
             })
-            return []
+        else:
+            # NORMAL MODE: Apply similarity threshold
+            partners_above_threshold = [
+                p for p in partners_with_scores
+                if p['overall_similarity'] > SIMILARITY_THRESHOLD
+            ]
+            
+            log_to_db("INFO", "Partners filtered by similarity threshold", {
+                "total_partners": len(partners_with_scores),
+                "above_threshold": len(partners_above_threshold),
+                "threshold": SIMILARITY_THRESHOLD
+            })
+            
+            if not partners_above_threshold:
+                log_to_db("WARNING", "No partners above similarity threshold", {
+                    "threshold": SIMILARITY_THRESHOLD,
+                    "highest_similarity": max([p['overall_similarity'] for p in partners_with_scores]) if partners_with_scores else 0
+                })
+                return []
         
-        # Step 3: Sort by overall similarity (highest first)
+        # Sort by overall similarity (highest first)
         partners_above_threshold.sort(key=lambda x: x['overall_similarity'], reverse=True)
         
         log_to_db("INFO", "Partners sorted by overall similarity", {
@@ -488,8 +500,8 @@ async def find_matching_partners(symptoms, location, max_distance_km=MAX_DISTANC
             "partners_above_threshold": len(partners_above_threshold),
             "partners_within_range": len(matching_partners),
             "top_matches_returned": len(top_matches),
-            "max_distance_km": MAX_DISTANCE_KM,
-            "similarity_threshold": SIMILARITY_THRESHOLD,
+            "max_distance_km": max_distance_km,  # Use parameter instead of constant
+            "similarity_threshold": SIMILARITY_THRESHOLD if max_distance_km is not None else "NONE (fallback mode)",
             "top_matches": [
                 {
                     "name": p.get("partner_name"),
