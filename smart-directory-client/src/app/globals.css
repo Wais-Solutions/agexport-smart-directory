@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-violet: #5C14EC;
+  --color-navy: #14044C;
+  --color-pearl: #FCFBFC;
+  --color-forest: #417B5A;
+  --color-dark: #1F271B;
+
+  --font-display: "Space Mono", monospace;
+  --font-body: "DM Sans", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #FCFBFC; }
+::-webkit-scrollbar-thumb { background: #5C14EC; border-radius: 3px; }
