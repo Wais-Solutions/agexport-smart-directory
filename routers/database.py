@@ -1,15 +1,8 @@
-import os
 from fastapi import APIRouter, HTTPException, Query
-from pymongo import MongoClient
 from bson import ObjectId
+from utils.db_tools import db  #reutilizar conexion existente
 
 router = APIRouter()
-
-MONGODB_URI = os.environ.get("MONGODB_URI")
-DB_NAME = os.environ.get("MONGODB_DB_NAME")
-
-client = MongoClient(MONGODB_URI)
-db = client[DB_NAME]
 
 COLLECTIONS = [
     "debugging-logs",
