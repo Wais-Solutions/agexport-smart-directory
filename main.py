@@ -1,11 +1,19 @@
 from fastapi import FastAPI
-from routers import messages, database 
+from fastapi.middleware.cors import CORSMiddleware
+from routers import messages, database
 
 app = FastAPI()
 
-# Include the user router with prefix
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(messages.router, prefix="/message", tags=["message"])
-app.include_router(database.router, prefix="/db", tags=["database"]) 
+app.include_router(database.router, prefix="/db", tags=["database"])
 
 @app.get("/")
 async def root():
