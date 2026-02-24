@@ -46,9 +46,11 @@ async def verify_webhook(request: Request):
 async def callback(request: Request): 
     data = await request.json()
     
+    '''
     log_to_db("INFO", "Webhook callback received", {
         "data_preview": str(data)[:200]
     })
+    '''
 
     try:
         entry = data["entry"][0]
@@ -58,18 +60,21 @@ async def callback(request: Request):
 
         if messages:
             message = messages[0]
-            
+            '''
             log_to_db("INFO", "Message extracted from webhook", {
                 "sender_id": message.get("from"),
                 "message_type": message.get("type"),
                 "message_preview": str(message)[:200]
             })
+            '''
             
             await handle_message(message)
             
+            '''
             log_to_db("INFO", "Message handled successfully", {
                 "sender_id": message.get("from")
             })
+            '''
 
     except Exception as e:
         # Get full traceback

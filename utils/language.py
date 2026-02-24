@@ -5,6 +5,11 @@ async def process_language_message(sender_id, conversation, message_data):
     if not has_language(conversation) and message_data.get('language'): 
         await update_conversation_language(sender_id, message_data['language'])
         await update_patient_language(sender_id, conversation, message_data['language'])
+        
+        log_to_db("INFO", "Conversation language detected", {
+            "sender_id": sender_id,
+            "language": message_data['language']
+        })
 
 async def update_conversation_language(sender_id, language):
     from utils.db_tools import ongoing_conversations
