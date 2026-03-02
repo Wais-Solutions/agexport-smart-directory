@@ -2,7 +2,6 @@
 *.log
 *.pyc
 __pycache__
-*.ipynb
 # Environments 
 .env 
 .venv 
@@ -12,3 +11,8 @@ ENV/
 env.bak/ 
 venv.bak/ 
 test.ipynb
+*.xlsx
+local test/data/
+*.pkl
+*.png
+*.csv
