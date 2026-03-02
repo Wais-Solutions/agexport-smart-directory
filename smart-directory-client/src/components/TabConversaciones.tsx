@@ -101,6 +101,84 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
   )
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MessageThread ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+type Message = { sender?: string; text?: string; role?: string; content?: string; [key: string]: any }
+
+function MessageThread({ messages, senderId }: { messages: Message[]; senderId: string }) {
+  const [open, setOpen] = useState(false)
+  const count = messages.length
+  const last10 = messages.slice(-10)
+
+  function isUser(msg: Message): boolean {
+    const s = (msg.sender || msg.role || '').toLowerCase()
+    return s === senderId || s === 'user' || s === 'patient'
+  }
+
+  function getMsgText(msg: Message): string {
+    return msg.text || msg.content || msg.message || JSON.stringify(msg)
+  }
+
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <span className="text-violet/50 mt-0.5 shrink-0"><MessageSquare size={13} /></span>
+      <span className="text-dark/40 font-display text-xs w-24 shrink-0 pt-0.5">MENSAJES</span>
+      <div className="flex-1">
+        {/* Toggle row */}
+        <button
+          onClick={function(e) { e.stopPropagation(); setOpen(!open) }}
+          className="flex items-center gap-2 group"
+        >
+          <span className="text-xs text-dark/70">
+            {count} {count === 1 ? 'mensaje' : 'mensajes'}
+          </span>
+          {count > 0 && (
+            <span className="flex items-center gap-1 text-xs text-violet/60 group-hover:text-violet transition-colors font-display">
+              {open ? 'ocultar' : 'ver últimos ' + Math.min(10, count)}
+              {open
+                ? <ChevronDown size={11} />
+                : <ChevronRight size={11} />
+              }
+            </span>
+          )}
+        </button>
+
+        {/* Chat bubbles */}
+        {open && count > 0 && (
+          <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-1">
+            {count > 10 && (
+              <p className="text-center text-xs text-dark/25 font-display pb-1">
+                {'— mostrando últimos 10 de ' + count + ' mensajes —'}
+              </p>
+            )}
+            {last10.map(function(msg, i) {
+              const user = isUser(msg)
+              const text = getMsgText(msg)
+              return (
+                <div
+                  key={i}
+                  className={'flex ' + (user ? 'justify-end' : 'justify-start')}
+                >
+                  <div
+                    className={
+                      'max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ' +
+                      (user
+                        ? 'bg-violet text-pearl rounded-br-sm'
+                        : 'bg-navy/8 text-dark/70 border border-navy/10 rounded-bl-sm'
+                      )
+                    }
+                  >
+                    {text}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ OngoingCard ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
@@ -183,9 +261,7 @@ function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: 
             <span className="text-xs">{formatLanguage(conv.language)}</span>
           </InfoRow>
 
-          <InfoRow icon={<MessageSquare size={13} />} label="MENSAJES">
-            <span className="text-xs">{msgCount} mensajes en la conversación</span>
-          </InfoRow>
+          <MessageThread messages={conv.messages} senderId={conv.sender_id} />
 
           <InfoRow icon={<Stethoscope size={13} />} label="RECOMEND.">
             {conv.recommendation ? (
