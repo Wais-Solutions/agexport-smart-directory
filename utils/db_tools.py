@@ -19,11 +19,13 @@ referrals = db["referrals"]
 
 def log_to_db(level, message, extra_data=None):
     try:
+        data = extra_data if extra_data else {}
         log_entry = {
             "timestamp": datetime.utcnow(),
             "level": level,
             "message": message,
-            "extra_data": extra_data if extra_data else {}
+            "sender_id": data.get("sender_id"),
+            "extra_data": data
         }
         debugging_logs.insert_one(log_entry)
     except Exception as e:
@@ -146,6 +148,7 @@ def get_country_from_phone(phone_number):
         
     except Exception as e:
         log_to_db("ERROR", "Error extracting country from phone", {
+            "sender_id": phone_number,
             "phone_number": phone_number,
             "error": str(e)
         })
@@ -179,6 +182,7 @@ def save_patient_data(phone_number, symptoms=None, location=None, language=None,
         
     except Exception as e:
         log_to_db("ERROR", "Error saving patient data", {
+            "sender_id": phone_number,
             "phone_number": phone_number,
             "error": str(e)
         })
@@ -190,6 +194,7 @@ def get_patient_data(phone_number):
         return patient
     except Exception as e:
         log_to_db("ERROR", "Error getting patient data", {
+            "sender_id": phone_number,
             "phone_number": phone_number,
             "error": str(e)
         })
@@ -201,6 +206,7 @@ def get_patient_referrals(phone_number):
         return patient_referrals
     except Exception as e:
         log_to_db("ERROR", "Error getting patient referrals", {
+            "sender_id": phone_number,
             "phone_number": phone_number,
             "error": str(e)
         })
@@ -216,6 +222,7 @@ def update_referral_status(referral_id, new_status):
         return result.modified_count > 0
     except Exception as e:
         log_to_db("ERROR", "Error updating referral status", {
+            "sender_id": None,
             "referral_id": referral_id,
             "new_status": new_status,
             "error": str(e)

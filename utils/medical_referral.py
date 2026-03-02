@@ -85,6 +85,7 @@ async def extract_symptoms_specialties(message: str) -> tuple:
         
     except Exception as e:
         log_to_db("ERROR", "Error extracting symptoms and specialties", {
+            "sender_id": None,
             "error": str(e),
             "message": message
         })
@@ -107,7 +108,7 @@ def calculate_similarity_scores(query_embedding, partner_embeddings_list):
         return similarity_scores.tolist()
         
     except Exception as e:
-        log_to_db("ERROR", "Error calculating similarity scores", {"error": str(e)})
+        log_to_db("ERROR", "Error calculating similarity scores", {"sender_id": None, "error": str(e)})
         return [0.0] * len(partner_embeddings_list)
 
 async def provide_medical_referral(sender_id, conversation):
@@ -311,6 +312,7 @@ async def find_matching_partners(symptoms, location, max_distance_km=MAX_DISTANC
         
     except Exception as e:
         log_to_db("ERROR", "Error searching for partners", {
+            "sender_id": None,
             "error": str(e),
             "error_type": type(e).__name__,
             "symptoms": symptoms,
@@ -539,6 +541,7 @@ async def save_referrals(sender_id, partners, symptoms, location, is_fallback=Fa
                     )
                 else:
                     log_to_db("ERROR", "Partner has no WhatsApp number, notification not sent", {
+                        "sender_id": sender_id,
                         "partner_name": partner.get('partner_name'),
                         "partner_id": str(partner.get('_id'))
                     })

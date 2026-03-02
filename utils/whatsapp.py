@@ -11,6 +11,15 @@ headers = {
     "Content-Type": "application/json"
 }
 
+def _log_whatsapp_response(sender_id, message_type, resp):
+    """Log WhatsApp API response, using ERROR level for non-200 status codes"""
+    level = "INFO" if resp.status_code == 200 else "ERROR"
+    log_to_db(level, f"WhatsApp API response [{message_type}]", {
+        "sender_id": sender_id,
+        "status_code": resp.status_code,
+        "response": resp.text
+    })
+
 async def send_text_message(sender_id, message):
     payload = {
         "messaging_product": "whatsapp",
@@ -21,11 +30,9 @@ async def send_text_message(sender_id, message):
         }
     }
 
-    print(f"sending {payload} - {WHATSAPP_API_URL} to {sender_id}")
-    
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-        print(f"resp - {resp}")
+        _log_whatsapp_response(sender_id, "text", resp)
         return resp
 
 async def send_initial_location_request(sender_id):
@@ -56,12 +63,14 @@ async def send_initial_location_request(sender_id):
     
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        _log_whatsapp_response(sender_id, "location_request", resp)
         return resp
 
 async def echo_message(message): 
+    sender_id = message["from"]
     payload = {
         "messaging_product": "whatsapp",
-        "to": message["from"],
+        "to": sender_id,
         "type": "text",
         "text": {
             "body": message.get("text", {}).get("body", "")
@@ -69,6 +78,7 @@ async def echo_message(message):
     }
     async with httpx.AsyncClient() as client:
         resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+        _log_whatsapp_response(sender_id, "echo", resp)
         return resp
 
 async def send_template_message(recipient_number, template_name, parameters, language_code="es"):
@@ -106,20 +116,12 @@ async def send_template_message(recipient_number, template_name, parameters, lan
         
         async with httpx.AsyncClient() as client:
             resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
-            
-            if resp.status_code != 200:
-                log_to_db("ERROR", "Failed to send template message", {
-                    "recipient": recipient_number,
-                    "template_name": template_name,
-                    "status_code": resp.status_code,
-                    "response": resp.text
-                })
-            
+            _log_whatsapp_response(recipient_number, f"template:{template_name}", resp)
             return resp
             
     except Exception as e:
         log_to_db("ERROR", "Error sending template message", {
-            "recipient": recipient_number,
+            "sender_id": recipient_number,
             "template_name": template_name,
             "error": str(e)
         })

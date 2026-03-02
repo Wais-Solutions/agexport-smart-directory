@@ -151,6 +151,7 @@ async def save_patient_data_from_extraction(sender_id, conversation, message_dat
     except Exception as e:
         log_to_db("ERROR", "Error saving patient data", {
             "sender_id": sender_id,
+            "sender_id": sender_id,
             "error": str(e)
         })
 
@@ -170,6 +171,7 @@ async def save_patient_data_from_gps(sender_id, conversation, location_data):
         
     except Exception as e:
         log_to_db("ERROR", "Error saving GPS data", {
+            "sender_id": sender_id,
             "sender_id": sender_id,
             "error": str(e)
         })

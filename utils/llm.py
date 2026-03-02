@@ -81,6 +81,7 @@ async def detect_confirmation(message_text):
         return data
     except Exception as e:
         log_to_db("ERROR", "Error detecting confirmation", {
+            "sender_id": None,
             "message_text": message_text,
             "error": str(e)
         })
@@ -147,7 +148,7 @@ async def geocode_location(location_text):
     api_key = os.getenv('GOOGLE_MAPS_API_KEY')
     
     if not api_key:
-        log_to_db("ERROR", "Google Maps API key not found")
+        log_to_db("ERROR", "Google Maps API key not found", {"sender_id": None})
         return None, None, None
     
     search_queries = [
@@ -195,6 +196,7 @@ async def geocode_location(location_text):
                     
         except Exception as e:
             log_to_db("ERROR", "Exception in geocoding", {
+                "sender_id": None,
                 "search_query": search_query,
                 "error": str(e)
             })
