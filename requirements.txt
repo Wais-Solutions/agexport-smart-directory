@@ -3,8 +3,4 @@ httpx
 pymongo
 groq
 fastapi
-sentence-transformers
-numpy
-torch
 requests
-scikit-learn
