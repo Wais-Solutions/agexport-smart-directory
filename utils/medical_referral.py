@@ -21,7 +21,7 @@ MAX_DISTANCE_GPS = 30    # km — GPS locations
 MAX_DISTANCE_TEXT = 60   # km — text-based locations
 
 # Gaussian scoring parameters
-DISTANCE_SIGMA_KM = 50.0   # controls how fast distance score decays (matches notebook)
+DISTANCE_SIGMA_KM = 20.0   # controls how fast distance score decays
 SIMILARITY_SIGMA = 0.3     # controls how fast similarity score decays
 
 # Emergency boost multiplier applied to matching emergency services
@@ -219,23 +219,17 @@ async def find_matching_partners(
     max_distance_km: float | None = MAX_DISTANCE_GPS,
 ) -> list[dict]:
     """
-    Rank all partners by a combined service-similarity × distance score,
-    exactly as implemented in partner_emb_ranking.ipynb.
+    Rank all partners by a combined service-similarity × distance score.
 
-    Flow:
-      1. Extract symptoms/services/emergency flag via Groq LLM.
-      2. Build a single query embedding (mean of original text + extracted signals).
-      3. For each partner, score every service against the query embedding with a
-         Gaussian similarity. Apply 3× boost for emergency services when relevant.
-         Take the top-1 service score as the partner's service_score.
-      4. For each partner geo-location compute distance_score (Gaussian, σ=50 km).
-         combined_score = service_score × distance_score. Keep the best location.
-      5. Sort all partners by final_score descending.
-      6. If max_distance_km is given (normal path): return top-K partners whose
-         closest location is within the radius.
-         If none qualify, return [] so the caller can trigger the fallback.
-      7. If max_distance_km is None (fallback path): return global top-K with no
-         distance filter, so the caller always gets the best available match.
+    The approach follows the notebook (partner_emb_ranking.ipynb):
+      1. Build a query embedding from the symptom text + LLM-extracted signals.
+      2. For each partner, compute a Gaussian service similarity score using the
+         pre-computed embeddings stored in the `services` collection.
+      3. For each partner location, compute a Gaussian distance score.
+      4. Final score = service_score × distance_score (multiplicative).
+      5. If max_distance_km is not None, only partners whose closest location is
+         within the radius are considered (hard filter applied AFTER ranking).
+      6. Return the top-2 partners.
     """
     from utils.db_tools import db
 
@@ -249,7 +243,7 @@ async def find_matching_partners(
         symptoms_query = ", ".join(symptoms)
         extracted = await extract_symptoms_services(symptoms_query)
 
-        # Build query embedding: mean of [original text, symptoms, possible_services]
+        # Build query embedding: average of [original text, symptoms, possible_services]
         query_chunks = (
             [symptoms_query]
             + extracted["symptoms"]
@@ -271,7 +265,7 @@ async def find_matching_partners(
                 for s in partner.get("partner_services", [])
             ]
 
-            # --- Service similarity score (top-1 as in notebook) --------
+            # --- Service similarity score --------------------------------
             service_scores: list[float] = []
             for svc_name in partner_services:
                 emb = service_embedding_map.get(svc_name)
@@ -281,19 +275,16 @@ async def find_matching_partners(
                 raw_sim = _cosine_similarity(query_emb, emb)
                 sim_score = _gaussian_similarity(raw_sim, sigma=SIMILARITY_SIGMA)
 
+                # Boost emergency services when the patient query is an emergency
                 if _has_emergency_signal([svc_name]) and extracted["is_emergency"]:
                     sim_score = sim_score * EMERGENCY_SERVICE_BOOST_FACTOR
 
                 service_scores.append(sim_score)
 
-            # top-1 average (identical to max, matches notebook exactly)
-            if service_scores:
-                top_scores = sorted(service_scores, reverse=True)[:1]
-                service_score = float(sum(top_scores) / len(top_scores))
-            else:
-                service_score = 0.0
+            # Use best service score (top-1)
+            service_score: float = max(service_scores) if service_scores else 0.0
 
-            # --- Best location (highest combined score) ------------------
+            # --- Best location by combined score -------------------------
             best_location: dict | None = None
             best_combined: float = -1.0
 
@@ -326,7 +317,6 @@ async def find_matching_partners(
                     "lat": float(glat),
                     "lon": float(glon),
                     "maps_url": geo.get("maps_url"),
-                    "place_id": geo.get("place_id"),
                     "distance_km": distance_km,
                     "distance_score": distance_score,
                     "combined_score": combined,
@@ -336,40 +326,48 @@ async def find_matching_partners(
                     best_combined = combined
                     best_location = location_result
 
-            # Partner has no geo-locations
+            # Fallback when no geo-location is available
             if best_location is None:
                 best_location = {
-                    "location_index": None, "query": None, "name": None,
-                    "direccion": None, "lat": None, "lon": None,
-                    "maps_url": None, "place_id": None,
-                    "distance_km": None, "distance_score": 0.0,
-                    "combined_score": service_score,
+                    "location_index": None,
+                    "query": None,
+                    "name": None,
+                    "direccion": None,
+                    "lat": None,
+                    "lon": None,
+                    "maps_url": None,
+                    "distance_km": None,
+                    "distance_score": 0.0,
+                    "combined_score": service_score,  # distance-agnostic
                 }
                 best_combined = service_score
 
             ranked.append({
+                # Original MongoDB document fields
                 **{k: v for k, v in partner.items() if k != "_id"},
                 "_id": partner.get("_id"),
+                # Scoring metadata
                 "service_score": service_score,
                 "overall_similarity": service_score,
                 "final_score": best_combined,
+                # Location fields expected by format helpers
                 "closest_location": best_location,
                 "distance_km": best_location["distance_km"],
+                # Extra signals for audit trail
                 "extracted_signals": extracted,
             })
 
-        # Sort by final_score descending — same as notebook
         ranked.sort(key=lambda x: x["final_score"], reverse=True)
 
+        # Hard distance filter (only applied when a radius is specified)
         if max_distance_km is not None:
-            # Normal path: only return partners within the hard radius
             within_radius = [
                 p for p in ranked
                 if p["distance_km"] is not None and p["distance_km"] <= max_distance_km
             ]
             return within_radius[:TOP_K]
 
-        # Fallback path (max_distance_km=None): no radius filter, return global top-K
+        # No radius filter — return global top-2
         return ranked[:TOP_K]
 
     except Exception as e:
@@ -488,133 +486,105 @@ async def provide_medical_referral(sender_id: str, conversation: dict):
 # Formatting helpers
 # ---------------------------------------------------------------------------
 
-def _build_location_fields(partner: dict) -> tuple[str, str]:
-    """Return (direccion, maps_url) from closest_location or partner_geo_locations."""
-    closest = partner.get("closest_location")
-    if closest:
-        direccion = closest.get("direccion") or closest.get("address") or "Address not available"
-        lat, lon = closest.get("lat"), closest.get("lon")
-        maps_url = (
-            f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
-            if lat and lon
-            else closest.get("maps_url", "")
-        )
-        return direccion, maps_url
+def _format_partner_block(partner: dict, index: int | None = None) -> str:
+    """
+    Build the WhatsApp message block for a single partner using the fields
+    that exist in the partners collection:
+      - partner_name
+      - partner_category
+      - partner_locations     → human-readable address strings
+      - partner_geo_locations → structured geo data with maps_url and place_id
+      - partner_phone_number
+      - partner_whatsapp
+      - closest_location      → best geo location selected during ranking
+      - distance_km
+    """
+    name = partner.get("partner_name", "Unknown")
+    category = partner.get("partner_category", "")
+    distance = partner.get("distance_km")
+    distance_text = f" · {round(distance, 1)} km" if distance is not None else ""
 
-    geos = partner.get("partner_geo_locations", [])
-    if geos:
-        geo = geos[0]
-        direccion = geo.get("address") or "Address not available"
-        lat, lon = geo.get("lat"), geo.get("lon")
-        maps_url = (
-            f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
-            if lat and lon
-            else geo.get("maps_url", "")
-        )
-        return direccion, maps_url
+    # --- Address: prefer human-readable partner_locations, fall back to geo address ---
+    locations_text = partner.get("partner_locations", [])
+    closest = partner.get("closest_location") or {}
 
-    return "Address not available", ""
+    if locations_text:
+        # Use the text address that corresponds to the matched geo-location index
+        loc_idx = closest.get("location_index")
+        if loc_idx is not None and loc_idx < len(locations_text):
+            address = locations_text[loc_idx]
+        else:
+            address = locations_text[0]
+    else:
+        address = closest.get("direccion") or closest.get("address") or "Dirección no disponible"
+
+    # --- Google Maps URL: use the stored maps_url (includes place_id) ---
+    maps_url = (closest.get("maps_url") or "").strip()
+
+    # --- Contact ---
+    phones = partner.get("partner_phone_number", [])
+    phone_text = ", ".join(phones) if phones else "No disponible"
+
+    whatsapps = partner.get("partner_whatsapp", [])
+    whatsapp_text = ", ".join(whatsapps) if whatsapps else "No disponible"
+
+    # Build block
+    prefix = f"*{index}. " if index is not None else "*"
+    header = f"{prefix}{name}*"
+    if category:
+        header += f"\n_{category}{distance_text}_"
+    else:
+        header += distance_text
+
+    block = f"""━━━━━━━━━━━━━━━
+{header}
+
+📍 *Dirección:*
+{address}"""
+
+    if maps_url:
+        block += f"\n🗺️ *Google Maps:* {maps_url}"
+
+    block += f"""
+
+📞 *Teléfono:* {phone_text}
+💬 *WhatsApp:* {whatsapp_text}"""
+
+    return block
 
 
 async def format_partner_referrals(partners: list[dict]) -> str:
     """Format partner list into a WhatsApp-friendly message."""
     if not partners:
-        return "No medical partners found for your needs."
+        return "No se encontraron socios médicos para tus necesidades."
 
-    parts = ["🏥 *I found the following medical partners for you:*\n"]
+    parts = ["🏥 *Encontré los siguientes socios médicos para ti:*\n"]
 
     for i, partner in enumerate(partners, 1):
-        name = partner.get("partner_name", "Unknown")
-        direccion, maps_url = _build_location_fields(partner)
-
-        distance = partner.get("distance_km")
-        distance_text = f" ({round(distance, 1)} km away)" if distance else ""
-
-        phone_numbers = partner.get("partner_phone_number") or partner.get("phone_number", [])
-        phone_text = ", ".join(phone_numbers) if phone_numbers else "Not available"
-
-        emergency_numbers = partner.get("emergency_number", [])
-        emergency_text = (
-            ", ".join([n for n in emergency_numbers if n]) if emergency_numbers else "Not available"
-        )
-
-        website = (partner.get("website") or "").strip().replace('"', "").replace("'", "")
-        website_text = website if website else "Not available"
-
-        block = f"""
-━━━━━━━━━━━━━━━
-*{i}. {name}*{distance_text}
-
-📍 *Address:*
-{direccion}"""
-
-        if maps_url and maps_url.strip():
-            block += f"\n🗺️ *Google Maps:* {maps_url.strip()}"
-
-        block += f"""
-
-📞 *Phone:* {phone_text}
-🚨 *Emergency:* {emergency_text}
-🌐 *Website:* {website_text}
-"""
-        parts.append(block)
+        parts.append(_format_partner_block(partner, index=i))
 
     parts.append(
-        "\n━━━━━━━━━━━━━━━\n\n💡 Please contact them directly to schedule an appointment."
+        "\n━━━━━━━━━━━━━━━\n\n💡 Contáctalos directamente para agendar una cita."
     )
-    return "\n".join(parts)
+    return "\n\n".join(parts)
 
 
 async def format_fallback_referral(partner: dict, max_distance_searched: float | None) -> str:
-    """Format a fallback referral message for a partner outside the search radius."""
+    """Format a fallback referral when no partners are within the search radius."""
     if not partner:
-        return "No medical partners found for your needs."
+        return "No se encontraron socios médicos para tus necesidades."
 
     intro = (
-        f"⚠️ *I couldn't find any medical partners within {max_distance_searched} km of your location.*\n\n"
-        "However, this partner might be helpful for your symptoms:\n"
+        f"⚠️ *No encontré socios médicos dentro de {max_distance_searched} km de tu ubicación.*\n\n"
+        "Sin embargo, este socio podría ayudarte con tus síntomas:\n\n"
     )
 
-    name = partner.get("partner_name", "Unknown")
-    direccion, maps_url = _build_location_fields(partner)
-
-    distance = partner.get("distance_km")
-    distance_text = f" ({round(distance, 1)} km away)" if distance else ""
-
-    phone_numbers = partner.get("partner_phone_number") or partner.get("phone_number", [])
-    phone_text = ", ".join(phone_numbers) if phone_numbers else "Not available"
-
-    emergency_numbers = partner.get("emergency_number", [])
-    emergency_text = (
-        ", ".join([n for n in emergency_numbers if n]) if emergency_numbers else "Not available"
-    )
-
-    website = (partner.get("website") or "").strip().replace('"', "").replace("'", "")
-    website_text = website if website else "Not available"
-
-    block = f"""
-━━━━━━━━━━━━━━━
-*{name}*{distance_text}
-
-📍 *Address:*
-{direccion}"""
-
-    if maps_url and maps_url.strip():
-        block += f"\n🗺️ *Google Maps:* {maps_url.strip()}"
-
-    block += f"""
-
-📞 *Phone:* {phone_text}
-🚨 *Emergency:* {emergency_text}
-🌐 *Website:* {website_text}
-"""
+    block = _format_partner_block(partner, index=None)
 
     footer = (
-        "\n━━━━━━━━━━━━━━━\n\n"
-        "⚠️ *Note:* This partner is outside your search radius but may be able to help "
-        "with your symptoms.\n\n"
-        "💡 Please contact them to verify they can assist you, or consider contacting "
-        "your local hospital."
+        "\n\n━━━━━━━━━━━━━━━\n\n"
+        "⚠️ *Nota:* Este socio está fuera de tu radio de búsqueda pero puede ser de ayuda.\n\n"
+        "💡 Contáctalos para verificar que pueden asistirte, o considera contactar tu hospital local."
     )
 
     return intro + block + footer
