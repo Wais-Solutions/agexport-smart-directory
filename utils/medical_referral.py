@@ -21,7 +21,7 @@ MAX_DISTANCE_GPS = 30    # km — GPS locations
 MAX_DISTANCE_TEXT = 60   # km — text-based locations
 
 # Gaussian scoring parameters
-DISTANCE_SIGMA_KM = 20.0   # controls how fast distance score decays
+DISTANCE_SIGMA_KM = 50.0   # controls how fast distance score decays (matches notebook)
 SIMILARITY_SIGMA = 0.3     # controls how fast similarity score decays
 
 # Emergency boost multiplier applied to matching emergency services
@@ -219,17 +219,23 @@ async def find_matching_partners(
     max_distance_km: float | None = MAX_DISTANCE_GPS,
 ) -> list[dict]:
     """
-    Rank all partners by a combined service-similarity × distance score.
+    Rank all partners by a combined service-similarity × distance score,
+    exactly as implemented in partner_emb_ranking.ipynb.
 
-    The approach follows the notebook (partner_emb_ranking.ipynb):
-      1. Build a query embedding from the symptom text + LLM-extracted signals.
-      2. For each partner, compute a Gaussian service similarity score using the
-         pre-computed embeddings stored in the `services` collection.
-      3. For each partner location, compute a Gaussian distance score.
-      4. Final score = service_score × distance_score (multiplicative).
-      5. If max_distance_km is not None, only partners whose closest location is
-         within the radius are considered (hard filter applied AFTER ranking).
-      6. Return the top-2 partners.
+    Flow:
+      1. Extract symptoms/services/emergency flag via Groq LLM.
+      2. Build a single query embedding (mean of original text + extracted signals).
+      3. For each partner, score every service against the query embedding with a
+         Gaussian similarity. Apply 3× boost for emergency services when relevant.
+         Take the top-1 service score as the partner's service_score.
+      4. For each partner geo-location compute distance_score (Gaussian, σ=50 km).
+         combined_score = service_score × distance_score. Keep the best location.
+      5. Sort all partners by final_score descending.
+      6. If max_distance_km is given (normal path): return top-K partners whose
+         closest location is within the radius.
+         If none qualify, return [] so the caller can trigger the fallback.
+      7. If max_distance_km is None (fallback path): return global top-K with no
+         distance filter, so the caller always gets the best available match.
     """
     from utils.db_tools import db
 
@@ -243,7 +249,7 @@ async def find_matching_partners(
         symptoms_query = ", ".join(symptoms)
         extracted = await extract_symptoms_services(symptoms_query)
 
-        # Build query embedding: average of [original text, symptoms, possible_services]
+        # Build query embedding: mean of [original text, symptoms, possible_services]
         query_chunks = (
             [symptoms_query]
             + extracted["symptoms"]
@@ -265,7 +271,7 @@ async def find_matching_partners(
                 for s in partner.get("partner_services", [])
             ]
 
-            # --- Service similarity score --------------------------------
+            # --- Service similarity score (top-1 as in notebook) --------
             service_scores: list[float] = []
             for svc_name in partner_services:
                 emb = service_embedding_map.get(svc_name)
@@ -275,16 +281,19 @@ async def find_matching_partners(
                 raw_sim = _cosine_similarity(query_emb, emb)
                 sim_score = _gaussian_similarity(raw_sim, sigma=SIMILARITY_SIGMA)
 
-                # Boost emergency services when the patient query is an emergency
                 if _has_emergency_signal([svc_name]) and extracted["is_emergency"]:
                     sim_score = sim_score * EMERGENCY_SERVICE_BOOST_FACTOR
 
                 service_scores.append(sim_score)
 
-            # Use best service score (top-1)
-            service_score: float = max(service_scores) if service_scores else 0.0
+            # top-1 average (identical to max, matches notebook exactly)
+            if service_scores:
+                top_scores = sorted(service_scores, reverse=True)[:1]
+                service_score = float(sum(top_scores) / len(top_scores))
+            else:
+                service_score = 0.0
 
-            # --- Best location by combined score -------------------------
+            # --- Best location (highest combined score) ------------------
             best_location: dict | None = None
             best_combined: float = -1.0
 
@@ -317,6 +326,7 @@ async def find_matching_partners(
                     "lat": float(glat),
                     "lon": float(glon),
                     "maps_url": geo.get("maps_url"),
+                    "place_id": geo.get("place_id"),
                     "distance_km": distance_km,
                     "distance_score": distance_score,
                     "combined_score": combined,
@@ -326,48 +336,40 @@ async def find_matching_partners(
                     best_combined = combined
                     best_location = location_result
 
-            # Fallback when no geo-location is available
+            # Partner has no geo-locations
             if best_location is None:
                 best_location = {
-                    "location_index": None,
-                    "query": None,
-                    "name": None,
-                    "direccion": None,
-                    "lat": None,
-                    "lon": None,
-                    "maps_url": None,
-                    "distance_km": None,
-                    "distance_score": 0.0,
-                    "combined_score": service_score,  # distance-agnostic
+                    "location_index": None, "query": None, "name": None,
+                    "direccion": None, "lat": None, "lon": None,
+                    "maps_url": None, "place_id": None,
+                    "distance_km": None, "distance_score": 0.0,
+                    "combined_score": service_score,
                 }
                 best_combined = service_score
 
             ranked.append({
-                # Original MongoDB document fields
                 **{k: v for k, v in partner.items() if k != "_id"},
                 "_id": partner.get("_id"),
-                # Scoring metadata
                 "service_score": service_score,
                 "overall_similarity": service_score,
                 "final_score": best_combined,
-                # Location fields expected by format helpers
                 "closest_location": best_location,
                 "distance_km": best_location["distance_km"],
-                # Extra signals for audit trail
                 "extracted_signals": extracted,
             })
 
+        # Sort by final_score descending — same as notebook
         ranked.sort(key=lambda x: x["final_score"], reverse=True)
 
-        # Hard distance filter (only applied when a radius is specified)
         if max_distance_km is not None:
+            # Normal path: only return partners within the hard radius
             within_radius = [
                 p for p in ranked
                 if p["distance_km"] is not None and p["distance_km"] <= max_distance_km
             ]
             return within_radius[:TOP_K]
 
-        # No radius filter — return global top-2
+        # Fallback path (max_distance_km=None): no radius filter, return global top-K
         return ranked[:TOP_K]
 
     except Exception as e:
