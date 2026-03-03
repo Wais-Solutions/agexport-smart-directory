@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from bson import ObjectId
-from utils.db_tools import db  #reutilizar conexion existente
+from datetime import datetime
+from utils.db_tools import db  # reutilizar conexion existente
 
 router = APIRouter()
 
@@ -13,13 +14,23 @@ COLLECTIONS = [
     "referrals",
 ]
 
-def serialize(doc):
-    doc["_id"] = str(doc["_id"])
-    return doc
+def serialize(value):
+    """Recursivamente serializa tipos de MongoDB a tipos JSON-compatibles."""
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: serialize(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [serialize(item) for item in value]
+    return value
+
 
 @router.get("/")
 def list_collections():
     return {"collections": COLLECTIONS}
+
 
 @router.get("/{collection}")
 def get_collection(
@@ -29,14 +40,15 @@ def get_collection(
 ):
     if collection not in COLLECTIONS:
         raise HTTPException(status_code=404, detail=f"Colección '{collection}' no encontrada")
-    
+
     docs = list(db[collection].find().sort("_id", -1).skip(skip).limit(limit))
     return {
         "collection": collection,
         "total": db[collection].count_documents({}),
         "returned": len(docs),
-        "data": [serialize(d) for d in docs],
+        "data": [serialize(doc) for doc in docs],
     }
+
 
 @router.get("/{collection}/{id}")
 def get_document(collection: str, id: str):
@@ -50,6 +62,7 @@ def get_document(collection: str, id: str):
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return serialize(doc)
 
+
 @router.delete("/{collection}/{id}")
 def delete_document(collection: str, id: str):
     if collection not in COLLECTIONS:
@@ -61,6 +74,7 @@ def delete_document(collection: str, id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return {"deleted": True, "id": id}
+
 
 @router.delete("/{collection}")
 def clear_collection(collection: str):
