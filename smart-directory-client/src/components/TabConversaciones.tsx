@@ -1,11 +1,13 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { Phone, MapPin, Globe, MessageSquare, Stethoscope, ChevronDown, ChevronRight, Trash2, RefreshCw, Archive } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Phone, MapPin, Globe, MessageSquare, Stethoscope, ChevronDown, ChevronRight, Trash2, RefreshCw, Archive, Search, X, SlidersHorizontal } from 'lucide-react'
 
 //const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
 const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────
 type Location = {
   lat?: number | null
   lon?: number | null
@@ -30,7 +32,22 @@ type HistoricalConversation = {
   history: any[]
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+type OngoingFilters = {
+  search: string
+  language: string
+  hasRecommendation: 'all' | 'yes' | 'no'
+  hasReferral: 'all' | 'yes' | 'no'
+  hasLocation: 'all' | 'yes' | 'no'
+  hasSymptoms: 'all' | 'yes' | 'no'
+}
+
+type HistoricalFilters = {
+  search: string
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────
 function formatLocation(location: Location): { text: string; isCoords: boolean } {
   if (!location) return { text: 'Sin ubicación', isCoords: false }
   if (location.lat != null && location.lon != null) {
@@ -48,18 +65,80 @@ function formatLocation(location: Location): { text: string; isCoords: boolean }
 function formatLanguage(lang: string | null): string {
   if (!lang) return '—'
   const map: Record<string, string> = {
-    // códigos
     es: 'Español', en: 'English',
     'es-MX': 'Español', 'es-GT': 'Español', 'en-US': 'English',
-    // texto libre (como viene en el api)
-    spanish: 'Español', english: 'English',
-    español: 'Español',
+    spanish: 'Español', english: 'English', español: 'Español',
   }
   return map[lang.toLowerCase()] ?? lang
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LocationLink ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// componente separado para evitar template literals en JSX
+function normalizeLanguage(lang: string | null): string {
+  if (!lang) return ''
+  const map: Record<string, string> = {
+    es: 'Español', en: 'English',
+    'es-mx': 'Español', 'es-gt': 'Español', 'en-us': 'English',
+    spanish: 'Español', english: 'English', español: 'Español',
+  }
+  return map[lang.toLowerCase()] ?? lang
+}
+
+function getUniqueLanguages(convs: OngoingConversation[]): string[] {
+  const set = new Set<string>()
+  convs.forEach(function(c) {
+    const n = normalizeLanguage(c.language)
+    if (n) set.add(n)
+  })
+  return Array.from(set).sort()
+}
+
+function applyOngoingFilters(convs: OngoingConversation[], f: OngoingFilters): OngoingConversation[] {
+  return convs.filter(function(c) {
+    if (f.search && !c.sender_id.toLowerCase().includes(f.search.toLowerCase())) return false
+    if (f.language && normalizeLanguage(c.language) !== f.language) return false
+    if (f.hasRecommendation === 'yes' && !c.recommendation) return false
+    if (f.hasRecommendation === 'no' && !!c.recommendation) return false
+    if (f.hasReferral === 'yes' && !c.referral_provided) return false
+    if (f.hasReferral === 'no' && !!c.referral_provided) return false
+    const loc = formatLocation(c.location)
+    if (f.hasLocation === 'yes' && loc.text === 'Sin ubicación') return false
+    if (f.hasLocation === 'no' && loc.text !== 'Sin ubicación') return false
+    const hasSym = Array.isArray(c.symptoms) && c.symptoms.length > 0
+    if (f.hasSymptoms === 'yes' && !hasSym) return false
+    if (f.hasSymptoms === 'no' && hasSym) return false
+    return true
+  })
+}
+
+function applyHistoricalFilters(convs: HistoricalConversation[], f: HistoricalFilters): HistoricalConversation[] {
+  return convs.filter(function(c) {
+    if (f.search && !c.sender_id.toLowerCase().includes(f.search.toLowerCase())) return false
+    return true
+  })
+}
+
+function countActiveFilters(f: OngoingFilters): number {
+  let n = 0
+  if (f.search) n++
+  if (f.language) n++
+  if (f.hasRecommendation !== 'all') n++
+  if (f.hasReferral !== 'all') n++
+  if (f.hasLocation !== 'all') n++
+  if (f.hasSymptoms !== 'all') n++
+  return n
+}
+
+const defaultOngoingFilters: OngoingFilters = {
+  search: '',
+  language: '',
+  hasRecommendation: 'all',
+  hasReferral: 'all',
+  hasLocation: 'all',
+  hasSymptoms: 'all',
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LocationLink
+// ─────────────────────────────────────────────────────────────────
 function LocationLink({ lat, lon, text }: { lat: number; lon: number; text: string }) {
   const url = 'https://www.google.com/maps?q=' + lat + ',' + lon
   return (
@@ -75,7 +154,9 @@ function LocationLink({ lat, lon, text }: { lat: number; lon: number; text: stri
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Badge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// Badge
+// ─────────────────────────────────────────────────────────────────
 function Badge({ children, color }: { children: React.ReactNode; color: 'violet' | 'forest' | 'navy' | 'amber' }) {
   const styles = {
     violet: 'bg-violet/10 text-violet border border-violet/20',
@@ -90,7 +171,9 @@ function Badge({ children, color }: { children: React.ReactNode; color: 'violet'
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ InfoRow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// InfoRow
+// ─────────────────────────────────────────────────────────────────
 function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2 text-sm">
@@ -101,7 +184,9 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MessageThread ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// MessageThread
+// ─────────────────────────────────────────────────────────────────
 type Message = { sender?: string; text?: string; role?: string; content?: string; [key: string]: any }
 
 function MessageThread({ messages, senderId }: { messages: Message[]; senderId: string }) {
@@ -123,7 +208,6 @@ function MessageThread({ messages, senderId }: { messages: Message[]; senderId: 
       <span className="text-violet/50 mt-0.5 shrink-0"><MessageSquare size={13} /></span>
       <span className="text-dark/40 font-display text-xs w-24 shrink-0 pt-0.5">MENSAJES</span>
       <div className="flex-1">
-        {/* Toggle row */}
         <button
           onClick={function(e) { e.stopPropagation(); setOpen(!open) }}
           className="flex items-center gap-2 group"
@@ -133,16 +217,12 @@ function MessageThread({ messages, senderId }: { messages: Message[]; senderId: 
           </span>
           {count > 0 && (
             <span className="flex items-center gap-1 text-xs text-violet/60 group-hover:text-violet transition-colors font-display">
-              {open ? 'ocultar' : 'ver últimos ' + Math.min(10, count)}
-              {open
-                ? <ChevronDown size={11} />
-                : <ChevronRight size={11} />
-              }
+              {open ? 'ocultar' : ('ver últimos ' + Math.min(10, count))}
+              {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
             </span>
           )}
         </button>
 
-        {/* Chat bubbles */}
         {open && count > 0 && (
           <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-1">
             {count > 10 && (
@@ -154,19 +234,14 @@ function MessageThread({ messages, senderId }: { messages: Message[]; senderId: 
               const user = isUser(msg)
               const text = getMsgText(msg)
               return (
-                <div
-                  key={i}
-                  className={'flex ' + (user ? 'justify-end' : 'justify-start')}
-                >
-                  <div
-                    className={
-                      'max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ' +
-                      (user
-                        ? 'bg-violet text-pearl rounded-br-sm'
-                        : 'bg-navy/8 text-dark/70 border border-navy/10 rounded-bl-sm'
-                      )
-                    }
-                  >
+                <div key={i} className={'flex ' + (user ? 'justify-end' : 'justify-start')}>
+                  <div className={
+                    'max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ' +
+                    (user
+                      ? 'bg-violet text-pearl rounded-br-sm'
+                      : 'bg-navy/8 text-dark/70 border border-navy/10 rounded-bl-sm'
+                    )
+                  }>
                     {text}
                   </div>
                 </div>
@@ -179,7 +254,161 @@ function MessageThread({ messages, senderId }: { messages: Message[]; senderId: 
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ OngoingCard ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// FilterSelect
+// ─────────────────────────────────────────────────────────────────
+function FilterSelect({ label, value, onChange, options }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-display text-dark/35 tracking-widest">{label}</label>
+      <select
+        value={value}
+        onChange={function(e) { onChange(e.target.value) }}
+        className="bg-pearl border border-navy/15 rounded px-2.5 py-1.5 text-xs text-dark/70 font-body focus:outline-none focus:border-violet transition-colors cursor-pointer"
+      >
+        {options.map(function(o) {
+          return <option key={o.value} value={o.value}>{o.label}</option>
+        })}
+      </select>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OngoingFiltersPanel
+// ─────────────────────────────────────────────────────────────────
+function OngoingFiltersPanel({ filters, onChange, languages, onReset, activeCount }: {
+  filters: OngoingFilters
+  onChange: (f: OngoingFilters) => void
+  languages: string[]
+  onReset: () => void
+  activeCount: number
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-2 mb-2">
+        {/* Search */}
+        <div className="relative flex-1 max-w-xs">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark/30" />
+          <input
+            type="text"
+            placeholder="Buscar por número..."
+            value={filters.search}
+            onChange={function(e) { onChange({ ...filters, search: e.target.value }) }}
+            className="w-full pl-7 pr-7 py-1.5 text-xs border border-navy/15 rounded bg-pearl text-dark/70 focus:outline-none focus:border-violet transition-colors font-body placeholder:text-dark/25"
+          />
+          {filters.search && (
+            <button
+              onClick={function() { onChange({ ...filters, search: '' }) }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-dark/25 hover:text-dark/50"
+            >
+              <X size={11} />
+            </button>
+          )}
+        </div>
+
+        {/* Toggle advanced */}
+        <button
+          onClick={function() { setOpen(!open) }}
+          className={
+            'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-display border transition-colors ' +
+            (open || activeCount > 0
+              ? 'bg-violet text-pearl border-violet'
+              : 'border-navy/15 text-dark/40 hover:text-dark/70 hover:bg-navy/5'
+            )
+          }
+        >
+          <SlidersHorizontal size={12} />
+          FILTROS
+          {activeCount > 0 && (
+            <span className={
+              'w-4 h-4 rounded-full text-xs flex items-center justify-center font-display ' +
+              (open ? 'bg-pearl text-violet' : 'bg-white/20 text-pearl')
+            }>
+              {activeCount}
+            </span>
+          )}
+        </button>
+
+        {activeCount > 0 && (
+          <button
+            onClick={onReset}
+            className="flex items-center gap-1 text-xs text-dark/30 hover:text-dark/60 transition-colors font-display"
+          >
+            <X size={11} />
+            LIMPIAR
+          </button>
+        )}
+      </div>
+
+      {/* Advanced filters grid */}
+      {open && (
+        <div className="grid grid-cols-2 gap-3 p-4 bg-navy/[0.02] border border-navy/10 rounded-xl">
+          <FilterSelect
+            label="IDIOMA"
+            value={filters.language}
+            onChange={function(v) { onChange({ ...filters, language: v }) }}
+            options={[
+              { value: '', label: 'Todos los idiomas' },
+              ...languages.map(function(l) { return { value: l, label: l } }),
+            ]}
+          />
+          <FilterSelect
+            label="RECOMENDACIÓN"
+            value={filters.hasRecommendation}
+            onChange={function(v) { onChange({ ...filters, hasRecommendation: v as OngoingFilters['hasRecommendation'] }) }}
+            options={[
+              { value: 'all', label: 'Todas' },
+              { value: 'yes', label: 'Con recomendación' },
+              { value: 'no',  label: 'Sin recomendación' },
+            ]}
+          />
+          <FilterSelect
+            label="REFERIDO"
+            value={filters.hasReferral}
+            onChange={function(v) { onChange({ ...filters, hasReferral: v as OngoingFilters['hasReferral'] }) }}
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'yes', label: 'Con referido' },
+              { value: 'no',  label: 'Sin referido' },
+            ]}
+          />
+          <FilterSelect
+            label="UBICACIÓN"
+            value={filters.hasLocation}
+            onChange={function(v) { onChange({ ...filters, hasLocation: v as OngoingFilters['hasLocation'] }) }}
+            options={[
+              { value: 'all', label: 'Todas' },
+              { value: 'yes', label: 'Con ubicación' },
+              { value: 'no',  label: 'Sin ubicación' },
+            ]}
+          />
+          <FilterSelect
+            label="SÍNTOMAS"
+            value={filters.hasSymptoms}
+            onChange={function(v) { onChange({ ...filters, hasSymptoms: v as OngoingFilters['hasSymptoms'] }) }}
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'yes', label: 'Con síntomas' },
+              { value: 'no',  label: 'Sin síntomas' },
+            ]}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OngoingCard
+// ─────────────────────────────────────────────────────────────────
 function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const loc = formatLocation(conv.location)
@@ -187,8 +416,6 @@ function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: 
 
   return (
     <div className="border border-navy/10 rounded-xl overflow-hidden shadow-sm bg-pearl transition-shadow hover:shadow-md">
-
-      {/* Header */}
       <div
         className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-violet/[0.03] transition-colors"
         onClick={function() { setExpanded(!expanded) }}
@@ -198,9 +425,7 @@ function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: 
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="font-display text-sm text-dark tracking-wide truncate">
-            {conv.sender_id || '—'}
-          </p>
+          <p className="font-display text-sm text-dark tracking-wide truncate">{conv.sender_id || '—'}</p>
           <p className="text-xs text-dark/35 mt-0.5">
             {msgCount} {msgCount === 1 ? 'mensaje' : 'mensajes'}
             {conv.referral_count > 0 && (' · ' + conv.referral_count + ' referencia' + (conv.referral_count > 1 ? 's' : ''))}
@@ -227,10 +452,8 @@ function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: 
         </div>
       </div>
 
-      {/* Expanded */}
       {expanded && (
         <div className="border-t border-navy/10 px-5 py-4 bg-navy/[0.015] space-y-3">
-
           <InfoRow icon={<Stethoscope size={13} />} label="SÍNTOMAS">
             {Array.isArray(conv.symptoms) && conv.symptoms.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
@@ -272,22 +495,21 @@ function OngoingCard({ conv, onDelete }: { conv: OngoingConversation; onDelete: 
               <span className="text-dark/30 italic text-xs">Sin recomendación aún</span>
             )}
           </InfoRow>
-
         </div>
       )}
     </div>
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ HistoricalCard ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// HistoricalCard
+// ─────────────────────────────────────────────────────────────────
 function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const historyCount = Array.isArray(conv.history) ? conv.history.length : 0
 
   return (
     <div className="border border-navy/10 rounded-xl overflow-hidden shadow-sm bg-pearl transition-shadow hover:shadow-md">
-
-      {/* Header */}
       <div
         className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-violet/[0.03] transition-colors"
         onClick={function() { setExpanded(!expanded) }}
@@ -297,9 +519,7 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="font-display text-sm text-dark tracking-wide truncate">
-            {conv.sender_id || '—'}
-          </p>
+          <p className="font-display text-sm text-dark tracking-wide truncate">{conv.sender_id || '—'}</p>
           <p className="text-xs text-dark/35 mt-0.5">
             {historyCount} conversación{historyCount !== 1 ? 'es' : ''} archivada{historyCount !== 1 ? 's' : ''}
           </p>
@@ -321,7 +541,6 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
         </div>
       </div>
 
-      {/* Expanded */}
       {expanded && (
         <div className="border-t border-navy/10 bg-navy/[0.015]">
           {Array.isArray(conv.history) && conv.history.length > 0 ? (
@@ -330,11 +549,8 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
               const hMsgCount = Array.isArray(h.messages) ? h.messages.length : 0
               return (
                 <div key={i} className={'px-5 py-3 ' + (i < conv.history.length - 1 ? 'border-b border-navy/10' : '')}>
-
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-display text-xs text-violet/60 tracking-widest">
-                      {'ARCHIVO #' + (i + 1)}
-                    </span>
+                    <span className="font-display text-xs text-violet/60 tracking-widest">{'ARCHIVO #' + (i + 1)}</span>
                     {h.archived_at && (
                       <span className="text-xs text-dark/25 font-display">
                         {'· ' + new Date(h.archived_at).toLocaleDateString('es-GT')}
@@ -342,7 +558,6 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
                     )}
                     <span className="ml-auto text-xs text-dark/30">{hMsgCount} mensajes</span>
                   </div>
-
                   <div className="space-y-2">
                     {Array.isArray(h.symptoms) && h.symptoms.length > 0 && (
                       <div className="flex flex-wrap gap-1">
@@ -355,7 +570,6 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
                         })}
                       </div>
                     )}
-
                     {hLoc.text !== 'Sin ubicación' && (
                       <div className="flex items-center gap-1.5 text-xs text-dark/45">
                         <MapPin size={11} className="text-violet/40" />
@@ -366,14 +580,12 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
                         )}
                       </div>
                     )}
-
                     {h.recommendation && (
                       <p className="text-xs text-dark/50 bg-forest/5 border border-forest/10 rounded px-2.5 py-1.5 leading-relaxed">
                         {h.recommendation}
                       </p>
                     )}
                   </div>
-
                 </div>
               )
             })
@@ -386,14 +598,15 @@ function HistoricalCard({ conv, onDelete }: { conv: HistoricalConversation; onDe
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Section ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function Section({
-  title, subtitle, icon, count, loading, children,
-}: {
+// ─────────────────────────────────────────────────────────────────
+// Section
+// ─────────────────────────────────────────────────────────────────
+function Section({ title, subtitle, icon, count, total, loading, children }: {
   title: string
   subtitle: string
   icon: React.ReactNode
   count: number
+  total: number
   loading: boolean
   children: React.ReactNode
 }) {
@@ -407,7 +620,10 @@ function Section({
           <h3 className="font-display text-sm text-navy tracking-widest uppercase">{title}</h3>
           <p className="text-xs text-dark/35">{subtitle}</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1.5">
+          {!loading && count !== total && (
+            <span className="text-xs text-dark/30 font-display">{count} de {total}</span>
+          )}
           <Badge color={loading ? 'navy' : 'violet'}>{loading ? '...' : count}</Badge>
         </div>
       </div>
@@ -416,12 +632,16 @@ function Section({
   )
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Main ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ─────────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────────
 export default function TabConversaciones() {
   const [ongoing, setOngoing] = useState<OngoingConversation[]>([])
   const [historical, setHistorical] = useState<HistoricalConversation[]>([])
   const [loadingOngoing, setLoadingOngoing] = useState(true)
   const [loadingHistorical, setLoadingHistorical] = useState(true)
+  const [ongoingFilters, setOngoingFilters] = useState<OngoingFilters>(defaultOngoingFilters)
+  const [historicalFilters, setHistoricalFilters] = useState<HistoricalFilters>({ search: '' })
 
   const loadOngoing = async () => {
     setLoadingOngoing(true)
@@ -457,6 +677,17 @@ export default function TabConversaciones() {
     loadHistorical()
   }
 
+  const filteredOngoing = useMemo(
+    function() { return applyOngoingFilters(ongoing, ongoingFilters) },
+    [ongoing, ongoingFilters]
+  )
+  const filteredHistorical = useMemo(
+    function() { return applyHistoricalFilters(historical, historicalFilters) },
+    [historical, historicalFilters]
+  )
+  const languages = useMemo(function() { return getUniqueLanguages(ongoing) }, [ongoing])
+  const activeOngoingFilters = useMemo(function() { return countActiveFilters(ongoingFilters) }, [ongoingFilters])
+
   const EmptyState = function({ label }: { label: string }) {
     return (
       <div className="text-center py-12 border border-dashed border-navy/15 rounded-xl">
@@ -488,35 +719,74 @@ export default function TabConversaciones() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
-        <Section
-          title="En Curso"
-          subtitle="Conversaciones activas en WhatsApp"
-          icon={<MessageSquare size={14} className="text-violet" />}
-          count={ongoing.length}
-          loading={loadingOngoing}
-        >
-          {loadingOngoing
-            ? <LoadingState />
-            : ongoing.length === 0
-              ? <EmptyState label="SIN CONVERSACIONES ACTIVAS" />
-              : ongoing.map(function(c) { return <OngoingCard key={c._id} conv={c} onDelete={deleteOngoing} /> })
-          }
-        </Section>
+        {/* ── En Curso ── */}
+        <div>
+          <Section
+            title="En Curso"
+            subtitle="Conversaciones activas en WhatsApp"
+            icon={<MessageSquare size={14} className="text-violet" />}
+            count={filteredOngoing.length}
+            total={ongoing.length}
+            loading={loadingOngoing}
+          >
+            {!loadingOngoing && (
+              <OngoingFiltersPanel
+                filters={ongoingFilters}
+                onChange={setOngoingFilters}
+                languages={languages}
+                onReset={function() { setOngoingFilters(defaultOngoingFilters) }}
+                activeCount={activeOngoingFilters}
+              />
+            )}
+            {loadingOngoing
+              ? <LoadingState />
+              : filteredOngoing.length === 0
+                ? <EmptyState label={activeOngoingFilters > 0 ? 'SIN RESULTADOS PARA ESTOS FILTROS' : 'SIN CONVERSACIONES ACTIVAS'} />
+                : filteredOngoing.map(function(c) { return <OngoingCard key={c._id} conv={c} onDelete={deleteOngoing} /> })
+            }
+          </Section>
+        </div>
 
-        <Section
-          title="Históricas"
-          subtitle="Conversaciones archivadas"
-          icon={<Archive size={14} className="text-forest" />}
-          count={historical.length}
-          loading={loadingHistorical}
-        >
-          {loadingHistorical
-            ? <LoadingState />
-            : historical.length === 0
-              ? <EmptyState label="SIN HISTORIAL" />
-              : historical.map(function(c) { return <HistoricalCard key={c._id} conv={c} onDelete={deleteHistorical} /> })
-          }
-        </Section>
+        {/* ── Históricas ── */}
+        <div>
+          <Section
+            title="Históricas"
+            subtitle="Conversaciones archivadas"
+            icon={<Archive size={14} className="text-forest" />}
+            count={filteredHistorical.length}
+            total={historical.length}
+            loading={loadingHistorical}
+          >
+            {!loadingHistorical && (
+              <div className="mb-4">
+                <div className="relative max-w-xs">
+                  <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark/30" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por número..."
+                    value={historicalFilters.search}
+                    onChange={function(e) { setHistoricalFilters({ search: e.target.value }) }}
+                    className="w-full pl-7 pr-7 py-1.5 text-xs border border-navy/15 rounded bg-pearl text-dark/70 focus:outline-none focus:border-violet transition-colors font-body placeholder:text-dark/25"
+                  />
+                  {historicalFilters.search && (
+                    <button
+                      onClick={function() { setHistoricalFilters({ search: '' }) }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-dark/25 hover:text-dark/50"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            {loadingHistorical
+              ? <LoadingState />
+              : filteredHistorical.length === 0
+                ? <EmptyState label={historicalFilters.search ? 'SIN RESULTADOS' : 'SIN HISTORIAL'} />
+                : filteredHistorical.map(function(c) { return <HistoricalCard key={c._id} conv={c} onDelete={deleteHistorical} /> })
+            }
+          </Section>
+        </div>
 
       </div>
     </div>
