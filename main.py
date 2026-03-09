@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import messages, database
+from routers import messages, database, verification
 
 app = FastAPI()
 
@@ -12,8 +12,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(messages.router, prefix="/message", tags=["message"])
-app.include_router(database.router, prefix="/db", tags=["database"])
+app.include_router(messages.router,      prefix="/message",      tags=["message"])
+app.include_router(database.router,      prefix="/db",           tags=["database"])
+app.include_router(verification.router,  prefix="/verification", tags=["verification"])
 
 @app.get("/")
 async def root():
