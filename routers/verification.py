@@ -54,7 +54,7 @@ def get_partners_for_verification():
     ))
     result = []
     for doc in docs:
-        raw_numbers = "58792752" #doc.get("partner_whatsapp") or []
+        raw_numbers = ["58792752"]  # TEST: reemplazar con doc.get("partner_whatsapp") or []
         formatted = [format_phone(n) for n in raw_numbers if n]
         result.append({
             "_id":              str(doc["_id"]),
