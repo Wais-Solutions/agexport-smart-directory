@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from bson import ObjectId
 from datetime import datetime
+from typing import Optional, List
+from pydantic import BaseModel
 from utils.db_tools import db  # reutilizar conexion existente
 
 router = APIRouter()
@@ -25,6 +27,13 @@ def serialize(value):
     if isinstance(value, list):
         return [serialize(item) for item in value]
     return value
+
+
+# ── Modelo para edición de partners ──────────────────────────────
+class PartnerUpdate(BaseModel):
+    partner_name: Optional[str] = None
+    partner_category: Optional[str] = None
+    partner_services: Optional[List[str]] = None
 
 
 @router.get("/")
@@ -61,6 +70,27 @@ def get_document(collection: str, id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return serialize(doc)
+
+
+@router.patch("/partners/{id}")
+def update_partner(id: str, body: PartnerUpdate):
+    """Edita solo partner_name, partner_category y partner_services."""
+    try:
+        oid = ObjectId(id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
+
+    # Solo incluir campos que vienen en el body (no None)
+    fields = body.model_dump(exclude_none=True)
+    if not fields:
+        raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+
+    result = db["partners"].update_one({"_id": oid}, {"$set": fields})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Socio no encontrado")
+
+    updated = db["partners"].find_one({"_id": oid})
+    return serialize(updated)
 
 
 @router.delete("/{collection}/{id}")
