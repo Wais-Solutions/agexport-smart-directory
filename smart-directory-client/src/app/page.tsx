@@ -4,13 +4,15 @@ import TabSocios from '@/components/TabSocios'
 import TabRecomendaciones from '@/components/TabRecomendaciones'
 import TabConversaciones from '@/components/TabConversaciones'
 import TabLogs from '@/components/TabLogs'
-import { Users, GitBranch, MessageSquare, Terminal } from 'lucide-react'
+import TabVerificacion from '@/components/TabVerificacion'
+import { Users, GitBranch, MessageSquare, Terminal, ShieldCheck } from 'lucide-react'
 
 const tabs = [
-  { id: 'socios', label: 'Socios', icon: Users },
-  { id: 'recomendaciones', label: 'Recomendaciones', icon: GitBranch },
-  { id: 'conversaciones', label: 'Conversaciones', icon: MessageSquare },
-  { id: 'logs', label: 'Logs', icon: Terminal },
+  { id: 'socios',          label: 'Socios',          icon: Users },
+  { id: 'recomendaciones', label: 'Recomendaciones',  icon: GitBranch },
+  { id: 'conversaciones',  label: 'Conversaciones',   icon: MessageSquare },
+  { id: 'verificacion',    label: 'Verificación',     icon: ShieldCheck },
+  { id: 'logs',            label: 'Logs',             icon: Terminal },
 ]
 
 export default function Home() {
@@ -34,28 +36,33 @@ export default function Home() {
 
       {/* Tabs */}
       <nav className="px-8 pt-6 flex gap-1 border-b border-navy/10 bg-pearl">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActive(id)}
-            className={`flex items-center gap-2 px-5 py-3 text-sm font-display tracking-wide transition-all rounded-t-md
-              ${active === id
-                ? 'bg-violet text-pearl border-b-2 border-violet'
-                : 'text-dark/40 hover:text-dark/70 hover:bg-navy/5'
-              }`}
-          >
-            <Icon size={14} />
-            {label}
-          </button>
-        ))}
+        {tabs.map(function({ id, label, icon: Icon }) {
+          return (
+            <button
+              key={id}
+              onClick={function() { setActive(id) }}
+              className={
+                'flex items-center gap-2 px-5 py-3 text-sm font-display tracking-wide transition-all rounded-t-md ' +
+                (active === id
+                  ? 'bg-violet text-pearl border-b-2 border-violet'
+                  : 'text-dark/40 hover:text-dark/70 hover:bg-navy/5'
+                )
+              }
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          )
+        })}
       </nav>
 
       {/* Content */}
       <main className="p-8 bg-pearl min-h-[calc(100vh-120px)]">
-        {active === 'socios' && <TabSocios />}
+        {active === 'socios'          && <TabSocios />}
         {active === 'recomendaciones' && <TabRecomendaciones />}
-        {active === 'conversaciones' && <TabConversaciones />}
-        {active === 'logs' && <TabLogs />}
+        {active === 'conversaciones'  && <TabConversaciones />}
+        {active === 'verificacion'    && <TabVerificacion />}
+        {active === 'logs'            && <TabLogs />}
       </main>
     </div>
   )

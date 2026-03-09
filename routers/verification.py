@@ -58,7 +58,7 @@ async def send_verification_blast():
 
     for doc in docs:
         partner_name = doc.get("partner_name", str(doc["_id"]))
-        raw_numbers  = ["58792752"]  # TEST: reemplazar con doc.get("partner_whatsapp") or []
+        raw_numbers  = doc.get("partner_whatsapp") or [] #TEST: ["58792752"]
 
         for raw in raw_numbers:
             if not raw:
