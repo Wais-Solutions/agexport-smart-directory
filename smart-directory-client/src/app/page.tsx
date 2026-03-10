@@ -1,11 +1,12 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import TabSocios from '@/components/TabSocios'
 import TabRecomendaciones from '@/components/TabRecomendaciones'
 import TabConversaciones from '@/components/TabConversaciones'
 import TabLogs from '@/components/TabLogs'
 import TabVerificacion from '@/components/TabVerificacion'
-import { Users, GitBranch, MessageSquare, Terminal, ShieldCheck } from 'lucide-react'
+import { Users, GitBranch, MessageSquare, Terminal, ShieldCheck, LogOut } from 'lucide-react'
 
 const tabs = [
   { id: 'socios',          label: 'Socios',          icon: Users },
@@ -16,7 +17,14 @@ const tabs = [
 ]
 
 export default function Home() {
+  const router = useRouter()
   const [active, setActive] = useState('socios')
+
+  const handleLogout = async () => {
+    await fetch('/api/auth', { method: 'DELETE' })
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <div className="min-h-screen bg-pearl text-dark">
@@ -28,9 +36,18 @@ export default function Home() {
         <h1 className="font-display text-sm text-navy tracking-widest uppercase">
           AGEXPORT Smart Directory
         </h1>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-forest animate-pulse" />
-          <span className="text-xs text-dark/40 font-display">LIVE</span>
+        <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-forest animate-pulse" />
+            <span className="text-xs text-dark/40 font-display">LIVE</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs text-dark/30 hover:text-dark/60 font-display transition-colors border border-navy/10 hover:border-navy/25 px-3 py-1.5 rounded"
+          >
+            <LogOut size={11} />
+            SALIR
+          </button>
         </div>
       </header>
 

@@ -2,8 +2,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Phone, MapPin, Globe, MessageSquare, Stethoscope, ChevronDown, ChevronRight, Trash2, RefreshCw, Archive, Search, X, SlidersHorizontal } from 'lucide-react'
 
-//const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
-const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
+//const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
 
 // ─────────────────────────────────────────────────────────────────
 // Types

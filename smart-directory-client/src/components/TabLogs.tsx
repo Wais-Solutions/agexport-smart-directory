@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, Trash2, ChevronDown, ChevronRight, ChevronLeft, AlertCircle, Info, AlertTriangle, Bug, Search, X } from 'lucide-react'
 
-const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
+//const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
 const PAGE_SIZE = 25
 
 type Log = {
