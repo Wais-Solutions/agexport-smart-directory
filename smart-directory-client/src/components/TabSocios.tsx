@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Pencil, Trash2, X, Check, Search, ChevronDown, ChevronRight, Phone, MapPin, RefreshCw, Plus, SlidersHorizontal } from 'lucide-react'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
-//const API_BASE = 'https://agexport-smart-directory.onrender.com/db'
+const SERVICES_API = process.env.NEXT_PUBLIC_API_URL + '/services'
 
 // ─────────────────────────────────────────────────────────────────
 // Types
@@ -29,10 +29,17 @@ type Partner = {
   partner_geo_locations?: GeoLocation[]
 }
 
+type ServiceOption = {
+  service: string
+  og_service_name: string
+  description?: string
+}
+
 type EditForm = {
   partner_name: string
   partner_category: string
   partner_services: string[]
+  partner_whatsapp: string[]
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -63,6 +70,136 @@ function MapsLink({ url, label }: { url: string; label: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// ServiceDropdown — multiselect con búsqueda
+// ─────────────────────────────────────────────────────────────────
+function ServiceDropdown({
+  selected,
+  options,
+  loadingOptions,
+  onAdd,
+  onRemove,
+}: {
+  selected: string[]
+  options: ServiceOption[]
+  loadingOptions: boolean
+  onAdd: (service: string) => void
+  onRemove: (index: number) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Cerrar al hacer click fuera
+  useEffect(function() {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return function() { document.removeEventListener('mousedown', handleClickOutside) }
+  }, [])
+
+  const filtered = useMemo(function() {
+    const q = query.toLowerCase()
+    return options.filter(function(o) {
+      return o.og_service_name.toLowerCase().includes(q)
+    })
+  }, [options, query])
+
+  const available = filtered.filter(function(o) {
+    return !selected.includes(o.og_service_name)
+  })
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={function() { setOpen(!open) }}
+        className="w-full flex items-center justify-between bg-navy/5 border border-navy/10 rounded-lg px-3 py-2 text-sm text-dark/50 focus:outline-none focus:border-violet transition-colors hover:border-navy/20"
+      >
+        <span className="text-xs">
+          {loadingOptions ? 'Cargando servicios...' : `Agregar servicio (${available.length} disponibles)`}
+        </span>
+        <ChevronDown size={13} className={`transition-transform text-dark/30 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-pearl border border-navy/15 rounded-xl shadow-xl overflow-hidden">
+          {/* Search dentro del dropdown */}
+          <div className="p-2 border-b border-navy/8">
+            <div className="relative">
+              <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark/25" />
+              <input
+                autoFocus
+                value={query}
+                onChange={function(e) { setQuery(e.target.value) }}
+                placeholder="Buscar servicio..."
+                className="w-full pl-7 pr-3 py-1.5 text-xs bg-navy/5 border border-navy/10 rounded-lg text-dark focus:outline-none focus:border-violet transition-colors placeholder:text-dark/25"
+              />
+            </div>
+          </div>
+
+          {/* Lista */}
+          <div className="max-h-52 overflow-y-auto">
+            {available.length === 0 ? (
+              <p className="text-xs text-dark/25 italic text-center py-4">
+                {query ? 'Sin resultados' : 'Todos los servicios ya están agregados'}
+              </p>
+            ) : (
+              available.map(function(o) {
+                return (
+                  <button
+                    key={o.og_service_name}
+                    type="button"
+                    onClick={function() {
+                      onAdd(o.og_service_name)
+                      setQuery('')
+                      setOpen(false)
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-xs text-dark/70 hover:bg-violet/5 hover:text-violet transition-colors flex items-center gap-2 border-b border-navy/5 last:border-0"
+                  >
+                    <Plus size={10} className="text-violet/50 shrink-0" />
+                    <span className="capitalize">{o.og_service_name}</span>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Chips de servicios seleccionados */}
+      <div className="flex flex-wrap gap-1.5 mt-3 max-h-40 overflow-y-auto p-0.5">
+        {selected.map(function(s, i) {
+          return (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 bg-violet/8 text-violet/80 border border-violet/15 text-xs px-2.5 py-1 rounded-full"
+            >
+              <span className="capitalize">{s}</span>
+              <button
+                type="button"
+                onClick={function() { onRemove(i) }}
+                className="text-violet/30 hover:text-red-400 transition-colors"
+              >
+                <X size={10} />
+              </button>
+            </span>
+          )
+        })}
+        {selected.length === 0 && (
+          <p className="text-xs text-dark/25 italic px-1">Sin servicios</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
 // EditModal
 // ─────────────────────────────────────────────────────────────────
 function EditModal({ partner, onClose, onSaved }: {
@@ -74,10 +211,28 @@ function EditModal({ partner, onClose, onSaved }: {
     partner_name: partner.partner_name,
     partner_category: partner.partner_category,
     partner_services: [...(partner.partner_services ?? [])],
+    partner_whatsapp: [...(partner.partner_whatsapp ?? [])],
   })
   const [saving, setSaving] = useState(false)
-  const [newService, setNewService] = useState('')
   const [error, setError] = useState('')
+
+  // Servicios del catálogo
+  const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([])
+  const [loadingOptions, setLoadingOptions] = useState(true)
+
+  useEffect(function() {
+    async function fetchServices() {
+      try {
+        const res = await fetch(SERVICES_API + '/api/services')
+        const json = await res.json()
+        setServiceOptions(json.services ?? [])
+      } catch {
+        setServiceOptions([])
+      }
+      setLoadingOptions(false)
+    }
+    fetchServices()
+  }, [])
 
   const save = async () => {
     if (!form.partner_name.trim()) { setError('El nombre es requerido'); return }
@@ -99,16 +254,28 @@ function EditModal({ partner, onClose, onSaved }: {
     setSaving(false)
   }
 
-  const addService = () => {
-    const s = newService.trim().toLowerCase()
-    if (!s) return
-    if (form.partner_services.includes(s)) { setNewService(''); return }
-    setForm({ ...form, partner_services: [...form.partner_services, s] })
-    setNewService('')
+  const addService = (service: string) => {
+    if (form.partner_services.includes(service)) return
+    setForm({ ...form, partner_services: [...form.partner_services, service] })
   }
 
   const removeService = (i: number) => {
     setForm({ ...form, partner_services: form.partner_services.filter(function(_, idx) { return idx !== i }) })
+  }
+
+  // WhatsApp handlers
+  const updateWhatsapp = (i: number, value: string) => {
+    const updated = [...form.partner_whatsapp]
+    updated[i] = value
+    setForm({ ...form, partner_whatsapp: updated })
+  }
+
+  const addWhatsapp = () => {
+    setForm({ ...form, partner_whatsapp: [...form.partner_whatsapp, ''] })
+  }
+
+  const removeWhatsapp = (i: number) => {
+    setForm({ ...form, partner_whatsapp: form.partner_whatsapp.filter(function(_, idx) { return idx !== i }) })
   }
 
   return (
@@ -127,7 +294,7 @@ function EditModal({ partner, onClose, onSaved }: {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+        <div className="px-6 py-4 space-y-5 overflow-y-auto flex-1">
 
           {/* Nombre */}
           <div>
@@ -149,51 +316,62 @@ function EditModal({ partner, onClose, onSaved }: {
             />
           </div>
 
+          {/* WhatsApp */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-display text-dark/40 tracking-widest">
+                WHATSAPP <span className="text-dark/25">({form.partner_whatsapp.length})</span>
+              </label>
+              <button
+                type="button"
+                onClick={addWhatsapp}
+                className="flex items-center gap-1 text-xs text-violet/60 hover:text-violet transition-colors font-display"
+              >
+                <Plus size={11} />
+                AGREGAR
+              </button>
+            </div>
+            <div className="space-y-2">
+              {form.partner_whatsapp.length === 0 && (
+                <p className="text-xs text-dark/25 italic px-1">Sin números de WhatsApp</p>
+              )}
+              {form.partner_whatsapp.map(function(w, i) {
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Phone size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-forest/40" />
+                      <input
+                        value={w}
+                        onChange={function(e) { updateWhatsapp(i, e.target.value) }}
+                        placeholder="Ej: 50212345678"
+                        className="w-full pl-7 pr-3 py-2 bg-navy/5 border border-navy/10 rounded-lg text-dark text-xs font-mono focus:outline-none focus:border-violet transition-colors placeholder:text-dark/20 placeholder:font-sans"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={function() { removeWhatsapp(i) }}
+                      className="p-2 text-dark/25 hover:text-red-400 transition-colors shrink-0"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Servicios */}
           <div>
             <label className="block text-xs font-display text-dark/40 mb-1.5 tracking-widest">
               SERVICIOS <span className="text-dark/25">({form.partner_services.length})</span>
             </label>
-
-            {/* Add service */}
-            <div className="flex gap-2 mb-3">
-              <input
-                value={newService}
-                onChange={function(e) { setNewService(e.target.value) }}
-                onKeyDown={function(e) { if (e.key === 'Enter') { e.preventDefault(); addService() } }}
-                placeholder="Agregar servicio..."
-                className="flex-1 bg-navy/5 border border-navy/10 rounded-lg px-3 py-2 text-dark text-xs focus:outline-none focus:border-violet transition-colors placeholder:text-dark/25"
-              />
-              <button
-                onClick={addService}
-                className="px-3 py-2 bg-violet hover:bg-violet/80 text-pearl rounded-lg text-xs font-display transition-colors"
-              >
-                <Plus size={13} />
-              </button>
-            </div>
-
-            {/* Service chips */}
-            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
-              {form.partner_services.map(function(s, i) {
-                return (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1.5 bg-navy/8 text-dark/60 border border-navy/12 text-xs px-2.5 py-1 rounded-full"
-                  >
-                    {s}
-                    <button
-                      onClick={function() { removeService(i) }}
-                      className="text-dark/30 hover:text-red-400 transition-colors"
-                    >
-                      <X size={10} />
-                    </button>
-                  </span>
-                )
-              })}
-              {form.partner_services.length === 0 && (
-                <p className="text-xs text-dark/25 italic px-1">Sin servicios</p>
-              )}
-            </div>
+            <ServiceDropdown
+              selected={form.partner_services}
+              options={serviceOptions}
+              loadingOptions={loadingOptions}
+              onAdd={addService}
+              onRemove={removeService}
+            />
           </div>
 
           {error && (
@@ -357,7 +535,7 @@ function PartnerCard({ partner, onEdit, onDelete }: {
               <div className="flex flex-wrap gap-1.5">
                 {(partner.partner_services ?? []).map(function(s, i) {
                   return (
-                    <span key={i} className="bg-navy/6 text-dark/55 border border-navy/10 text-xs px-2 py-0.5 rounded-full">
+                    <span key={i} className="bg-navy/6 text-dark/55 border border-navy/10 text-xs px-2 py-0.5 rounded-full capitalize">
                       {s}
                     </span>
                   )

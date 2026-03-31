@@ -34,6 +34,7 @@ class PartnerUpdate(BaseModel):
     partner_name: Optional[str] = None
     partner_category: Optional[str] = None
     partner_services: Optional[List[str]] = None
+    partner_whatsapp: Optional[List[str]] = None 
 
 
 @router.get("/")
