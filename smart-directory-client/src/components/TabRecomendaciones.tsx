@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { RefreshCw, Search, X, ChevronDown, ChevronRight, Phone, MapPin, Stethoscope, Star, Clock, SlidersHorizontal, ExternalLink, AlertTriangle } from 'lucide-react'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/db'
@@ -123,6 +123,141 @@ function MapsLink({ url, label }: { url: string; label: string }) {
       {label}
       <ExternalLink size={10} className="opacity-60" />
     </a>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ReferralMap  (Leaflet, sin API key, carga dinámica)
+// ─────────────────────────────────────────────────────────────────
+type ReferralMapProps = {
+  patientLat: number
+  patientLon: number
+  partnerLat: number
+  partnerLon: number
+  partnerName: string
+}
+
+function ReferralMap({ patientLat, patientLon, partnerLat, partnerLon, partnerName }: ReferralMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<any>(null)
+
+  const initMap = useCallback(async () => {
+    if (!mapRef.current || mapInstance.current) return
+
+    // Cargar Leaflet CSS si no está cargado
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link')
+      link.id = 'leaflet-css'
+      link.rel = 'stylesheet'
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+      document.head.appendChild(link)
+    }
+
+    // Cargar Leaflet JS si no está disponible
+    const L: any = await new Promise((resolve) => {
+      if ((window as any).L) { resolve((window as any).L); return }
+      const script = document.createElement('script')
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      script.onload = () => resolve((window as any).L)
+      document.head.appendChild(script)
+    })
+
+    // Centro entre los dos puntos
+    const centerLat = (patientLat + partnerLat) / 2
+    const centerLon = (patientLon + partnerLon) / 2
+
+    const map = L.map(mapRef.current, {
+      center: [centerLat, centerLon],
+      zoom: 12,
+      zoomControl: true,
+      attributionControl: false,
+    })
+
+    mapInstance.current = map
+
+    // Tiles OpenStreetMap con estilo claro y sutil
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+    }).addTo(map)
+
+    // Icono paciente (azul/violeta)
+    const patientIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:14px;height:14px;border-radius:50%;
+        background:#6D5BBA;border:2.5px solid white;
+        box-shadow:0 1px 6px rgba(109,91,186,0.5);
+      "></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    })
+
+    // Icono partner (verde)
+    const partnerIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:14px;height:14px;border-radius:50%;
+        background:#2E7D5E;border:2.5px solid white;
+        box-shadow:0 1px 6px rgba(46,125,94,0.5);
+      "></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    })
+
+    // Marcadores
+    L.marker([patientLat, patientLon], { icon: patientIcon })
+      .addTo(map)
+      .bindTooltip('Paciente', { permanent: false, direction: 'top', className: 'leaflet-tooltip-custom' })
+
+    L.marker([partnerLat, partnerLon], { icon: partnerIcon })
+      .addTo(map)
+      .bindTooltip(partnerName, { permanent: false, direction: 'top', className: 'leaflet-tooltip-custom' })
+
+    // Línea punteada entre ambos puntos
+    L.polyline(
+      [[patientLat, patientLon], [partnerLat, partnerLon]],
+      { color: '#6D5BBA', weight: 1.5, dashArray: '5, 6', opacity: 0.55 }
+    ).addTo(map)
+
+    // Ajustar zoom para mostrar ambos puntos
+    const bounds = L.latLngBounds(
+      [patientLat, patientLon],
+      [partnerLat, partnerLon]
+    )
+    map.fitBounds(bounds, { padding: [28, 28] })
+
+  }, [patientLat, patientLon, partnerLat, partnerLon, partnerName])
+
+  useEffect(() => {
+    initMap()
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove()
+        mapInstance.current = null
+      }
+    }
+  }, [initMap])
+
+  return (
+    <div className="px-5 py-4 border-t border-navy/8 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-display text-dark/25 tracking-widest">MAPA DE DISTANCIA</p>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-xs text-dark/40">
+            <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'#6D5BBA' }} />
+            Paciente
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-dark/40">
+            <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'#2E7D5E' }} />
+            Partner
+          </span>
+        </div>
+      </div>
+      <div
+        ref={mapRef}
+        style={{ height: 200, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(10,20,40,0.08)' }}
+      />
+    </div>
   )
 }
 
@@ -377,6 +512,18 @@ function ReferralCard({ ref: referral }: { ref: Referral }) {
               </div>
               <p className="text-xs text-dark/25 font-display">Los servicios en verde coinciden con los identificados</p>
             </div>
+          )}
+
+          {/* Mapa de distancia - full width */}
+          {referral.patient_location?.lat && referral.patient_location?.lon &&
+           referral.location_matched?.lat && referral.location_matched?.lon && (
+            <ReferralMap
+              patientLat={referral.patient_location.lat}
+              patientLon={referral.patient_location.lon}
+              partnerLat={referral.location_matched.lat}
+              partnerLon={referral.location_matched.lon}
+              partnerName={referral.partner_name || 'Partner'}
+            />
           )}
 
         </div>
