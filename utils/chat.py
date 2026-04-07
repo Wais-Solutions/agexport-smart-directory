@@ -1,5 +1,5 @@
 import os
-from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data, reset_conversation
+from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data, reset_conversation, save_feedback
 from utils.llm import extract_data
 from utils.location import process_location_message, request_location
 from utils.symptoms import process_symptoms_message, request_symptoms
@@ -38,6 +38,19 @@ async def handle_message(message):
             else:
                 await send_text_message(sender_id, "There was an issue resetting your conversation. Please try again.")
             
+            return
+
+        # Check if message is the feedback command
+        if message_text.strip() == "/feedback":
+            from utils.translation import send_translated_message
+            success = save_feedback(sender_id)
+
+            if success:
+                confirmation_msg = "Thank you for your feedback! Your recent conversation has been saved and will help us improve the service."
+                await send_translated_message(sender_id, confirmation_msg)
+            else:
+                await send_text_message(sender_id, "There was an issue saving your feedback. Please try again.")
+
             return
         
         # Check if we're waiting for another referral response

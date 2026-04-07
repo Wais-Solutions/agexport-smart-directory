@@ -16,6 +16,7 @@ debugging_logs = db["debugging-logs"]
 patients = db["patients"]
 partners = db["partners"]
 referrals = db["referrals"]
+feedback_conversations = db["feedback_conversations"]
 
 def log_to_db(level, message, extra_data=None):
     try:
@@ -333,6 +334,35 @@ def increment_referral_count(sender_id):
         return result.modified_count > 0
     except Exception as e:
         log_to_db("ERROR", "Error incrementing referral count", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+def save_feedback(sender_id: str) -> bool:
+    """Save the last 10 messages of the conversation to feedback_conversations."""
+    try:
+        conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+        if not conversation:
+            log_to_db("ERROR", "No conversation found for feedback", {"sender_id": sender_id})
+            return False
+
+        all_messages = conversation.get("messages", [])
+        last_10 = all_messages[-10:] if len(all_messages) > 10 else all_messages
+
+        feedback_conversations.insert_one({
+            "sender_id": sender_id,
+            "timestamp": datetime.utcnow(),
+            "messages": last_10,
+        })
+
+        log_to_db("INFO", "Feedback saved", {
+            "sender_id": sender_id,
+            "messages_count": len(last_10)
+        })
+        return True
+
+    except Exception as e:
+        log_to_db("ERROR", "Error saving feedback", {
             "sender_id": sender_id,
             "error": str(e)
         })
