@@ -34,6 +34,22 @@ def log_to_db(level, message, extra_data=None):
         if extra_data:
             print(f"Extra data: {extra_data}")
 
+def log_bot_message(sender_id: str, message_text: str, message_type: str = "text"):
+    """Append a bot message to the ongoing conversation's messages array."""
+    try:
+        ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$push": {"messages": {
+                "sender": "bot",
+                "type": message_type,
+                "text": message_text,
+                "timestamp": datetime.utcnow()
+            }}}
+        )
+    except Exception as e:
+        # Non-critical: log to DB but don't raise
+        print(f"Failed to log bot message: {e}")
+
 def get_conversation(sender_id): 
     conversation = ongoing_conversations.find_one({"sender_id": sender_id})
     return conversation
