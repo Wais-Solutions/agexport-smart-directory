@@ -4,3 +4,4 @@ pymongo
 groq
 fastapi
 requests
+bcrypt

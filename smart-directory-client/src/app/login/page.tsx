@@ -22,7 +22,8 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       })
       if (res.ok) {
-        router.push('/')
+        const data = await res.json()
+        router.push(data.role === 'partner' ? '/especialidades' : '/')
         router.refresh()
       } else {
         const data = await res.json()
