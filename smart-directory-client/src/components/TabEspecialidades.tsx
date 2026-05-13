@@ -1,13 +1,13 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { Save, X, Stethoscope, Loader2 } from 'lucide-react'
+import { Save, X, Stethoscope, Loader2, Search } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface Specialty {
   code: string
   title: string
-  uri: string
+  uri?: string
 }
 
 interface PartnerInfo {
@@ -17,29 +17,26 @@ interface PartnerInfo {
 }
 
 export default function TabEspecialidades() {
-  const [partner, setPartner]         = useState<PartnerInfo | null>(null)
-  const [specialties, setSpecialties] = useState<Specialty[]>([])
-  const [saving, setSaving]           = useState(false)
-  const [saved, setSaved]             = useState(false)
-  const [loadingData, setLoadingData] = useState(true)
-  const icdInitialized                = useRef(false)
+  const [partner, setPartner]           = useState<PartnerInfo | null>(null)
+  const [specialties, setSpecialties]   = useState<Specialty[]>([])
+  const [query, setQuery]               = useState('')
+  const [results, setResults]           = useState<Specialty[]>([])
+  const [searching, setSearching]       = useState(false)
+  const [saving, setSaving]             = useState(false)
+  const [saved, setSaved]               = useState(false)
+  const [loadingData, setLoadingData]   = useState(true)
+  const searchTimeout                   = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ── 1. Cargar info del partner y especialidades guardadas ──────────────
+  // ── 1. Cargar datos del partner ──────────────────────────────────────
   useEffect(() => {
     async function loadData() {
       try {
-        const meRes = await fetch('/api/auth/me')
-        const me = await meRes.json()
-        console.log('ME response:', me)
-        setPartner({
-          partner_id:   me.partner_id,
-          partner_name: me.partner_name,
-          username:     me.username,
-        })
+        const meRes  = await fetch('/api/auth/me')
+        const me     = await meRes.json()
+        setPartner({ partner_id: me.partner_id, partner_name: me.partner_name, username: me.username })
 
-        const specRes = await fetch(`${API_URL}/specialties/${me.partner_id}`)
+        const specRes  = await fetch(`${API_URL}/specialties/${me.partner_id}`)
         const specData = await specRes.json()
-        console.log('Specialties response:', specData)
         setSpecialties(specData.specialties || [])
       } catch (err) {
         console.error('Error cargando datos:', err)
@@ -50,84 +47,37 @@ export default function TabEspecialidades() {
     loadData()
   }, [])
 
-  // ── 2. Inicializar widget ECT cuando el partner esté listo ─────────────
+  // ── 2. Búsqueda con debounce ─────────────────────────────────────────
   useEffect(() => {
-    if (!partner || icdInitialized.current) return
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    if (!query || query.trim().length < 2) { setResults([]); return }
 
-    async function initECT() {
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true)
       try {
-        // Esperar a que el input esté en el DOM
-        const waitForInput = () => new Promise<void>((resolve) => {
-          const check = () => {
-            const input = document.querySelector('[data-ctw-ino="1"]')
-            if (input) {
-              resolve()
-            } else {
-              setTimeout(check, 100)
-            }
-          }
-          check()
-        })
-
-        await waitForInput()
-        console.log('Input found in DOM')
-
-        const tokenRes = await fetch(`${API_URL}/auth/icd-token`)
-        const tokenData = await tokenRes.json()
-        console.log('Token response ok:', !!tokenData.access_token)
-        const { access_token } = tokenData
-
-        console.log('Loading ECT module...')
-        const ECT = await import('@whoicd/icd11ect')
-        console.log('ECT module loaded:', Object.keys(ECT))
-
-        // Cargar CSS via link tag en lugar de import dinámico
-        if (!document.querySelector('link[data-ect-styles]')) {
-          const link = document.createElement('link')
-          link.rel = 'stylesheet'
-          link.href = 'https://icdcdn.who.int/embeddedct/icd11ect-1.7.1.css'
-          link.setAttribute('data-ect-styles', 'true')
-          document.head.appendChild(link)
-          console.log('ECT styles loaded via CDN')
-        }
-
-        const settings = {
-          apiServerUrl:  'https://id.who.int',
-          apiSecuredUrl: 'https://id.who.int',
-          language:      'es',
-          sourceApp:     'asd_partner_panel',
-          autoBind:      false,
-        }
-
-        const callbacks = {
-          selectedEntityFunction: (entity: { code: string; selectedText: string; uri: string }) => {
-            console.log('ENTITY SELECTED:', entity)
-            const newSpec: Specialty = {
-              code:  entity.code,
-              title: entity.selectedText,
-              uri:   entity.uri,
-            }
-            setSpecialties(prev => {
-              if (prev.some(s => s.code === newSpec.code)) return prev
-              return [...prev, newSpec]
-            })
-          },
-        }
-
-        ECT.Handler.configure(settings, callbacks)
-        console.log('ECT configured')
-        ECT.Handler.bind('1', access_token)
-        console.log('ECT bound')
-        icdInitialized.current = true
+        const res  = await fetch(`${API_URL}/specialties/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        setResults(data.results || [])
       } catch (err) {
-        console.error('Error inicializando ECT:', err)
+        console.error('Error buscando:', err)
+      } finally {
+        setSearching(false)
       }
-    }
+    }, 400)
+  }, [query])
 
-    initECT()
-  }, [partner])
+  // ── 3. Toggle selección ──────────────────────────────────────────────
+  const toggleSpecialty = (spec: Specialty) => {
+    setSpecialties(prev => {
+      const exists = prev.some(s => s.code === spec.code)
+      if (exists) return prev.filter(s => s.code !== spec.code)
+      return [...prev, { code: spec.code, title: spec.title }]
+    })
+  }
 
-  // ── 3. Guardar especialidades ──────────────────────────────────────────
+  const isSelected = (code: string) => specialties.some(s => s.code === code)
+
+  // ── 4. Guardar ───────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!partner) return
     setSaving(true)
@@ -151,11 +101,6 @@ export default function TabEspecialidades() {
     }
   }
 
-  const handleRemove = (code: string) => {
-    setSpecialties(prev => prev.filter(s => s.code !== code))
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────
   if (loadingData) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -167,7 +112,7 @@ export default function TabEspecialidades() {
   return (
     <div className="space-y-6 max-w-4xl">
 
-      {/* Header de sección */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-sm tracking-widest uppercase text-navy">
@@ -187,20 +132,56 @@ export default function TabEspecialidades() {
         </button>
       </div>
 
-      {/* Widget de búsqueda ECT */}
+      {/* Buscador */}
       <div className="bg-white border border-navy/10 rounded-xl p-4 space-y-3">
-        <p className="text-xs font-display tracking-widests text-dark/40 uppercase">
+        <p className="text-xs font-display tracking-widest text-dark/40 uppercase">
           Buscar en CIE-11
         </p>
-        <input
-          type="text"
-          data-ctw-ino="1"
-          placeholder="Escribe una enfermedad o especialidad..."
-          className="w-full bg-navy/5 border border-navy/10 rounded-lg px-3 py-2.5 text-dark text-sm focus:outline-none focus:border-violet transition-colors placeholder:text-dark/20"
-        />
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark/30" />
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Escribe una enfermedad o especialidad..."
+            className="w-full bg-navy/5 border border-navy/10 rounded-lg pl-9 pr-3 py-2.5 text-dark text-sm focus:outline-none focus:border-violet transition-colors placeholder:text-dark/20"
+          />
+          {searching && (
+            <Loader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-violet" />
+          )}
+        </div>
+
+        {/* Resultados */}
+        {results.length > 0 && (
+          <div className="border border-navy/10 rounded-lg divide-y divide-navy/5 max-h-72 overflow-y-auto">
+            {results.map(r => (
+              <label
+                key={r.code}
+                className="flex items-center gap-3 px-3 py-2.5 hover:bg-navy/3 cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected(r.code)}
+                  onChange={() => toggleSpecialty(r)}
+                  className="accent-violet"
+                />
+                <span className="text-xs font-display text-violet bg-violet/10 px-1.5 py-0.5 rounded font-bold shrink-0">
+                  {r.code}
+                </span>
+                <span className="text-sm text-dark">{r.title}</span>
+              </label>
+            ))}
+          </div>
+        )}
+
+        {query.length >= 2 && !searching && results.length === 0 && (
+          <p className="text-xs text-dark/30 text-center py-2">
+            No se encontraron resultados para "{query}"
+          </p>
+        )}
       </div>
 
-      {/* Lista de especialidades seleccionadas */}
+      {/* Seleccionadas */}
       <div className="bg-white border border-navy/10 rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-display tracking-widest text-dark/40 uppercase">
@@ -214,9 +195,7 @@ export default function TabEspecialidades() {
         {specialties.length === 0 ? (
           <div className="flex flex-col items-center py-8 gap-2">
             <Stethoscope size={20} className="text-dark/20" />
-            <p className="text-xs text-dark/30">
-              Aún no hay especialidades seleccionadas.
-            </p>
+            <p className="text-xs text-dark/30">Aún no hay especialidades seleccionadas.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -232,7 +211,7 @@ export default function TabEspecialidades() {
                   <span className="text-sm text-dark">{s.title}</span>
                 </div>
                 <button
-                  onClick={() => handleRemove(s.code)}
+                  onClick={() => toggleSpecialty(s)}
                   className="text-dark/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <X size={14} />
