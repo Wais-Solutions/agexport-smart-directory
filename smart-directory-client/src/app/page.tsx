@@ -28,7 +28,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-pearl text-dark">
-      {/* Header */}
       <header className="border-b border-navy/10 px-8 py-4 flex items-center gap-4 bg-pearl shadow-sm">
         <div className="w-8 h-8 bg-violet rounded-sm flex items-center justify-center">
           <span className="font-display text-xs text-pearl font-bold">ASD</span>
@@ -37,10 +36,17 @@ export default function Home() {
           AGEXPORT Smart Directory
         </h1>
         <div className="ml-auto flex items-center gap-4">
+          <div className="w-12 h-7 bg-violet rounded-sm flex items-center justify-center">
+            <span className="font-display text-xs text-pearl font-bold">
+              ADMIN
+            </span>
+          </div>
+          {/*
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-forest animate-pulse" />
             <span className="text-xs text-dark/40 font-display">LIVE</span>
           </div>
+          */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-1.5 text-xs text-dark/30 hover:text-dark/60 font-display transition-colors border border-navy/10 hover:border-navy/25 px-3 py-1.5 rounded"
@@ -51,7 +57,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Tabs */}
       <nav className="px-8 pt-6 flex gap-1 border-b border-navy/10 bg-pearl">
         {tabs.map(function({ id, label, icon: Icon }) {
           return (
@@ -73,7 +78,6 @@ export default function Home() {
         })}
       </nav>
 
-      {/* Content */}
       <main className="p-8 bg-pearl min-h-[calc(100vh-120px)]">
         {active === 'socios'          && <TabSocios />}
         {active === 'recomendaciones' && <TabRecomendaciones />}
