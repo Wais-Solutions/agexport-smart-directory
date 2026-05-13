@@ -6,6 +6,7 @@ from utils.db_tools import db
 import httpx
 import os
 import time
+import re
 
 router = APIRouter()
 
@@ -73,6 +74,8 @@ async def search_specialties(q: str):
     for entity in data.get("destinationEntities", []):
         code  = entity.get("theCode", "")
         title = entity.get("title", "")
+        # Limpiar tags HTML del highlighting
+        title = re.sub(r'<[^>]+>', '', title)
         if code and title:
             results.append({"code": code, "title": title})
 
