@@ -9,24 +9,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
   }
 
-  const parts = session.split('|')
-  const [secret, role, partner_id] = parts
+  const [secret, role, partner_id] = session.split('|')
 
   if (secret !== SESSION_SECRET) {
     return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
   }
 
-  // Para obtener partner_name y username, consultamos la BD via backend
   if (role === 'partner') {
     const res = await fetch(`${API_URL}/specialties/${partner_id}`)
     const data = await res.json()
     return NextResponse.json({
-      role,
-      partner_id,
-      partner_name: data.partner_name ?? null,
-      username: data.username ?? null,
+        role,
+        partner_id,
+        partner_name: data.partner_name ?? null,
+        username:     data.username ?? null,
     })
-  }
+    }
 
   return NextResponse.json({ role, partner_id: null, partner_name: null, username: null })
 }

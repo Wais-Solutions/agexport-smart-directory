@@ -17,13 +17,13 @@ interface PartnerInfo {
 }
 
 export default function TabEspecialidades() {
-  const [partner, setPartner]           = useState<PartnerInfo | null>(null)
-  const [specialties, setSpecialties]   = useState<Specialty[]>([])
-  const [saving, setSaving]             = useState(false)
-  const [saved, setSaved]               = useState(false)
-  const [loadingData, setLoadingData]   = useState(true)
-  const widgetContainerRef              = useRef<HTMLDivElement>(null)
-  const icdInitialized                  = useRef(false)
+  const [partner, setPartner]         = useState<PartnerInfo | null>(null)
+  const [specialties, setSpecialties] = useState<Specialty[]>([])
+  const [saving, setSaving]           = useState(false)
+  const [saved, setSaved]             = useState(false)
+  const [loadingData, setLoadingData] = useState(true)
+  const widgetContainerRef            = useRef<HTMLDivElement>(null)
+  const icdInitialized                = useRef(false)
 
   // ── 1. Cargar info del partner y especialidades guardadas ──────────────
   useEffect(() => {
@@ -31,6 +31,7 @@ export default function TabEspecialidades() {
       try {
         const meRes = await fetch('/api/auth/me')
         const me = await meRes.json()
+        console.log('ME response:', me)
         setPartner({
           partner_id:   me.partner_id,
           partner_name: me.partner_name,
@@ -39,6 +40,7 @@ export default function TabEspecialidades() {
 
         const specRes = await fetch(`${API_URL}/specialties/${me.partner_id}`)
         const specData = await specRes.json()
+        console.log('Specialties response:', specData)
         setSpecialties(specData.specialties || [])
       } catch (err) {
         console.error('Error cargando datos:', err)
@@ -55,12 +57,17 @@ export default function TabEspecialidades() {
 
     async function initECT() {
       try {
-        // Obtener token desde el backend (proxy)
         const tokenRes = await fetch(`${API_URL}/auth/icd-token`)
-        const { access_token } = await tokenRes.json()
+        const tokenData = await tokenRes.json()
+        console.log('Token response ok:', !!tokenData.access_token)
+        const { access_token } = tokenData
 
+        console.log('Loading ECT module...')
         const ECT = await import('@whoicd/icd11ect')
+        console.log('ECT module loaded:', Object.keys(ECT))
+
         await import('@whoicd/icd11ect/style.css')
+        console.log('ECT styles loaded')
 
         const settings = {
           apiServerUrl:  'https://id.who.int',
@@ -72,13 +79,13 @@ export default function TabEspecialidades() {
 
         const callbacks = {
           selectedEntityFunction: (entity: { code: string; selectedText: string; uri: string }) => {
+            console.log('ENTITY SELECTED:', entity)
             const newSpec: Specialty = {
               code:  entity.code,
               title: entity.selectedText,
               uri:   entity.uri,
             }
             setSpecialties(prev => {
-              // Evitar duplicados
               if (prev.some(s => s.code === newSpec.code)) return prev
               return [...prev, newSpec]
             })
@@ -86,7 +93,9 @@ export default function TabEspecialidades() {
         }
 
         ECT.Handler.configure(settings, callbacks)
+        console.log('ECT configured')
         ECT.Handler.bind('1', access_token)
+        console.log('ECT bound')
         icdInitialized.current = true
       } catch (err) {
         console.error('Error inicializando ECT:', err)
@@ -162,7 +171,6 @@ export default function TabEspecialidades() {
           Buscar en CIE-11
         </p>
         <div ref={widgetContainerRef}>
-          {/* El widget ECT se vincula a este input mediante data-ctw-ino="1" */}
           <input
             type="text"
             data-ctw-ino="1"
