@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PARTNER_PATHS = ['/especialidades']
+// Rutas a las que un partner puede acceder
+const PARTNER_ALLOWED = ['/especialidades']
+
+// Rutas a las que solo admin puede acceder  
+const ADMIN_ONLY = ['/']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -20,13 +24,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Partner intentando acceder a rutas de admin → redirigir a /especialidades
-  if (role === 'partner' && !PARTNER_PATHS.some(p => pathname.startsWith(p))) {
+  const isPartnerAllowed = PARTNER_ALLOWED.some(p => pathname.startsWith(p))
+  const isAdminOnly      = ADMIN_ONLY.some(p => pathname === p)
+
+  if (role === 'partner' && !isPartnerAllowed) {
     return NextResponse.redirect(new URL('/especialidades', request.url))
   }
 
-  // Admin intentando acceder a /especialidades → redirigir a /
-  if (role === 'admin' && PARTNER_PATHS.some(p => pathname.startsWith(p))) {
+  if (role === 'admin' && isPartnerAllowed) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
