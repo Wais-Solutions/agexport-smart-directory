@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import messages, database, verification, services, auth  # + auth
+from routers import messages, database, verification, services, auth, specialties
 
 app = FastAPI()
 
@@ -17,6 +17,7 @@ app.include_router(database.router,      prefix="/db",           tags=["database
 app.include_router(verification.router,  prefix="/verification", tags=["verification"])
 app.include_router(services.router,      prefix="/services",     tags=["services"])
 app.include_router(auth.router,          prefix="/auth",         tags=["auth"])
+app.include_router(specialties.router, prefix="/specialties", tags=["specialties"])
 
 @app.get("/")
 async def root():
