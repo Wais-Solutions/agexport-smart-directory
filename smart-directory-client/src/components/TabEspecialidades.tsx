@@ -22,7 +22,6 @@ export default function TabEspecialidades() {
   const [saving, setSaving]           = useState(false)
   const [saved, setSaved]             = useState(false)
   const [loadingData, setLoadingData] = useState(true)
-  const widgetContainerRef            = useRef<HTMLDivElement>(null)
   const icdInitialized                = useRef(false)
 
   // ── 1. Cargar info del partner y especialidades guardadas ──────────────
@@ -57,6 +56,22 @@ export default function TabEspecialidades() {
 
     async function initECT() {
       try {
+        // Esperar a que el input esté en el DOM
+        const waitForInput = () => new Promise<void>((resolve) => {
+          const check = () => {
+            const input = document.querySelector('[data-ctw-ino="1"]')
+            if (input) {
+              resolve()
+            } else {
+              setTimeout(check, 100)
+            }
+          }
+          check()
+        })
+
+        await waitForInput()
+        console.log('Input found in DOM')
+
         const tokenRes = await fetch(`${API_URL}/auth/icd-token`)
         const tokenData = await tokenRes.json()
         console.log('Token response ok:', !!tokenData.access_token)
@@ -66,8 +81,15 @@ export default function TabEspecialidades() {
         const ECT = await import('@whoicd/icd11ect')
         console.log('ECT module loaded:', Object.keys(ECT))
 
-        await import('@whoicd/icd11ect/style.css')
-        console.log('ECT styles loaded')
+        // Cargar CSS via link tag en lugar de import dinámico
+        if (!document.querySelector('link[data-ect-styles]')) {
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.href = 'https://icdcdn.who.int/embeddedct/icd11ect-1.7.1.css'
+          link.setAttribute('data-ect-styles', 'true')
+          document.head.appendChild(link)
+          console.log('ECT styles loaded via CDN')
+        }
 
         const settings = {
           apiServerUrl:  'https://id.who.int',
@@ -167,17 +189,15 @@ export default function TabEspecialidades() {
 
       {/* Widget de búsqueda ECT */}
       <div className="bg-white border border-navy/10 rounded-xl p-4 space-y-3">
-        <p className="text-xs font-display tracking-widest text-dark/40 uppercase">
+        <p className="text-xs font-display tracking-widests text-dark/40 uppercase">
           Buscar en CIE-11
         </p>
-        <div ref={widgetContainerRef}>
-          <input
-            type="text"
-            data-ctw-ino="1"
-            placeholder="Escribe una enfermedad o especialidad..."
-            className="w-full bg-navy/5 border border-navy/10 rounded-lg px-3 py-2.5 text-dark text-sm focus:outline-none focus:border-violet transition-colors placeholder:text-dark/20"
-          />
-        </div>
+        <input
+          type="text"
+          data-ctw-ino="1"
+          placeholder="Escribe una enfermedad o especialidad..."
+          className="w-full bg-navy/5 border border-navy/10 rounded-lg px-3 py-2.5 text-dark text-sm focus:outline-none focus:border-violet transition-colors placeholder:text-dark/20"
+        />
       </div>
 
       {/* Lista de especialidades seleccionadas */}
