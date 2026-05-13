@@ -36,11 +36,9 @@ export default function Home() {
           AGEXPORT Smart Directory
         </h1>
         <div className="ml-auto flex items-center gap-4">
-          <div className="w-12 h-7 bg-violet rounded-sm flex items-center justify-center">
-            <span className="font-display text-xs text-pearl font-bold">
-              ADMIN
-            </span>
-          </div>
+          <span className="text-xs text-pearl font-display font-bold bg-violet px-3 py-1.5 rounded-lg tracking-wide">
+            ADMIN
+          </span>
           {/*
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-forest animate-pulse" />

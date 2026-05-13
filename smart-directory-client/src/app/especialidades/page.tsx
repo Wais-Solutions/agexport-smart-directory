@@ -1,10 +1,19 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Script from 'next/script'
 import TabEspecialidades from '@/components/TabEspecialidades'
 import { Stethoscope, LogOut } from 'lucide-react'
 
 export default function EspecialidadesPage() {
   const router = useRouter()
+  const [partnerName, setPartnerName] = useState('')
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(data => setPartnerName(data.partner_name || 'PARTNER'))
+  }, [])
 
   const handleLogout = async () => {
     await fetch('/api/auth', { method: 'DELETE' })
@@ -22,11 +31,11 @@ export default function EspecialidadesPage() {
           AGEXPORT Smart Directory
         </h1>
         <div className="ml-auto flex items-center gap-4">
-          <div className="w-16 h-7 bg-violet rounded-sm flex items-center justify-center">
-            <span className="font-display text-xs text-pearl font-bold">
-              PARTNER
+          {partnerName && (
+            <span className="text-xs text-pearl font-display font-bold bg-violet px-3 py-1.5 rounded-lg tracking-wide">
+              {partnerName}
             </span>
-          </div>
+          )}
           <button
             onClick={handleLogout}
             className="flex items-center gap-1.5 text-xs text-dark/30 hover:text-dark/60 font-display transition-colors border border-navy/10 hover:border-navy/25 px-3 py-1.5 rounded"
