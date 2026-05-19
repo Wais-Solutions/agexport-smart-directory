@@ -118,13 +118,13 @@ async def get_suggestions(partner_id: str):
 
     token = await get_icd_token()
 
-    # Buscar en paralelo los primeros 3 servicios (máximo)
-    search_terms = services[:3]
+    # Buscar en paralelo los servicios
+    search_terms = services #[:3]
     seen_codes   = set()
     suggestions  = []
 
     async with httpx.AsyncClient() as client:
-        tasks   = [fetch_icd_results(client, token, term, limit=5) for term in search_terms]
+        tasks   = [fetch_icd_results(client, token, term, limit=3) for term in search_terms]
         results = await asyncio.gather(*tasks)
 
     for batch in results:
