@@ -7,6 +7,7 @@ import httpx
 import os
 import time
 import re
+import asyncio
 
 router = APIRouter()
 
@@ -34,6 +35,29 @@ async def get_icd_token():
         return _token_cache["token"]
 
 
+async def fetch_icd_results(client: httpx.AsyncClient, token: str, q: str, limit: int = 5):
+    res = await client.get(
+        "https://id.who.int/icd/release/11/2026-01/mms/search",
+        params={"q": q, "flatResults": "true", "highlighting": "false"},
+        headers={
+            "Authorization":   f"Bearer {token}",
+            "API-Version":     "v2",
+            "Accept-Language": "es",
+            "Accept":          "application/json",
+        },
+    )
+    data = res.json()
+    results = []
+    for entity in data.get("destinationEntities", []):
+        code  = entity.get("theCode", "")
+        title = re.sub(r'<[^>]+>', '', entity.get("title", ""))
+        if code and title:
+            results.append({"code": code, "title": title})
+        if len(results) >= limit:
+            break
+    return results
+
+
 # ── Modelos ───────────────────────────────────────────────────────────────────
 
 class Specialty(BaseModel):
@@ -48,7 +72,7 @@ class SpecialtiesPayload(BaseModel):
     specialties: List[Specialty]
 
 
-# ── Búsqueda CIE-11 (debe ir ANTES de /{partner_id}) ─────────────────────────
+# ── Búsqueda CIE-11 ───────────────────────────────────────────────────────────
 
 @router.get("/search")
 async def search_specialties(q: str):
@@ -73,13 +97,47 @@ async def search_specialties(q: str):
     results = []
     for entity in data.get("destinationEntities", []):
         code  = entity.get("theCode", "")
-        title = entity.get("title", "")
-        # Limpiar tags HTML del highlighting
-        title = re.sub(r'<[^>]+>', '', title)
+        title = re.sub(r'<[^>]+>', '', entity.get("title", ""))
         if code and title:
             results.append({"code": code, "title": title})
 
     return {"results": results[:50]}
+
+
+# ── Sugerencias basadas en servicios del partner ──────────────────────────────
+
+@router.get("/suggestions/{partner_id}")
+async def get_suggestions(partner_id: str):
+    partner = db["partners"].find_one({"_id": __import__("bson").ObjectId(partner_id)})
+    if not partner:
+        return {"suggestions": []}
+
+    services = partner.get("partner_services", [])
+    if not services:
+        return {"suggestions": []}
+
+    token = await get_icd_token()
+
+    # Buscar en paralelo los primeros 3 servicios (máximo)
+    search_terms = services[:3]
+    seen_codes   = set()
+    suggestions  = []
+
+    async with httpx.AsyncClient() as client:
+        tasks   = [fetch_icd_results(client, token, term, limit=5) for term in search_terms]
+        results = await asyncio.gather(*tasks)
+
+    for batch in results:
+        for item in batch:
+            if item["code"] not in seen_codes:
+                seen_codes.add(item["code"])
+                suggestions.append(item)
+            if len(suggestions) >= 10:
+                break
+        if len(suggestions) >= 10:
+            break
+
+    return {"suggestions": suggestions, "based_on": search_terms}
 
 
 # ── GET especialidades de un partner ─────────────────────────────────────────
