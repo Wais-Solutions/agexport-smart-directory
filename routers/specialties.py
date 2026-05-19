@@ -145,16 +145,14 @@ async def get_suggestions(partner_id: str):
 
 @router.post("/import/{partner_id}")
 async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
-    # Leer el archivo Excel
     contents = await file.read()
     wb = openpyxl.load_workbook(io.BytesIO(contents), read_only=True)
     ws = wb.active
 
-    # Extraer códigos de la columna A (saltando encabezado)
     codes = []
     for i, row in enumerate(ws.iter_rows(values_only=True)):
         if i == 0:
-            continue  # saltar encabezado
+            continue
         code = str(row[0]).strip() if row[0] else ""
         if code and code != "None":
             codes.append(code)
@@ -169,7 +167,8 @@ async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
     async with httpx.AsyncClient() as client:
         for code in codes:
             try:
-                res = await client.get(
+                # Primero obtenemos el stemId
+                info_res = await client.get(
                     f"https://id.who.int/icd/release/11/2026-01/mms/codeinfo/{code}",
                     headers={
                         "Authorization":   f"Bearer {token}",
@@ -178,15 +177,41 @@ async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
                         "Accept":          "application/json",
                     },
                 )
-                if res.status_code == 200:
-                    data  = res.json()
-                    title = re.sub(r'<[^>]+>', '', data.get("title", {}).get("@value", "") or data.get("title", ""))
-                    if title:
-                        specialties.append({"code": code, "title": title})
-                    else:
-                        not_found.append(code)
+                if info_res.status_code != 200:
+                    not_found.append(code)
+                    continue
+
+                info_data = info_res.json()
+                stem_id   = info_data.get("stemId", "")
+
+                if not stem_id:
+                    not_found.append(code)
+                    continue
+
+                # Con el stemId obtenemos el título
+                entity_res = await client.get(
+                    stem_id,
+                    headers={
+                        "Authorization":   f"Bearer {token}",
+                        "API-Version":     "v2",
+                        "Accept-Language": "es",
+                        "Accept":          "application/json",
+                    },
+                )
+                if entity_res.status_code != 200:
+                    not_found.append(code)
+                    continue
+
+                entity_data = entity_res.json()
+                title_raw   = entity_data.get("title", {})
+                title       = title_raw.get("@value", "") if isinstance(title_raw, dict) else str(title_raw)
+                title       = re.sub(r'<[^>]+>', '', title).strip()
+
+                if title:
+                    specialties.append({"code": code, "title": title})
                 else:
                     not_found.append(code)
+
             except Exception:
                 not_found.append(code)
 
