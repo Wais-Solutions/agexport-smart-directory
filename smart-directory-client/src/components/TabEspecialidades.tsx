@@ -302,6 +302,25 @@ export default function TabEspecialidades() {
         </div>
       </div>
 
+      {/* ── Leyenda CIE-11 ── */}
+      <div className="bg-violet/5 border border-violet/15 rounded-2xl px-5 py-4 flex gap-4 items-start">
+        <div className="w-8 h-8 bg-violet/15 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+          <Stethoscope size={15} className="text-violet" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs font-display font-bold text-navy tracking-wide uppercase">
+            ¿Qué es CIE-11?
+          </p>
+          <p className="text-xs text-dark/60 leading-relaxed">
+            La <span className="font-bold text-dark/80">Clasificación Internacional de Enfermedades (CIE-11)</span> es
+            el estándar global de la OMS para identificar enfermedades y condiciones médicas.
+            Selecciona las <span className="font-bold text-violet">enfermedades y condiciones que tu institución
+            puede diagnosticar y tratar</span> — esto permite que los pacientes encuentren
+            el centro de salud adecuado para su situación.
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* ── Columna izquierda ── */}
@@ -356,11 +375,13 @@ export default function TabEspecialidades() {
               </div>
               {basedOn.length > 0 && <span className="text-xs text-dark/30 italic">basado en tus servicios</span>}
             </div>
+            {/* Burbujas servicios:
             {basedOn.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {basedOn.map(s => <span key={s} className="text-xs bg-violet/10 text-violet px-2 py-0.5 rounded-full font-display">{s}</span>)}
               </div>
             )}
+            */}
             {loadingSuggestions ? (
               <div className="flex justify-center py-4"><Loader2 size={16} className="animate-spin text-violet/40" /></div>
             ) : suggestions.length === 0 ? (
