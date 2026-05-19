@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { Save, X, Stethoscope, Loader2, Search, Sparkles, CheckCircle2, Upload, AlertCircle } from 'lucide-react'
+import { Save, X, Stethoscope, Loader2, Search, Sparkles, CheckCircle2, Upload, AlertCircle, Download } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -169,6 +169,15 @@ export default function TabEspecialidades() {
     )
   }
 
+  // ── 6. Deacargar plantilla de Excel ────────────────────────────────────────────────
+  const handleDownloadTemplate = () => {
+    const a    = document.createElement('a')
+    a.href     = '/specialties_template.xlsx'
+    a.download = 'specialties_template.xlsx'
+    a.click()
+  }
+
+
   return (
     <div className="space-y-6">
 
@@ -284,6 +293,13 @@ export default function TabEspecialidades() {
             className="hidden"
             onChange={handleFileChange}
           />
+          <button
+            onClick={handleDownloadTemplate}
+            className="flex items-center gap-2 border border-navy/20 hover:border-violet/40 hover:bg-violet/5 text-dark/60 hover:text-violet px-4 py-2.5 rounded-lg text-xs font-display tracking-wide transition-colors"
+          >
+            <Download size={13} />
+            DESCARGAR PLANTILLA
+          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-2 border border-navy/20 hover:border-violet/40 hover:bg-violet/5 text-dark/60 hover:text-violet px-4 py-2.5 rounded-lg text-xs font-display tracking-wide transition-colors"
