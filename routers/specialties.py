@@ -182,7 +182,7 @@ async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
                     continue
 
                 info_data = info_res.json()
-                stem_id   = info_data.get("stemId", "")
+                stem_id = info_data.get("stemId", "").replace("http://", "https://")
 
                 if not stem_id:
                     not_found.append(code)
