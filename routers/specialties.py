@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -8,6 +8,8 @@ import os
 import time
 import re
 import asyncio
+import openpyxl
+import io
 
 router = APIRouter()
 
@@ -139,6 +141,60 @@ async def get_suggestions(partner_id: str):
 
     return {"suggestions": suggestions, "based_on": search_terms}
 
+# ── POST especialidades de excel de partner ─────────────────────────────────────────
+
+@router.post("/import/{partner_id}")
+async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
+    # Leer el archivo Excel
+    contents = await file.read()
+    wb = openpyxl.load_workbook(io.BytesIO(contents), read_only=True)
+    ws = wb.active
+
+    # Extraer códigos de la columna A (saltando encabezado)
+    codes = []
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        if i == 0:
+            continue  # saltar encabezado
+        code = str(row[0]).strip() if row[0] else ""
+        if code and code != "None":
+            codes.append(code)
+
+    if not codes:
+        raise HTTPException(status_code=400, detail="No se encontraron códigos en el archivo")
+
+    token = await get_icd_token()
+    specialties = []
+    not_found   = []
+
+    async with httpx.AsyncClient() as client:
+        for code in codes:
+            try:
+                res = await client.get(
+                    f"https://id.who.int/icd/release/11/2026-01/mms/codeinfo/{code}",
+                    headers={
+                        "Authorization":   f"Bearer {token}",
+                        "API-Version":     "v2",
+                        "Accept-Language": "es",
+                        "Accept":          "application/json",
+                    },
+                )
+                if res.status_code == 200:
+                    data  = res.json()
+                    title = re.sub(r'<[^>]+>', '', data.get("title", {}).get("@value", "") or data.get("title", ""))
+                    if title:
+                        specialties.append({"code": code, "title": title})
+                    else:
+                        not_found.append(code)
+                else:
+                    not_found.append(code)
+            except Exception:
+                not_found.append(code)
+
+    return {
+        "imported":  specialties,
+        "not_found": not_found,
+        "total":     len(codes),
+    }
 
 # ── GET especialidades de un partner ─────────────────────────────────────────
 
