@@ -6,7 +6,7 @@ from utils.whatsapp import send_template_message
 router = APIRouter()
 
 COUNTRY_CODE  = "502"
-TEMPLATE_NAME = "partners_number_verification"
+TEMPLATE_NAME = "partners_whatsapp_verification"
 TEMPLATE_LANG = "es"
 
 
@@ -21,22 +21,41 @@ def format_phone(raw: str) -> str:
 # ── GET /verification/partners ─────────────────────────────────────────────
 @router.get("/partners")
 def get_partners_for_verification():
-    """Devuelve todos los partners con sus números de WhatsApp."""
+    """
+    Devuelve todos los partners con sus números de WhatsApp e info de verificación.
+    verified_phones: lista de números e164 que ya presionaron el botón.
+    verified_at: timestamp unix del primer número que confirmó (para mostrar en UI).
+    """
     docs = list(db["partners"].find(
         {},
         {"partner_name": 1, "partner_category": 1, "partner_whatsapp": 1}
     ))
+
+    # Cargar todas las verificaciones de una vez para evitar N queries
+    verifications: dict[str, dict] = {
+        v["verified_phone"]: v
+        for v in db["partner_verifications"].find({}, {"_id": 0})
+        if v.get("verified_phone")
+    }
+
     result = []
     for doc in docs:
         raw_numbers = doc.get("partner_whatsapp") or []
-        formatted = [format_phone(n) for n in raw_numbers if n]
+        formatted   = [format_phone(n) for n in raw_numbers if n]
+
+        confirmed_phones = [p for p in formatted if p in verifications]
+
         result.append({
             "_id":              str(doc["_id"]),
             "partner_name":     doc.get("partner_name", ""),
             "partner_category": doc.get("partner_category", ""),
             "partner_whatsapp": raw_numbers,
             "whatsapp_e164":    formatted,
+            "verified_phones":  confirmed_phones,
+            "verified_at":      verifications[confirmed_phones[0]]["verified_at"]
+                                if confirmed_phones else None,
         })
+
     return {"partners": result, "total": len(result)}
 
 
@@ -44,8 +63,8 @@ def get_partners_for_verification():
 @router.post("/send")
 async def send_verification_blast():
     """
-    Envía la template 'partners_number_verification' a todos los números
-    de WhatsApp de todos los partners.
+    Envía la template a todos los números de WhatsApp de todos los partners.
+    Pasa el nombre del partner como parámetro {{1}} del body.
     """
     docs = list(db["partners"].find(
         {},
@@ -58,14 +77,22 @@ async def send_verification_blast():
 
     for doc in docs:
         partner_name = doc.get("partner_name", str(doc["_id"]))
-        raw_numbers  = doc.get("partner_whatsapp") or [] #TEST: ["58792752"]
+        raw_numbers  = ["58792752"] #doc.get("partner_whatsapp") or []
 
         for raw in raw_numbers:
             if not raw:
                 continue
             phone = format_phone(raw)
             try:
-                resp    = await send_template_message(phone, TEMPLATE_NAME, [], TEMPLATE_LANG)
+                components = [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {"type": "text", "text": partner_name}
+                        ]
+                    }
+                ]
+                resp    = await send_template_message(phone, TEMPLATE_NAME, components, TEMPLATE_LANG)
                 success = resp is not None and resp.status_code in (200, 201)
 
                 if success:
