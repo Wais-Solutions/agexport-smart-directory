@@ -58,26 +58,28 @@ async def callback(request: Request):
             message = messages[0]
             message_type = message.get("type")
 
-            # ── Captura del botón de verificación ──────────────────────────
-            if message_type == "button":
-                button_payload = message.get("button", {}).get("payload", "")
-                if button_payload == VERIFICATION_BUTTON_PAYLOAD:
-                    from_phone = message["from"]
-                    timestamp  = message.get("timestamp")
-                    db["partner_verifications"].update_one(
-                        {"verified_phone": from_phone},
-                        {"$set": {
-                            "verified":       True,
-                            "verified_at":    timestamp,
-                            "verified_phone": from_phone,
-                        }},
-                        upsert=True
-                    )
-                    log_to_db("INFO", f"Partner verificado vía botón: {from_phone}", {
-                        "phone":     from_phone,
-                        "timestamp": timestamp,
-                    })
-                    return {"status": "received"}
+            # ── Captura del botón de verificación (QUICK_REPLY de plantilla) ──
+            if message_type == "interactive":
+                interactive = message.get("interactive", {})
+                if interactive.get("type") == "button_reply":
+                    button_title = interactive.get("button_reply", {}).get("title", "")
+                    if button_title == VERIFICATION_BUTTON_PAYLOAD:
+                        from_phone = message["from"]
+                        timestamp  = message.get("timestamp")
+                        db["partner_verifications"].update_one(
+                            {"verified_phone": from_phone},
+                            {"$set": {
+                                "verified":       True,
+                                "verified_at":    timestamp,
+                                "verified_phone": from_phone,
+                            }},
+                            upsert=True
+                        )
+                        log_to_db("INFO", f"Partner verificado vía botón: {from_phone}", {
+                            "phone":     from_phone,
+                            "timestamp": timestamp,
+                        })
+                        return {"status": "received"}
 
             # ── Flujo normal del chatbot ────────────────────────────────────
             await handle_message(message)
