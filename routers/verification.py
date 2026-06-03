@@ -96,13 +96,13 @@ async def send_verification_blast():
                             {
                                 "type": "body",
                                 "parameters": [
-                                    {"type": "text", "text": partner_name}
+                                    {"type": "text", "text": partner_name, "parameter_name": "partner_name"}
                                 ]
                             }
                         ]
                     }
                 }
-
+                
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
 
