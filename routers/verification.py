@@ -93,6 +93,7 @@ async def send_verification_blast():
                     }
                 ]
                 resp    = await send_template_message(phone, TEMPLATE_NAME, components, TEMPLATE_LANG)
+                print("META RESPONSE:", resp.status_code, resp.text)
                 success = resp is not None and resp.status_code in (200, 201)
 
                 if success:
