@@ -1,7 +1,8 @@
 import asyncio
+import httpx
 from fastapi import APIRouter
 from utils.db_tools import db, log_to_db
-from utils.whatsapp import send_template_message
+from utils.whatsapp import headers, WHATSAPP_API_URL
 
 router = APIRouter()
 
@@ -64,7 +65,7 @@ def get_partners_for_verification():
 async def send_verification_blast():
     """
     Envía la template a todos los números de WhatsApp de todos los partners.
-    Pasa el nombre del partner como parámetro {{1}} del body.
+    Pasa el nombre del partner como parámetro {{partner_name}} del body.
     """
     docs = list(db["partners"].find(
         {},
@@ -77,16 +78,36 @@ async def send_verification_blast():
 
     for doc in docs:
         partner_name = doc.get("partner_name", str(doc["_id"]))
-        raw_numbers  = ["58792752"] #doc.get("partner_whatsapp") or []
+        raw_numbers  = ["58792752"]  # TEST — reemplazar por: doc.get("partner_whatsapp") or []
 
         for raw in raw_numbers:
             if not raw:
                 continue
             phone = format_phone(raw)
             try:
-                resp = await send_template_message(phone, TEMPLATE_NAME, [partner_name], TEMPLATE_LANG)
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone,
+                    "type": "template",
+                    "template": {
+                        "name": TEMPLATE_NAME,
+                        "language": {"code": TEMPLATE_LANG},
+                        "components": [
+                            {
+                                "type": "body",
+                                "parameters": [
+                                    {"type": "text", "text": partner_name}
+                                ]
+                            }
+                        ]
+                    }
+                }
+
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post(WHATSAPP_API_URL, headers=headers, json=payload)
+
                 print("META RESPONSE:", resp.status_code, resp.text)
-                success = resp is not None and resp.status_code in (200, 201)
+                success = resp.status_code in (200, 201)
 
                 if success:
                     sent_count += 1
@@ -100,15 +121,15 @@ async def send_verification_blast():
                         "partner_name": partner_name,
                         "phone":        phone,
                         "raw_phone":    raw,
-                        "status_code":  resp.status_code if resp else None,
-                        "response":     resp.text[:300] if resp else "No response",
+                        "status_code":  resp.status_code,
+                        "response":     resp.text[:300],
                     },
                 )
                 results.append({
                     "partner":     partner_name,
                     "phone":       phone,
                     "success":     success,
-                    "status_code": resp.status_code if resp else None,
+                    "status_code": resp.status_code,
                 })
 
             except Exception as e:
