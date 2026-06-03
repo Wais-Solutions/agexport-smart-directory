@@ -6,7 +6,8 @@ import TabRecomendaciones from '@/components/TabRecomendaciones'
 import TabConversaciones from '@/components/TabConversaciones'
 import TabLogs from '@/components/TabLogs'
 import TabVerificacion from '@/components/TabVerificacion'
-import { Users, GitBranch, MessageSquare, Terminal, ShieldCheck, LogOut } from 'lucide-react'
+import TabUsuarios from '@/components/TabUsuarios'
+import { Users, GitBranch, MessageSquare, Terminal, ShieldCheck, LogOut, UserCog } from 'lucide-react'
 
 const tabs = [
   { id: 'socios',          label: 'Socios',          icon: Users },
@@ -14,6 +15,7 @@ const tabs = [
   { id: 'conversaciones',  label: 'Conversaciones',   icon: MessageSquare },
   { id: 'verificacion',    label: 'Verificación',     icon: ShieldCheck },
   { id: 'logs',            label: 'Logs',             icon: Terminal },
+  { id: 'usuarios', label: 'Usuarios', icon: UserCog },
 ]
 
 export default function Home() {
@@ -82,6 +84,7 @@ export default function Home() {
         {active === 'conversaciones'  && <TabConversaciones />}
         {active === 'verificacion'    && <TabVerificacion />}
         {active === 'logs'            && <TabLogs />}
+        {active === 'usuarios' && <TabUsuarios />}
       </main>
     </div>
   )
