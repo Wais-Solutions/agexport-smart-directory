@@ -1,10 +1,12 @@
 uvicorn
 httpx
 pymongo
+motor
 groq
 fastapi
 requests
 bcrypt
-httpx
 openpyxl
 python-multipart
+python-dotenv
+tqdm

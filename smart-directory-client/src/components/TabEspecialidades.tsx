@@ -52,7 +52,7 @@ export default function TabEspecialidades() {
           fetch(`${API_URL}/specialties/suggestions/${me.partner_id}`),
         ])
         const specData = await specRes.json()
-        setSpecialties(specData.specialties || [])
+        setSpecialties(specData.cie || [])
         const suggData = await suggRes.json()
         setSuggestions(suggData.suggestions || [])
         setBasedOn(suggData.based_on || [])
@@ -98,7 +98,7 @@ export default function TabEspecialidades() {
       await fetch(`${API_URL}/specialties/${partner.partner_id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partner_id: partner.partner_id, partner_name: partner.partner_name, username: partner.username, specialties }),
+        body: JSON.stringify({ partner_id: partner.partner_id, partner_name: partner.partner_name, username: partner.username, cie: specialties }),
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -277,7 +277,7 @@ export default function TabEspecialidades() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-sm tracking-widests uppercase text-navy">
+          <h2 className="font-display text-sm tracking-widest uppercase text-navy font-bold">
             Especialidades
           </h2>
           <p className="text-xs text-dark/40 mt-1">

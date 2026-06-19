@@ -71,7 +71,7 @@ class SpecialtiesPayload(BaseModel):
     partner_id: str
     partner_name: str
     username: str
-    specialties: List[Specialty]
+    cie: List[Specialty]
 
 
 # ── Búsqueda CIE-11 ───────────────────────────────────────────────────────────
@@ -227,12 +227,12 @@ async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
 def get_specialties(partner_id: str):
     doc = db["specialties"].find_one({"partner_id": partner_id})
     if not doc:
-        return {"partner_id": partner_id, "specialties": []}
+        return {"partner_id": partner_id, "cie": []}
     return {
         "partner_id":   doc["partner_id"],
         "partner_name": doc.get("partner_name"),
         "username":     doc.get("username"),
-        "specialties":  doc.get("specialties", []),
+        "cie":          doc.get("cie", []),
         "updated_at":   doc.get("updated_at"),
     }
 
@@ -247,9 +247,9 @@ def save_specialties(partner_id: str, body: SpecialtiesPayload):
             "partner_id":   partner_id,
             "partner_name": body.partner_name,
             "username":     body.username,
-            "specialties":  [s.model_dump() for s in body.specialties],
+            "cie":          [s.model_dump() for s in body.cie],
             "updated_at":   datetime.now(timezone.utc).isoformat(),
         }},
         upsert=True,
     )
-    return {"ok": True, "saved": len(body.specialties)}
+    return {"ok": True, "saved": len(body.cie)}
