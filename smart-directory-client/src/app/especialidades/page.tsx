@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 import TabEspecialidades from '@/components/TabEspecialidades'
-import { Stethoscope, LogOut } from 'lucide-react'
+import TabICHI from '@/components/TabICHI'
+import { Stethoscope, Activity, LogOut } from 'lucide-react'
 
 export default function EspecialidadesPage() {
   const router = useRouter()
   const [partnerName, setPartnerName] = useState('')
+  const [activeTab, setActiveTab] = useState<'cie11' | 'ichi'>('cie11')
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -47,14 +49,33 @@ export default function EspecialidadesPage() {
       </header>
 
       <nav className="px-8 pt-6 flex gap-1 border-b border-navy/10 bg-pearl">
-        <button className="flex items-center gap-2 px-5 py-3 text-sm font-display tracking-wide rounded-t-md bg-violet text-pearl border-b-2 border-violet">
+        <button
+          onClick={() => setActiveTab('cie11')}
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-display tracking-wide rounded-t-md border-b-2 transition-colors ${
+            activeTab === 'cie11'
+              ? 'bg-violet text-pearl border-b-violet'
+              : 'bg-transparent text-dark/40 border-b-transparent hover:text-dark/60'
+          }`}
+        >
           <Stethoscope size={14} />
-          Especialidades
+          Especialidades CIE-11
+        </button>
+        <button
+          onClick={() => setActiveTab('ichi')}
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-display tracking-wide rounded-t-md border-b-2 transition-colors ${
+            activeTab === 'ichi'
+              ? 'bg-violet text-pearl border-b-violet'
+              : 'bg-transparent text-dark/40 border-b-transparent hover:text-dark/60'
+          }`}
+        >
+          <Activity size={14} />
+          Intervenciones ICHI
         </button>
       </nav>
 
       <main className="p-8 bg-pearl min-h-[calc(100vh-120px)]">
-        <TabEspecialidades />
+        {activeTab === 'cie11' && <TabEspecialidades />}
+        {activeTab === 'ichi' && <TabICHI />}
       </main>
     </div>
   )
