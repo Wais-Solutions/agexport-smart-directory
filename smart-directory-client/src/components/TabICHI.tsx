@@ -293,15 +293,15 @@ export default function TabICHI() {
             onChange={handleFileChange}
           />
           <button
-            onClick={handleDownloadTemplate}
-            className="flex items-center gap-2 border border-navy/20 hover:border-violet/40 hover:bg-violet/5 text-dark/60 hover:text-violet px-4 py-2.5 rounded-lg text-xs font-display tracking-wide transition-colors"
+            disabled
+            className="flex items-center gap-2 border border-navy/20 text-dark/30 px-4 py-2.5 rounded-lg text-xs font-display tracking-wide cursor-not-allowed opacity-50"
           >
             <Download size={13} />
             DESCARGAR PLANTILLA
           </button>
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 border border-navy/20 hover:border-violet/40 hover:bg-violet/5 text-dark/60 hover:text-violet px-4 py-2.5 rounded-lg text-xs font-display tracking-wide transition-colors"
+            disabled
+            className="flex items-center gap-2 border border-navy/20 text-dark/30 px-4 py-2.5 rounded-lg text-xs font-display tracking-wide cursor-not-allowed opacity-50"
           >
             <Upload size={13} />
             IMPORTAR EXCEL
