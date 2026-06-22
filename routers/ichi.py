@@ -27,7 +27,7 @@ class ICHIPayload(BaseModel):
 def _doc_to_ichi_class(doc: dict) -> Optional[dict]:
     """Convierte un documento de la colección 'ichi' al formato {code, title}."""
     code  = doc.get("code") or doc.get("block_id")
-    title = doc.get("titulo_limpio") or doc.get("titulo") or ""
+    title = doc.get("titulo_limpio_es") or doc.get("titulo_limpio") or doc.get("titulo") or ""
     if not code or not title:
         return None
     return {"code": code, "title": title}
@@ -42,7 +42,7 @@ def search_ichi(q: str):
 
     cursor = db["ichi"].find(
         {"$text": {"$search": q.strip()}},
-        {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio": 1, "titulo": 1,
+        {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio_es": 1, "titulo_limpio": 1, "titulo": 1,
          "score": {"$meta": "textScore"}},
     ).sort([("score", {"$meta": "textScore"})]).limit(50)
 
@@ -78,7 +78,7 @@ def get_suggestions(partner_id: str):
     for term in services:
         cursor = db["ichi"].find(
             {"$text": {"$search": term.strip()}},
-            {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio": 1, "titulo": 1,
+            {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio_es": 1, "titulo_limpio": 1, "titulo": 1,
              "score": {"$meta": "textScore"}},
         ).sort([("score", {"$meta": "textScore"})]).limit(3)
 
@@ -151,7 +151,7 @@ async def import_from_excel(partner_id: str, file: UploadFile = File(...)):
     for code in codes:
         doc = db["ichi"].find_one(
             {"$or": [{"code": code}, {"block_id": code}]},
-            {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio": 1, "titulo": 1},
+            {"_id": 0, "code": 1, "block_id": 1, "titulo_limpio_es": 1, "titulo_limpio": 1, "titulo": 1},
         )
         if doc:
             item = _doc_to_ichi_class(doc)
