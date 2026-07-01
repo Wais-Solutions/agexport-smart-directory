@@ -27,6 +27,7 @@ type Partner = {
   partner_whatsapp?: string[]
   partner_locations?: string[]
   partner_geo_locations?: GeoLocation[]
+  is_active?: boolean
 }
 
 type ServiceOption = {
@@ -66,6 +67,52 @@ function MapsLink({ url, label }: { url: string; label: string }) {
       <MapPin size={10} />
       {label}
     </a>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
+// StatusToggle — switch activo/inactivo
+// ─────────────────────────────────────────────────────────────────
+function StatusToggle({
+  active,
+  updating,
+  onToggle,
+}: {
+  active: boolean
+  updating: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={function(e) { e.stopPropagation(); if (!updating) onToggle() }}
+      disabled={updating}
+      title={active ? 'Marcar como inactivo' : 'Marcar como activo'}
+      className="flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+    >
+      <span
+        className={
+          'text-xs font-display tracking-wide ' +
+          (active ? 'text-forest' : 'text-dark/30')
+        }
+      >
+        {active ? 'ACTIVO' : 'INACTIVO'}
+      </span>
+      <span
+        className={
+          'relative inline-flex h-5 w-9 items-center rounded-full transition-colors ' +
+          (active ? 'bg-forest' : 'bg-navy/20')
+        }
+      >
+        <span
+          className={
+            'inline-block h-3.5 w-3.5 transform rounded-full bg-pearl shadow transition-transform ' +
+            (active ? 'translate-x-4.5' : 'translate-x-1')
+          }
+          style={{ transform: active ? 'translateX(18px)' : 'translateX(2px)' }}
+        />
+      </span>
+    </button>
   )
 }
 
@@ -404,16 +451,22 @@ function EditModal({ partner, onClose, onSaved }: {
 // ─────────────────────────────────────────────────────────────────
 // PartnerCard
 // ─────────────────────────────────────────────────────────────────
-function PartnerCard({ partner, onEdit, onDelete }: {
+function PartnerCard({ partner, onEdit, onDelete, onToggleActive, togglingId }: {
   partner: Partner
   onEdit: (p: Partner) => void
   onDelete: (id: string) => void
+  onToggleActive: (p: Partner) => void
+  togglingId: string | null
 }) {
   const [expanded, setExpanded] = useState(false)
   const geo = partner.partner_geo_locations?.[0]
+  const isActive = partner.is_active !== false // por defecto activo si el campo no existe
 
   return (
-    <div className="border border-navy/10 rounded-xl overflow-hidden shadow-sm bg-pearl hover:shadow-md transition-shadow">
+    <div className={
+      'border border-navy/10 rounded-xl overflow-hidden shadow-sm bg-pearl hover:shadow-md transition-shadow ' +
+      (isActive ? '' : 'opacity-60')
+    }>
 
       {/* Header */}
       <div
@@ -442,6 +495,13 @@ function PartnerCard({ partner, onEdit, onDelete }: {
             {(partner.partner_services ?? []).length} servicios
           </span>
         </div>
+
+        {/* Status toggle */}
+        <StatusToggle
+          active={isActive}
+          updating={togglingId === partner._id}
+          onToggle={function() { onToggleActive(partner) }}
+        />
 
         {/* Actions */}
         <div className="flex items-center gap-1 ml-2">
@@ -563,6 +623,7 @@ export default function TabSocios() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -580,6 +641,26 @@ export default function TabSocios() {
     if (!confirm('¿Eliminar este socio? Esta acción no se puede deshacer.')) return
     await fetch(API_BASE + '/partners/' + id, { method: 'DELETE' })
     setPartners(function(prev) { return prev.filter(function(p) { return p._id !== id }) })
+  }
+
+  const handleToggleActive = async (partner: Partner) => {
+    const nextValue = !(partner.is_active !== false)
+    setTogglingId(partner._id)
+    try {
+      const res = await fetch(API_BASE + '/partners/' + partner._id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: nextValue }),
+      })
+      if (!res.ok) throw new Error('Error al actualizar estado')
+      const updated = await res.json()
+      setPartners(function(prev) {
+        return prev.map(function(p) { return p._id === updated._id ? updated : p })
+      })
+    } catch {
+      alert('No se pudo actualizar el estado del socio. Intenta de nuevo.')
+    }
+    setTogglingId(null)
   }
 
   const handleSaved = (updated: Partner) => {
@@ -749,6 +830,8 @@ export default function TabSocios() {
                 partner={p}
                 onEdit={setEditingPartner}
                 onDelete={handleDelete}
+                onToggleActive={handleToggleActive}
+                togglingId={togglingId}
               />
             )
           })}

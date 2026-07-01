@@ -34,7 +34,8 @@ class PartnerUpdate(BaseModel):
     partner_name: Optional[str] = None
     partner_category: Optional[str] = None
     partner_services: Optional[List[str]] = None
-    partner_whatsapp: Optional[List[str]] = None 
+    partner_whatsapp: Optional[List[str]] = None
+    is_active: Optional[bool] = None
 
 
 @router.get("/")
@@ -75,7 +76,7 @@ def get_document(collection: str, id: str):
 
 @router.patch("/partners/{id}")
 def update_partner(id: str, body: PartnerUpdate):
-    """Edita solo partner_name, partner_category y partner_services."""
+    """Edita partner_name, partner_category, partner_services, partner_whatsapp e is_active."""
     try:
         oid = ObjectId(id)
     except Exception:
