@@ -624,6 +624,7 @@ export default function TabSocios() {
   const [showFilters, setShowFilters] = useState(false)
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [bulkUpdating, setBulkUpdating] = useState<'activate' | 'deactivate' | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -670,6 +671,26 @@ export default function TabSocios() {
     setEditingPartner(null)
   }
 
+  const handleBulkStatus = async (nextValue: boolean) => {
+    const label = nextValue ? 'activar' : 'desactivar'
+    if (!confirm(`¿Seguro que querés ${label} a TODOS los socios (${partners.length})?`)) return
+    setBulkUpdating(nextValue ? 'activate' : 'deactivate')
+    try {
+      const res = await fetch(API_BASE + '/partners/bulk-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: nextValue }),
+      })
+      if (!res.ok) throw new Error('Error al actualizar')
+      setPartners(function(prev) {
+        return prev.map(function(p) { return { ...p, is_active: nextValue } })
+      })
+    } catch {
+      alert('No se pudo actualizar el estado de los socios. Intenta de nuevo.')
+    }
+    setBulkUpdating(null)
+  }
+
   const categories = useMemo(function() { return getUniqueCategories(partners) }, [partners])
 
   const filtered = useMemo(function() {
@@ -696,13 +717,29 @@ export default function TabSocios() {
           <h2 className="font-display text-navy text-lg">SOCIOS</h2>
           <p className="text-xs text-dark/35 mt-0.5">Partners registrados en el directorio</p>
         </div>
-        <button
-          onClick={load}
-          className="flex items-center gap-2 border border-navy/15 text-dark/40 hover:text-dark/70 px-3 py-1.5 rounded text-xs font-display transition-colors hover:bg-navy/5"
-        >
-          <RefreshCw size={12} />
-          ACTUALIZAR
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={function() { handleBulkStatus(true) }}
+            disabled={bulkUpdating !== null}
+            className="flex items-center gap-2 border border-forest/25 text-forest/70 hover:text-forest px-3 py-1.5 rounded text-xs font-display transition-colors hover:bg-forest/5 disabled:opacity-50"
+          >
+            {bulkUpdating === 'activate' ? 'ACTIVANDO...' : 'ACTIVAR TODOS'}
+          </button>
+          <button
+            onClick={function() { handleBulkStatus(false) }}
+            disabled={bulkUpdating !== null}
+            className="flex items-center gap-2 border border-red-200 text-red-400/80 hover:text-red-500 px-3 py-1.5 rounded text-xs font-display transition-colors hover:bg-red-50 disabled:opacity-50"
+          >
+            {bulkUpdating === 'deactivate' ? 'DESACTIVANDO...' : 'DESACTIVAR TODOS'}
+          </button>
+          <button
+            onClick={load}
+            className="flex items-center gap-2 border border-navy/15 text-dark/40 hover:text-dark/70 px-3 py-1.5 rounded text-xs font-display transition-colors hover:bg-navy/5"
+          >
+            <RefreshCw size={12} />
+            ACTUALIZAR
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

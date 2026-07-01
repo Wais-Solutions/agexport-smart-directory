@@ -38,6 +38,10 @@ class PartnerUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class BulkStatusUpdate(BaseModel):
+    is_active: bool
+
+
 @router.get("/")
 def list_collections():
     return {"collections": COLLECTIONS}
@@ -72,6 +76,17 @@ def get_document(collection: str, id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return serialize(doc)
+
+
+@router.patch("/partners/bulk-status")
+def bulk_update_status(body: BulkStatusUpdate):
+    """Activa o desactiva TODOS los socios de una sola vez."""
+    result = db["partners"].update_many({}, {"$set": {"is_active": body.is_active}})
+    return {
+        "is_active": body.is_active,
+        "matched_count": result.matched_count,
+        "modified_count": result.modified_count,
+    }
 
 
 @router.patch("/partners/{id}")
