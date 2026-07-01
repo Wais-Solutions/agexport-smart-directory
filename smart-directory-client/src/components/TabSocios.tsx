@@ -673,7 +673,7 @@ export default function TabSocios() {
 
   const handleBulkStatus = async (nextValue: boolean) => {
     const label = nextValue ? 'activar' : 'desactivar'
-    if (!confirm(`¿Seguro que querés ${label} a TODOS los socios (${partners.length})?`)) return
+    if (!confirm(`¿Seguro que quieres ${label} a TODOS los socios (${partners.length})?`)) return
     setBulkUpdating(nextValue ? 'activate' : 'deactivate')
     try {
       const res = await fetch(API_BASE + '/partners/bulk-status', {
