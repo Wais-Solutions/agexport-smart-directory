@@ -516,17 +516,17 @@ def _format_partner_block(partner: dict, index: int | None = None) -> str:
         else:
             address = locations_text[0]
     else:
-        address = closest.get("direccion") or closest.get("address") or "Dirección no disponible"
+        address = closest.get("direccion") or closest.get("address") or "Address not available"
 
     # --- Google Maps URL: use the stored maps_url (includes place_id) ---
     maps_url = (closest.get("maps_url") or "").strip()
 
     # --- Contact ---
     phones = partner.get("partner_phone_number", [])
-    phone_text = ", ".join(phones) if phones else "No disponible"
+    phone_text = ", ".join(phones) if phones else "Not available"
 
     whatsapps = partner.get("partner_whatsapp", [])
-    whatsapp_text = ", ".join(whatsapps) if whatsapps else "No disponible"
+    whatsapp_text = ", ".join(whatsapps) if whatsapps else "Not available"
 
     # Build block
     prefix = f"*{index}. " if index is not None else "*"
@@ -539,7 +539,7 @@ def _format_partner_block(partner: dict, index: int | None = None) -> str:
     block = f"""━━━━━━━━━━━━━━━
 {header}
 
-📍 *Dirección:*
+📍 *Address:*
 {address}"""
 
     if maps_url:
@@ -547,7 +547,7 @@ def _format_partner_block(partner: dict, index: int | None = None) -> str:
 
     block += f"""
 
-📞 *Teléfono:* {phone_text}
+📞 *Phone:* {phone_text}
 💬 *WhatsApp:* {whatsapp_text}"""
 
     return block
@@ -556,15 +556,15 @@ def _format_partner_block(partner: dict, index: int | None = None) -> str:
 async def format_partner_referrals(partners: list[dict]) -> str:
     """Format partner list into a WhatsApp-friendly message."""
     if not partners:
-        return "No se encontraron socios médicos para tus necesidades."
+        return "No medical partners were found for your needs."
 
-    parts = ["🏥 *Encontré los siguientes socios médicos para ti:*\n"]
+    parts = ["🏥 *I found the following medical partners for you:*\n"]
 
     for i, partner in enumerate(partners, 1):
         parts.append(_format_partner_block(partner, index=i))
 
     parts.append(
-        "\n━━━━━━━━━━━━━━━\n\n💡 Contáctalos directamente para agendar una cita."
+        "\n━━━━━━━━━━━━━━━\n\n💡 Contact them directly to schedule an appointment."
     )
     return "\n\n".join(parts)
 
@@ -572,19 +572,19 @@ async def format_partner_referrals(partners: list[dict]) -> str:
 async def format_fallback_referral(partner: dict, max_distance_searched: float | None) -> str:
     """Format a fallback referral when no partners are within the search radius."""
     if not partner:
-        return "No se encontraron socios médicos para tus necesidades."
+        return "No medical partners were found for your needs."
 
     intro = (
-        f"⚠️ *No encontré socios médicos dentro de {max_distance_searched} km de tu ubicación.*\n\n"
-        "Sin embargo, este socio podría ayudarte con tus síntomas:\n\n"
+        f"⚠️ *I couldn't find medical partners within {max_distance_searched} km of your location.*\n\n"
+        "However, this partner may be able to help with your symptoms:\n\n"
     )
 
     block = _format_partner_block(partner, index=None)
 
     footer = (
         "\n\n━━━━━━━━━━━━━━━\n\n"
-        "⚠️ *Nota:* Este socio está fuera de tu radio de búsqueda pero puede ser de ayuda.\n\n"
-        "💡 Contáctalos para verificar que pueden asistirte, o considera contactar tu hospital local."
+        "⚠️ *Note:* This partner is outside your search radius but may still be able to help.\n\n"
+        "💡 Contact them to confirm they can assist you, or consider contacting your local hospital."
     )
 
     return intro + block + footer
