@@ -256,7 +256,7 @@ async def find_matching_partners(
             else np.mean(query_vectors, axis=0).astype(np.float32)
         )
 
-        all_partners = list(db["partners"].find({}))
+        all_partners = list(db["partners"].find({"is_active": True}))
         ranked: list[dict] = []
 
         for partner in all_partners:
