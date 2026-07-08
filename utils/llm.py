@@ -14,7 +14,7 @@ async def extract_data(message):
         , messages=[
         {
             "role": "system",
-            "content": "You are an information extraction assistant. Given a text message, extract the following fields and return them strictly in JSON format:\n\n{\n  \"location\": string | None,\n  \"symptoms\": array of strings | None,\n  \"language\": string | None\n}\n\nRules:\n- \"location\" must be a clear geographical entity: city, state, country, neighborhood, or publicly known place (e.g., \"Times Square\", \"Central Park\", \"Fifth Avenue\").\n- Do NOT use vague places (e.g., \"my hotel\", \"a pool\", \"a park\", \"the mall\"). Only accept a park if it is a specifically named, publicly recognized one.\n- Patients might use popular landmarks or well-known places as location references - these should be included.\n- correct misspellings\n- \"symptoms\" should capture ANY medical condition, health issue, or injury mentioned, including:\n  * Traditional symptoms (e.g., \"headache\", \"fever\", \"nausea\", \"dizziness\")\n  * Diagnosed diseases or conditions (e.g., \"lung cancer\", \"diabetes\", \"hypertension\", \"asthma\")\n  * Injuries from accidents (e.g., \"sprained ankle\", \"broken arm\", \"car accident injury\", \"fall injury\")\n  * Chronic conditions (e.g., \"arthritis\", \"back pain\", \"migraines\")\n  * Mental health conditions (e.g., \"depression\", \"anxiety\", \"stress\")\n- separate distinct symptoms/conditions/injuries into an array\n- preserve the medical context (e.g., \"lung cancer\" not just \"cancer\", \"sprained ankle\" not just \"ankle\")\n- \"language\" must be extracted as the full language name in English (e.g., \"English\", \"Spanish\", \"French\", \"Mandarin Chinese\"), not abbreviations or codes.\n- If any field is not present in the text, set it to None.\n- translate all results to english.\n- Return only the JSON, with no extra commentary."
+            "content": "You are an information extraction assistant. Given a text message, extract the following fields and return them strictly in JSON format:\n\n{\n  \"location\": string | None,\n  \"symptoms\": array of strings | None,\n  \"language\": string\n}\n\nRules:\n- \"location\" must be a clear geographical entity: city, state, country, neighborhood, or publicly known place (e.g., \"Times Square\", \"Central Park\", \"Fifth Avenue\").\n- Do NOT use vague places (e.g., \"my hotel\", \"a pool\", \"a park\", \"the mall\"). Only accept a park if it is a specifically named, publicly recognized one.\n- Patients might use popular landmarks or well-known places as location references - these should be included.\n- correct misspellings\n- \"symptoms\" should capture ANY medical condition, health issue, or injury mentioned, including:\n  * Traditional symptoms (e.g., \"headache\", \"fever\", \"nausea\", \"dizziness\")\n  * Diagnosed diseases or conditions (e.g., \"lung cancer\", \"diabetes\", \"hypertension\", \"asthma\")\n  * Injuries from accidents (e.g., \"sprained ankle\", \"broken arm\", \"car accident injury\", \"fall injury\")\n  * Chronic conditions (e.g., \"arthritis\", \"back pain\", \"migraines\")\n  * Mental health conditions (e.g., \"depression\", \"anxiety\", \"stress\")\n- separate distinct symptoms/conditions/injuries into an array\n- preserve the medical context (e.g., \"lung cancer\" not just \"cancer\", \"sprained ankle\" not just \"ankle\")\n- \"language\" is REQUIRED and must ALWAYS be filled in, on every single message, with no exceptions: detect the language the user's message ITSELF is written in (not a language they mention or talk about) and return its full English name (e.g., \"English\", \"Spanish\", \"French\", \"Mandarin Chinese\"), not abbreviations or codes.\n- This applies even when the message is already in English: if the user writes in English, you MUST still return \"English\" for \"language\". Never return None, null, or omit \"language\" just because no translation is needed.\n- \"language\" should only be None if the message contains no discernible language at all (e.g., it is purely a number, emoji, or GPS coordinates with no words).\n- If \"location\" or \"symptoms\" are not present in the text, set them to None.\n- translate the \"location\" and \"symptoms\" values to english (this does not apply to \"language\", which is always in English by definition already).\n- Return only the JSON, with no extra commentary."
         },
         {
             "role": "user",
@@ -24,7 +24,24 @@ async def extract_data(message):
         temperature=0,
         top_p=1,
         stream=True,
-        stop=None
+        stop=None,
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "message_extraction",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "location": {"type": ["string", "null"]},
+                        "symptoms": {"type": "array", "items": {"type": "string"}},
+                        "language": {"type": "string"},
+                    },
+                    "required": ["location", "symptoms", "language"],
+                    "additionalProperties": False,
+                },
+            },
+        },
     )
 
     response = ""
@@ -34,7 +51,12 @@ async def extract_data(message):
 
     try:
         data = json.loads(response)
-    except Exception:
+    except Exception as e:
+        log_to_db("ERROR", "Error parsing extract_data JSON response", {
+            "sender_id": None,
+            "raw_response": response,
+            "error": str(e)
+        })
         data = {"location": None, "symptoms": [], "language": None}
 
     return data
