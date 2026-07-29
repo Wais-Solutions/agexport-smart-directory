@@ -19,7 +19,9 @@ async def handle_message(message):
         log_to_db("INFO", "New conversation started", {"sender_id": sender_id})
     else:
         # Silently archive and reset if inactive for more than 12 hours
-        check_and_apply_timeout(sender_id)
+        timeout_applied = check_and_apply_timeout(sender_id)
+        if timeout_applied:
+            conversation = get_conversation(sender_id)  # Refresh after reset so language/symptoms are null
 
     # Update last activity timestamp on every incoming message
     update_last_activity(sender_id)
