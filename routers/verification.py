@@ -77,7 +77,7 @@ async def send_verification_blast():
     failed_count = 0
 
     for doc in docs:
-        partner_name = doc.get("partner_name", str(doc["_id"]))
+        partner_name = doc.get("partner_name", str(doc["_id"])).replace("\n", " ").replace("\r", "").strip()
         raw_numbers  = ["58792752"]  # TEST — reemplazar por: doc.get("partner_whatsapp") or []
 
         for raw in raw_numbers:
