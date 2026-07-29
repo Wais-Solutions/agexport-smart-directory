@@ -59,42 +59,38 @@ async def callback(request: Request):
             })
 
             # ── Captura del botón de verificación ──────────────────────────────
-            # Los botones de plantilla llegan como type=interactive / button_reply
-            if message_type == "interactive":
-                interactive = message.get("interactive", {})
-                if interactive.get("type") == "button_reply":
-                    button_title = interactive.get("button_reply", {}).get("title", "")
-                    if button_title == VERIFICATION_BUTTON_TITLE:
-                        unix_ts   = int(message.get("timestamp") or time.time())
-                        timestamp = datetime.fromtimestamp(unix_ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000+00:00")
+            # Los botones de plantilla llegan como type=button con button.payload
+            if message_type == "button":
+                button_payload = message.get("button", {}).get("payload", "")
+                unix_ts   = int(message.get("timestamp") or time.time())
+                timestamp = datetime.fromtimestamp(unix_ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000+00:00")
 
-                        # Buscar el partner que tiene este número registrado
-                        partner_doc = db["partners"].find_one(
-                            {"partner_whatsapp": {"$elemMatch": {"$regex": sender_id[-8:]}}},
-                            {"partner_name": 1, "partner_category": 1}
-                        )
-                        partner_name     = partner_doc.get("partner_name", "")     if partner_doc else ""
-                        partner_category = partner_doc.get("partner_category", "") if partner_doc else ""
+                # Buscar el partner que tiene este número registrado
+                partner_doc = db["partners"].find_one(
+                    {"partner_whatsapp": {"$elemMatch": {"$regex": sender_id[-8:]}}},
+                    {"partner_name": 1, "partner_category": 1}
+                )
+                partner_name     = partner_doc.get("partner_name", "")     if partner_doc else ""
+                partner_category = partner_doc.get("partner_category", "") if partner_doc else ""
 
-                        db["partner_verifications"].update_one(
-                            {"verified_phone": sender_id},
-                            {"$set": {
-                                "verified_phone":    sender_id,
-                                "verified_at":       timestamp,
-                                "verified":          True,
-                                "partner_name":      partner_name,
-                                "partner_category":  partner_category,
-                            }},
-                            upsert=True,
-                        )
-                        log_to_db("INFO", f"Partner verified via button: {sender_id}", {
-                            "phone":            sender_id,
-                            "timestamp":        timestamp,
-                            "partner_name":     partner_name,
-                            "partner_category": partner_category,
-                        })
-                        return {"status": "received"}
-                    # Si es otro button_reply (p.ej. de otro flujo), cae al handle_message
+                db["partner_verifications"].update_one(
+                    {"verified_phone": sender_id},
+                    {"$set": {
+                        "verified_phone":    sender_id,
+                        "verified_at":       timestamp,
+                        "verified":          True,
+                        "partner_name":      partner_name,
+                        "partner_category":  partner_category,
+                    }},
+                    upsert=True,
+                )
+                log_to_db("INFO", f"Partner verified via button: {sender_id}", {
+                    "phone":            sender_id,
+                    "timestamp":        timestamp,
+                    "partner_name":     partner_name,
+                    "partner_category": partner_category,
+                })
+                return {"status": "received"}
             # ───────────────────────────────────────────────────────────────────
 
             await handle_message(message)
