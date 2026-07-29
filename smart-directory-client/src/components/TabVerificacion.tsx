@@ -14,6 +14,8 @@ type Partner = {
   partner_category: string
   partner_whatsapp: string[]
   whatsapp_e164: string[]
+  verified_phones: string[]
+  verified_at: string | null
 }
 
 type SendResult = {
@@ -32,7 +34,7 @@ type BlastResult = {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// TemplatePreview — replica visual de la plantilla real
+// TemplatePreview — replica visual de la plantilla aprobada
 // ─────────────────────────────────────────────────────────────────
 function TemplatePreview() {
   return (
@@ -52,33 +54,33 @@ function TemplatePreview() {
       <div className="bg-white rounded-xl rounded-tl-sm shadow-sm max-w-[92%] overflow-hidden">
         {/* Header */}
         <div className="bg-navy/5 border-b border-navy/8 px-4 py-2.5">
-          <p className="text-xs font-bold text-dark/80">Verificación de Número</p>
+          <p className="text-xs font-bold text-dark/80">Verificación de WhatsApp</p>
         </div>
 
         {/* Body */}
         <div className="px-4 py-3 space-y-2">
-          <p className="text-xs text-dark/70 leading-relaxed">Estimado socio,</p>
           <p className="text-xs text-dark/70 leading-relaxed">
-            Le informamos que estamos realizando una prueba de verificación del Smart Directory de AGEXPORT para confirmar que el número de WhatsApp registrado en nuestra plataforma se encuentra activo y funcionando correctamente.
+            Estimado socio <span className="font-semibold text-violet/70">{'{{partner_name}}'}</span>, le informamos
+            que estamos realizando una prueba de verificación del Smart Directory de AGEXPORT para
+            confirmar que el número de WhatsApp registrado en nuestra plataforma se encuentra activo
+            y funcionando correctamente.
           </p>
           <p className="text-xs text-dark/70 leading-relaxed">
-            Si recibió este mensaje, su número ha sido verificado exitosamente. No es necesario realizar ninguna acción adicional.
+            Para confirmar la recepción de este mensaje, por favor presione el botón a continuación.
           </p>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-navy/8 px-4 py-2 flex items-center justify-between">
-          <p className="text-[10px] text-dark/30 leading-relaxed flex-1">
-            AGEXPORT Smart Directory | Este es un mensaje automático.
-          </p>
-          <p className="text-[10px] text-dark/25 ml-3 shrink-0">
-            {new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })}
-          </p>
+        {/* Quick reply button */}
+        <div className="border-t border-navy/10 px-4 py-2.5 flex items-center justify-center gap-1.5 text-sky-500">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="9 17 4 12 9 7"/><line x1="20" y1="12" x2="4" y2="12"/>
+          </svg>
+          <span className="text-xs font-medium">Verificar</span>
         </div>
       </div>
 
       <p className="text-[10px] text-dark/30 text-center mt-3 font-display tracking-wide">
-        PLANTILLA: partners_number_verification
+        PLANTILLA: {'{'}partners_whatsapp_verification{'}'}
       </p>
     </div>
   )
@@ -119,7 +121,7 @@ function PreviewModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ConfirmModal — solo advertencia + conteos, sin preview
+// ConfirmModal — advertencia + conteos, sin preview
 // ─────────────────────────────────────────────────────────────────
 function ConfirmModal({ partnerCount, phoneCount, onConfirm, onCancel, sending }: {
   partnerCount: number
@@ -147,7 +149,7 @@ function ConfirmModal({ partnerCount, phoneCount, onConfirm, onCancel, sending }
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
             <p className="text-xs text-amber-700 font-display tracking-wide">⚠️ ADVERTENCIA</p>
             <p className="text-sm text-amber-800 leading-relaxed">
-              Se enviará la plantilla <strong>partners_number_verification</strong> a todos los
+              Se enviará la plantilla <strong>partners_whatsapp_verification</strong> a todos los
               números de WhatsApp registrados en el directorio.
             </p>
             <div className="flex gap-6 pt-1">
@@ -204,7 +206,7 @@ function ConfirmModal({ partnerCount, phoneCount, onConfirm, onCancel, sending }
 // ─────────────────────────────────────────────────────────────────
 function ResultsPanel({ result, onClose }: { result: BlastResult; onClose: () => void }) {
   const [showDetails, setShowDetails] = useState(false)
-  const failed = result.results.filter(function(r) { return !r.success })
+  const failed    = result.results.filter(function(r) { return !r.success })
   const succeeded = result.results.filter(function(r) { return r.success })
 
   return (
@@ -283,30 +285,75 @@ function PartnerRow({ partner, resultMap }: {
   partner: Partner
   resultMap: Map<string, SendResult>
 }) {
-  const hasNumbers = partner.whatsapp_e164.length > 0
+  const hasNumbers        = partner.whatsapp_e164.length > 0
+  const verifiedPhones    = partner.verified_phones ?? []
+  const isFullyVerified   = hasNumbers && partner.whatsapp_e164.every(function(p) {
+    return verifiedPhones.includes(p)
+  })
+  const isPartialVerified = !isFullyVerified && verifiedPhones.length > 0
+
+  const verifiedDate = partner.verified_at
+    ? new Date(partner.verified_at).toLocaleString('es-GT', {
+        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+      })
+    : null
 
   return (
-    <div className={'flex items-center gap-4 px-5 py-3.5 border border-navy/10 rounded-xl bg-pearl shadow-sm ' +
-      (!hasNumbers ? 'opacity-50' : '')}>
+    <div className={
+      'flex items-center gap-4 px-5 py-3.5 border rounded-xl bg-pearl shadow-sm ' +
+      (!hasNumbers        ? 'opacity-50 border-navy/10'          :
+       isFullyVerified    ? 'border-forest/30 bg-forest/[0.02]'  :
+       isPartialVerified  ? 'border-amber-300/40 bg-amber-50/30' :
+                            'border-navy/10')
+    }>
+      {/* Avatar */}
       <div className="w-9 h-9 rounded-xl bg-violet/10 border border-violet/20 flex items-center justify-center shrink-0 font-display text-violet font-bold text-sm">
         {(partner.partner_name || '?')[0].toUpperCase()}
       </div>
 
+      {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-display text-sm text-dark tracking-wide truncate">{partner.partner_name}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-display text-sm text-dark tracking-wide truncate">{partner.partner_name}</p>
+          {isFullyVerified && (
+            <span className="flex items-center gap-1 text-[10px] font-display text-forest bg-forest/10 px-1.5 py-0.5 rounded-full shrink-0">
+              <CheckCircle size={9} />
+              VERIFICADO
+            </span>
+          )}
+          {isPartialVerified && (
+            <span className="flex items-center gap-1 text-[10px] font-display text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full shrink-0">
+              <AlertTriangle size={9} />
+              PARCIAL
+            </span>
+          )}
+        </div>
         <p className="text-xs text-dark/35 mt-0.5 truncate">{partner.partner_category}</p>
+        {verifiedDate && (
+          <p className="text-[10px] text-forest/60 mt-0.5">
+            Confirmado {verifiedDate}
+          </p>
+        )}
       </div>
 
+      {/* Números */}
       <div className="flex flex-col gap-1 items-end shrink-0">
         {hasNumbers ? partner.whatsapp_e164.map(function(phone, i) {
-          const result = resultMap.get(phone)
+          const sendResult  = resultMap.get(phone)
+          const wasVerified = verifiedPhones.includes(phone)
           return (
             <div key={i} className="flex items-center gap-2">
-              {result && (
-                result.success
-                  ? <CheckCircle size={12} className="text-forest" />
-                  : <XCircle size={12} className="text-red-400" />
+              {/* Ícono de envío (solo si se hizo blast en esta sesión) */}
+              {sendResult && (
+                sendResult.success
+                  ? <CheckCircle size={12} className="text-forest" title="Enviado correctamente" />
+                  : <XCircle    size={12} className="text-red-400"  title="Error al enviar"      />
               )}
+              {/* Ícono de confirmación del botón */}
+              {wasVerified
+                ? <CheckCircle size={12} className="text-forest"   title="Presionó Verificar" />
+                : <div className="w-3 h-3 rounded-full border border-navy/20"                   title="Sin confirmar" />
+              }
               <div className="text-right">
                 <span className="font-mono text-xs text-violet/70">{partner.partner_whatsapp[i]}</span>
                 <span className="text-xs text-dark/25 ml-1">→ {phone}</span>
@@ -325,18 +372,18 @@ function PartnerRow({ partner, resultMap }: {
 // Main
 // ─────────────────────────────────────────────────────────────────
 export default function TabVerificacion() {
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [blastResult, setBlastResult] = useState<BlastResult | null>(null)
+  const [partners,     setPartners]     = useState<Partner[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [search,       setSearch]       = useState('')
+  const [showConfirm,  setShowConfirm]  = useState(false)
+  const [showPreview,  setShowPreview]  = useState(false)
+  const [sending,      setSending]      = useState(false)
+  const [blastResult,  setBlastResult]  = useState<BlastResult | null>(null)
 
   const load = async () => {
     setLoading(true)
     try {
-      const res = await fetch(API_BASE + '/verification/partners')
+      const res  = await fetch(API_BASE + '/verification/partners')
       const json = await res.json()
       setPartners(json.partners ?? [])
     } catch { setPartners([]) }
@@ -363,6 +410,10 @@ export default function TabVerificacion() {
     return partners.filter(function(p) { return p.whatsapp_e164.length > 0 }).length
   }, [partners])
 
+  const verifiedCount = useMemo(function() {
+    return partners.filter(function(p) { return (p.verified_phones ?? []).length > 0 }).length
+  }, [partners])
+
   const resultMap = useMemo(function() {
     const map = new Map<string, SendResult>()
     if (blastResult) {
@@ -374,7 +425,7 @@ export default function TabVerificacion() {
   const handleSend = async () => {
     setSending(true)
     try {
-      const res = await fetch(API_BASE + '/verification/send', { method: 'POST' })
+      const res  = await fetch(API_BASE + '/verification/send', { method: 'POST' })
       const json = await res.json()
       setBlastResult(json)
     } catch {
@@ -434,6 +485,11 @@ export default function TabVerificacion() {
           <div className="flex items-center gap-1.5 text-xs text-dark/40">
             <span className="font-display text-violet text-sm font-bold">{totalPhones}</span>
             mensajes a enviar
+          </div>
+          <div className="w-px h-4 bg-navy/10" />
+          <div className="flex items-center gap-1.5 text-xs text-dark/40">
+            <span className="font-display text-forest text-sm font-bold">{verifiedCount}</span>
+            confirmados
           </div>
         </div>
       )}
