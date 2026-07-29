@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import os 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 mongo_user = os.getenv('GENEZ_MONGO_DB_USER')
 mongo_psw = os.getenv('GENEZ_MONGO_DB_PSW')
@@ -68,7 +68,8 @@ def new_conversation(sender_id):
         "waiting_for_another_referral": False,
         "waiting_for_location_reference": False,
         "pending_location_confirmation": None,
-        "location_confirmation_attempts": 0
+        "location_confirmation_attempts": 0,
+        "last_activity_at": datetime.now(timezone.utc)
     }
     
     ongoing_conversations.insert_one(new_conversation)
@@ -338,6 +339,66 @@ def increment_referral_count(sender_id):
             "error": str(e)
         })
         return False
+CONVERSATION_TIMEOUT_HOURS = 0.05
+
+def update_last_activity(sender_id):
+    """Update the last activity timestamp for a conversation."""
+    try:
+        ongoing_conversations.update_one(
+            {"sender_id": sender_id},
+            {"$set": {"last_activity_at": datetime.now(timezone.utc)}}
+        )
+    except Exception as e:
+        log_to_db("ERROR", "Error updating last_activity_at", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+
+def check_and_apply_timeout(sender_id):
+    """
+    If the conversation has been inactive for more than CONVERSATION_TIMEOUT_HOURS,
+    archive it to historical_conversations and reset it silently (no message sent).
+    Returns True if a timeout reset was applied, False otherwise.
+    """
+    try:
+        conversation = ongoing_conversations.find_one({"sender_id": sender_id})
+        if not conversation:
+            return False
+
+        last_activity = conversation.get("last_activity_at")
+
+        # Legacy docs without the field: backfill timestamp and skip reset
+        if last_activity is None:
+            ongoing_conversations.update_one(
+                {"sender_id": sender_id},
+                {"$set": {"last_activity_at": datetime.now(timezone.utc)}}
+            )
+            return False
+
+        # Ensure timezone-aware comparison
+        if last_activity.tzinfo is None:
+            last_activity = last_activity.replace(tzinfo=timezone.utc)
+
+        elapsed = datetime.now(timezone.utc) - last_activity
+
+        if elapsed >= timedelta(hours=CONVERSATION_TIMEOUT_HOURS):
+            log_to_db("INFO", "Conversation timeout — archiving and resetting silently", {
+                "sender_id": sender_id,
+                "inactive_hours": round(elapsed.total_seconds() / 3600, 2)
+            })
+            copy_conversation_to_history(sender_id)
+            reset_conversation(sender_id)
+            return True
+
+        return False
+
+    except Exception as e:
+        log_to_db("ERROR", "Error checking conversation timeout", {
+            "sender_id": sender_id,
+            "error": str(e)
+        })
+        return False
+
 def save_feedback(sender_id: str) -> bool:
     """Save the last 10 messages of the conversation to feedback_conversations."""
     try:

@@ -1,5 +1,5 @@
 import os
-from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data, reset_conversation, save_feedback
+from utils.db_tools import get_conversation, new_conversation, log_to_db, save_patient_data, reset_conversation, save_feedback, check_and_apply_timeout, update_last_activity
 from utils.llm import extract_data
 from utils.location import process_location_message, request_location
 from utils.symptoms import process_symptoms_message, request_symptoms
@@ -17,6 +17,12 @@ async def handle_message(message):
     if not conversation: 
         conversation = new_conversation(sender_id=sender_id)
         log_to_db("INFO", "New conversation started", {"sender_id": sender_id})
+    else:
+        # Silently archive and reset if inactive for more than 12 hours
+        check_and_apply_timeout(sender_id)
+
+    # Update last activity timestamp on every incoming message
+    update_last_activity(sender_id)
 
     # Initialize variables
     message_data = {"location": None, "symptoms": None, "language": None}
