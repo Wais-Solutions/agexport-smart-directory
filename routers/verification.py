@@ -1,6 +1,8 @@
 import asyncio
 import httpx
+from bson import ObjectId
 from fastapi import APIRouter
+from pydantic import BaseModel
 from utils.db_tools import db, log_to_db
 from utils.whatsapp import headers, WHATSAPP_API_URL
 
@@ -61,14 +63,26 @@ def get_partners_for_verification():
 
 
 # ── POST /verification/send ────────────────────────────────────────────────
+class BlastRequest(BaseModel):
+    partner_ids: list[str] | None = None
+
+
 @router.post("/send")
-async def send_verification_blast():
+async def send_verification_blast(body: BlastRequest | None = None):
     """
-    Envía la template a todos los números de WhatsApp de todos los partners.
+    Envía la template a los números de WhatsApp de los partners seleccionados.
+    Si no se envía partner_ids, se envía a todos.
     Pasa el nombre del partner como parámetro {{partner_name}} del body.
     """
+    query: dict = {}
+    if body and body.partner_ids is not None:
+        object_ids = [ObjectId(pid) for pid in body.partner_ids if ObjectId.is_valid(pid)]
+        if not object_ids:
+            return {"sent": 0, "failed": 0, "total": 0, "results": []}
+        query = {"_id": {"$in": object_ids}}
+
     docs = list(db["partners"].find(
-        {},
+        query,
         {"partner_name": 1, "partner_whatsapp": 1}
     ))
 
@@ -109,6 +123,18 @@ async def send_verification_blast():
                 print("META RESPONSE:", resp.status_code, resp.text)
                 success = resp.status_code in (200, 201)
 
+                # Mensaje de error legible de Meta (ej. 131056 pair rate limit)
+                meta_error = None
+                if not success:
+                    try:
+                        err = resp.json().get("error", {})
+                        meta_error = "{} ({})".format(
+                            err.get("message", resp.text[:120]),
+                            err.get("code", "sin código"),
+                        )
+                    except Exception:
+                        meta_error = resp.text[:150]
+
                 if success:
                     sent_count += 1
                 else:
@@ -130,6 +156,7 @@ async def send_verification_blast():
                     "phone":       phone,
                     "success":     success,
                     "status_code": resp.status_code,
+                    "error":       meta_error,
                 })
 
             except Exception as e:

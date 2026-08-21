@@ -149,8 +149,8 @@ function ConfirmModal({ partnerCount, phoneCount, onConfirm, onCancel, sending }
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
             <p className="text-xs text-amber-700 font-display tracking-wide">⚠️ ADVERTENCIA</p>
             <p className="text-sm text-amber-800 leading-relaxed">
-              Se enviará la plantilla <strong>partners_whatsapp_verification</strong> a todos los
-              números de WhatsApp registrados en el directorio.
+              Se enviará la plantilla <strong>partners_whatsapp_verification</strong> a los
+              números de WhatsApp de los socios seleccionados.
             </p>
             <div className="flex gap-6 pt-1">
               <div className="text-center">
@@ -204,13 +204,28 @@ function ConfirmModal({ partnerCount, phoneCount, onConfirm, onCancel, sending }
 // ─────────────────────────────────────────────────────────────────
 // ResultsPanel
 // ─────────────────────────────────────────────────────────────────
-function ResultsPanel({ result, onClose }: { result: BlastResult; onClose: () => void }) {
+function ResultsPanel({ result, expected, onClose }: {
+  result: BlastResult
+  expected: number
+  onClose: () => void
+}) {
   const [showDetails, setShowDetails] = useState(false)
   const failed    = result.results.filter(function(r) { return !r.success })
   const succeeded = result.results.filter(function(r) { return r.success })
+  const overSent  = result.total > expected
 
   return (
     <div className="border border-navy/10 rounded-2xl overflow-hidden shadow-sm bg-pearl">
+      {overSent && (
+        <div className="flex items-start gap-2 px-5 py-3 bg-amber-50 border-b border-amber-200">
+          <AlertTriangle size={13} className="text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-800 leading-relaxed">
+            Se enviaron <strong>{result.total}</strong> mensajes pero solo había{' '}
+            <strong>{expected}</strong> seleccionados. El servidor está ignorando la selección —
+            probablemente corre una versión desactualizada del backend.
+          </p>
+        </div>
+      )}
       <div className="px-5 py-4 flex items-center gap-4 bg-navy/[0.01]">
         <div className="flex items-center gap-2">
           <CheckCircle size={16} className="text-forest" />
@@ -255,10 +270,15 @@ function ResultsPanel({ result, onClose }: { result: BlastResult; onClose: () =>
               <div key={'f' + i} className="flex items-center gap-3 px-5 py-2.5 bg-red-50/50">
                 <XCircle size={12} className="text-red-400 shrink-0" />
                 <span className="font-mono text-xs text-dark/60 w-32 shrink-0">{r.phone}</span>
-                <span className="text-xs text-dark/50 flex-1 truncate">{r.partner}</span>
-                <span className="text-xs text-red-400 font-display shrink-0">
-                  {r.status_code ? 'HTTP ' + r.status_code : r.error?.slice(0, 30)}
+                <span className="text-xs text-dark/50 w-40 shrink-0 truncate">{r.partner}</span>
+                <span className="text-xs text-red-500/80 flex-1 truncate text-right" title={r.error}>
+                  {r.error || (r.status_code ? 'HTTP ' + r.status_code : 'Error desconocido')}
                 </span>
+                {r.status_code && (
+                  <span className="text-[10px] text-red-400/60 font-display shrink-0">
+                    {r.status_code}
+                  </span>
+                )}
               </div>
             )
           })}
@@ -281,9 +301,11 @@ function ResultsPanel({ result, onClose }: { result: BlastResult; onClose: () =>
 // ─────────────────────────────────────────────────────────────────
 // PartnerRow
 // ─────────────────────────────────────────────────────────────────
-function PartnerRow({ partner, resultMap }: {
+function PartnerRow({ partner, resultMap, selected, onToggle }: {
   partner: Partner
   resultMap: Map<string, SendResult>
+  selected: boolean
+  onToggle: (id: string) => void
 }) {
   const hasNumbers        = partner.whatsapp_e164.length > 0
   const verifiedPhones    = partner.verified_phones ?? []
@@ -300,12 +322,23 @@ function PartnerRow({ partner, resultMap }: {
 
   return (
     <div className={
-      'flex items-center gap-4 px-5 py-3.5 border rounded-xl bg-pearl shadow-sm ' +
+      'flex items-center gap-4 px-5 py-3.5 border rounded-xl bg-pearl shadow-sm transition-colors ' +
       (!hasNumbers        ? 'opacity-50 border-navy/10'          :
        isFullyVerified    ? 'border-forest/30 bg-forest/[0.02]'  :
        isPartialVerified  ? 'border-amber-300/40 bg-amber-50/30' :
-                            'border-navy/10')
+                            'border-navy/10') +
+      (hasNumbers && !selected ? ' opacity-60' : '')
     }>
+      {/* Checkbox */}
+      <input
+        type="checkbox"
+        checked={selected}
+        disabled={!hasNumbers}
+        onChange={function() { onToggle(partner._id) }}
+        title={hasNumbers ? 'Incluir en el envío' : 'Sin número de WhatsApp'}
+        className="w-4 h-4 shrink-0 accent-violet cursor-pointer disabled:cursor-not-allowed"
+      />
+
       {/* Avatar */}
       <div className="w-9 h-9 rounded-xl bg-violet/10 border border-violet/20 flex items-center justify-center shrink-0 font-display text-violet font-bold text-sm">
         {(partner.partner_name || '?')[0].toUpperCase()}
@@ -345,14 +378,17 @@ function PartnerRow({ partner, resultMap }: {
             <div key={i} className="flex items-center gap-2">
               {/* Ícono de envío (solo si se hizo blast en esta sesión) */}
               {sendResult && (
-                sendResult.success
-                  ? <CheckCircle size={12} className="text-forest" title="Enviado correctamente" />
-                  : <XCircle    size={12} className="text-red-400"  title="Error al enviar"      />
+                <span title={sendResult.success ? 'Enviado correctamente' : (sendResult.error || 'Error al enviar')}>
+                  {sendResult.success
+                    ? <CheckCircle size={12} className="text-forest" />
+                    : <XCircle     size={12} className="text-red-400" />
+                  }
+                </span>
               )}
               {/* Ícono de confirmación del botón */}
               {wasVerified
-                ? <CheckCircle size={12} className="text-forest"   title="Presionó Verificar" />
-                : <div className="w-3 h-3 rounded-full border border-navy/20"                   title="Sin confirmar" />
+                ? <span title="Presionó Verificar"><CheckCircle size={12} className="text-forest" /></span>
+                : <div className="w-3 h-3 rounded-full border border-navy/20" title="Sin confirmar" />
               }
               <div className="text-right">
                 <span className="font-mono text-xs text-violet/70">{partner.partner_whatsapp[i]}</span>
@@ -379,14 +415,25 @@ export default function TabVerificacion() {
   const [showPreview,  setShowPreview]  = useState(false)
   const [sending,      setSending]      = useState(false)
   const [blastResult,  setBlastResult]  = useState<BlastResult | null>(null)
+  const [selected,     setSelected]     = useState<Set<string>>(new Set())
+  const [expectedSent, setExpectedSent] = useState(0)
 
   const load = async () => {
     setLoading(true)
     try {
       const res  = await fetch(API_BASE + '/verification/partners')
       const json = await res.json()
-      setPartners(json.partners ?? [])
-    } catch { setPartners([]) }
+      const list: Partner[] = json.partners ?? []
+      setPartners(list)
+      // por defecto se seleccionan todos los que tienen WhatsApp
+      setSelected(new Set(
+        list.filter(function(p) { return p.whatsapp_e164.length > 0 })
+            .map(function(p) { return p._id })
+      ))
+    } catch {
+      setPartners([])
+      setSelected(new Set())
+    }
     setLoading(false)
   }
 
@@ -414,6 +461,46 @@ export default function TabVerificacion() {
     return partners.filter(function(p) { return (p.verified_phones ?? []).length > 0 }).length
   }, [partners])
 
+  // ── Selección ──────────────────────────────────────────────────
+  const selectedPartners = useMemo(function() {
+    return partners.filter(function(p) {
+      return p.whatsapp_e164.length > 0 && selected.has(p._id)
+    })
+  }, [partners, selected])
+
+  const selectedPhones = useMemo(function() {
+    return selectedPartners.reduce(function(acc, p) { return acc + p.whatsapp_e164.length }, 0)
+  }, [selectedPartners])
+
+  // socios seleccionables dentro del filtro actual
+  const selectableFiltered = useMemo(function() {
+    return filtered.filter(function(p) { return p.whatsapp_e164.length > 0 })
+  }, [filtered])
+
+  const allFilteredSelected = selectableFiltered.length > 0 &&
+    selectableFiltered.every(function(p) { return selected.has(p._id) })
+
+  const toggleOne = function(id: string) {
+    setSelected(function(prev) {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAllFiltered = function() {
+    setSelected(function(prev) {
+      const next = new Set(prev)
+      if (allFilteredSelected) {
+        selectableFiltered.forEach(function(p) { next.delete(p._id) })
+      } else {
+        selectableFiltered.forEach(function(p) { next.add(p._id) })
+      }
+      return next
+    })
+  }
+
   const resultMap = useMemo(function() {
     const map = new Map<string, SendResult>()
     if (blastResult) {
@@ -424,12 +511,19 @@ export default function TabVerificacion() {
 
   const handleSend = async () => {
     setSending(true)
+    setExpectedSent(selectedPhones)
     try {
-      const res  = await fetch(API_BASE + '/verification/send', { method: 'POST' })
+      const res = await fetch(API_BASE + '/verification/send', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          partner_ids: selectedPartners.map(function(p) { return p._id })
+        }),
+      })
       const json = await res.json()
       setBlastResult(json)
     } catch {
-      setBlastResult({ sent: 0, failed: totalPhones, total: totalPhones, results: [] })
+      setBlastResult({ sent: 0, failed: selectedPhones, total: selectedPhones, results: [] })
     }
     setSending(false)
     setShowConfirm(false)
@@ -460,11 +554,11 @@ export default function TabVerificacion() {
           </button>
           <button
             onClick={function() { setShowConfirm(true) }}
-            disabled={loading || sending || totalPhones === 0}
+            disabled={loading || sending || selectedPhones === 0}
             className="flex items-center gap-2 bg-violet hover:bg-violet/80 disabled:opacity-40 disabled:cursor-not-allowed text-pearl px-4 py-1.5 rounded text-xs font-display transition-colors"
           >
             <Send size={12} />
-            ENVIAR VERIFICACIÓN
+            ENVIAR VERIFICACIÓN{selectedPhones > 0 ? ' (' + selectedPhones + ')' : ''}
           </button>
         </div>
       </div>
@@ -483,7 +577,12 @@ export default function TabVerificacion() {
           </div>
           <div className="w-px h-4 bg-navy/10" />
           <div className="flex items-center gap-1.5 text-xs text-dark/40">
-            <span className="font-display text-violet text-sm font-bold">{totalPhones}</span>
+            <span className="font-display text-dark/70 text-sm">{totalPhones}</span>
+            números totales
+          </div>
+          <div className="w-px h-4 bg-navy/10" />
+          <div className="flex items-center gap-1.5 text-xs text-dark/40">
+            <span className="font-display text-violet text-sm font-bold">{selectedPhones}</span>
             mensajes a enviar
           </div>
           <div className="w-px h-4 bg-navy/10" />
@@ -497,27 +596,52 @@ export default function TabVerificacion() {
       {/* Blast results */}
       {blastResult && (
         <div className="mb-5">
-          <ResultsPanel result={blastResult} onClose={function() { setBlastResult(null) }} />
+          <ResultsPanel
+            result={blastResult}
+            expected={expectedSent}
+            onClose={function() { setBlastResult(null) }}
+          />
         </div>
       )}
 
-      {/* Search */}
+      {/* Search + selección */}
       {!loading && (
-        <div className="relative max-w-sm mb-4">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark/30" />
-          <input
-            type="text"
-            placeholder="Buscar socio o número..."
-            value={search}
-            onChange={function(e) { setSearch(e.target.value) }}
-            className="w-full pl-7 pr-7 py-1.5 text-xs border border-navy/15 rounded bg-pearl text-dark/70 focus:outline-none focus:border-violet transition-colors font-body placeholder:text-dark/25"
-          />
-          {search && (
-            <button onClick={function() { setSearch('') }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-dark/25 hover:text-dark/50">
-              <X size={11} />
-            </button>
-          )}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative max-w-sm flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark/30" />
+            <input
+              type="text"
+              placeholder="Buscar socio o número..."
+              value={search}
+              onChange={function(e) { setSearch(e.target.value) }}
+              className="w-full pl-7 pr-7 py-1.5 text-xs border border-navy/15 rounded bg-pearl text-dark/70 focus:outline-none focus:border-violet transition-colors font-body placeholder:text-dark/25"
+            />
+            {search && (
+              <button onClick={function() { setSearch('') }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-dark/25 hover:text-dark/50">
+                <X size={11} />
+              </button>
+            )}
+          </div>
+
+          <label className="flex items-center gap-2 text-xs font-display text-dark/40 hover:text-dark/70 transition-colors cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={allFilteredSelected}
+              disabled={selectableFiltered.length === 0}
+              onChange={toggleAllFiltered}
+              className="w-4 h-4 accent-violet cursor-pointer disabled:cursor-not-allowed"
+            />
+            {allFilteredSelected ? 'DESELECCIONAR TODOS' : 'SELECCIONAR TODOS'}
+            {search && selectableFiltered.length > 0 && (
+              <span className="text-dark/25">({selectableFiltered.length} en la búsqueda)</span>
+            )}
+          </label>
+
+          <span className="ml-auto text-xs text-dark/35">
+            <span className="font-display text-violet font-bold">{selectedPartners.length}</span>
+            {' '}de {partnersWithPhone} socios seleccionados
+          </span>
         </div>
       )}
 
@@ -533,7 +657,15 @@ export default function TabVerificacion() {
       ) : (
         <div className="space-y-2">
           {filtered.map(function(p) {
-            return <PartnerRow key={p._id} partner={p} resultMap={resultMap} />
+            return (
+              <PartnerRow
+                key={p._id}
+                partner={p}
+                resultMap={resultMap}
+                selected={selected.has(p._id)}
+                onToggle={toggleOne}
+              />
+            )
           })}
         </div>
       )}
@@ -546,8 +678,8 @@ export default function TabVerificacion() {
       {/* Confirm modal */}
       {showConfirm && (
         <ConfirmModal
-          partnerCount={partnersWithPhone}
-          phoneCount={totalPhones}
+          partnerCount={selectedPartners.length}
+          phoneCount={selectedPhones}
           onConfirm={handleSend}
           onCancel={function() { setShowConfirm(false) }}
           sending={sending}
