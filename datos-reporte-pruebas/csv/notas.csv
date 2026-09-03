@@ -1,0 +1,23 @@
+﻿Hoja,Que contiene
+Resumen,Cifras globales del reporte.
+Mensual,"Conversaciones, mensajes, promedio y recomendaciones por mes."
+Semanal,"Lo mismo, por semana ISO (solo semanas con actividad)."
+Conversaciones,Una fila por sesion reconstruida; es el detalle detras de Mensual y Semanal.
+Socios,"Veces que cada socio fue recomendado, en total y por mes."
+Socios por semana,"El mismo conteo, abierto por semana ISO."
+Socios sin recomendar,Socios del directorio que nunca aparecieron en una prueba.
+Categorias,Referencias por categoria de socio.
+Idiomas,Idioma detectado del paciente en cada referencia.
+Recomendaciones,"Los 58 eventos de recomendacion, con los dos socios entregados."
+Referencias,"Las 116 filas de la coleccion referrals, con sintomas, scores y ubicacion."
+
+Definicion,Detalle
+Conversacion,El bot archiva una copia en historical_conversations cada vez que el usuario pide otra referencia o pasan 3 minutos sin actividad. Los fragmentos del mismo numero separados por menos de 2 horas se unen en una sola conversacion.
+Mensajes,"Las copias archivadas son acumulativas: el conteo por sesion es la diferencia entre copias consecutivas, mas la cola viva en ongoing_conversations."
+Fechas,"Los mensajes del usuario no traen timestamp. Las sesiones se fechan con archived_at, last_activity_at y, cuando faltan, con el ultimo evento del numero en debugging-logs."
+Recomendacion vs referencia,"Cada recomendacion entrega dos socios, asi que hay 58 recomendaciones y 116 referencias."
+Febrero,La coleccion referrals empezo a escribirse el 3 de marzo de 2026. Las conversaciones de febrero si dieron recomendaciones (referral_provided: true) pero no quedaron registradas.
+502 5879 2752,Telefono interno de pruebas y destino fijo de las notificaciones a socios.
+
+Fuente,"MongoDB agexport-smart-directory, leido via la API en Render el 2026-09-02."
+Crudo,La carpeta 'crudo' tiene los volcados JSON tal como salieron de la API.

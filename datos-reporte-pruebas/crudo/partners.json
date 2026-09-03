@@ -1,0 +1,1952 @@
+﻿[
+    {
+        "_id":  "69a6380a6476e4cb444681c5",
+        "partner_category":  "Proveedores de servicios  complementarios",
+        "partner_name":  "Pan American Services",
+        "partner_services":  [
+                                 "seguros mÃ©dicos"
+                             ],
+        "partner_phone_number":  [
+                                     "23352737"
+                                 ],
+        "partner_whatsapp":  [
+                                 "23352737"
+                             ],
+        "partner_locations":  [
+                                  "12 CALLE 1-25, ZONA 10, EDIF. GEMINIS 10, TORRE SUR, OF.1407"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Pan American Services - 12 CALLE 1-25, ZONA 10, EDIF. GEMINIS 10, TORRE SUR, OF.1407",
+                                          "name":  "Centro Empresarial GÃ©minis 10",
+                                          "address":  "12 Calle 1-25, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6012848,
+                                          "lon":  -90.51497379999999,
+                                          "place_id":  "ChIJH-77vc-jiYURMn3G9wMGNvo",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJH-77vc-jiYURMn3G9wMGNvo"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681c4",
+        "partner_category":  "Proveedores de servicios  complementarios",
+        "partner_name":  "Cedilab",
+        "partner_services":  [
+                                 "proveedor de servicios de laboratorio",
+                                 "asesorÃ­as corporativas"
+                             ],
+        "partner_phone_number":  [
+                                     "22922929"
+                                 ],
+        "partner_whatsapp":  [
+                                 "49959980"
+                             ],
+        "partner_locations":  [
+                                  "6 ave 9-18 zona 10 edificio Sixtino II 6to nivel oficina 608 ala 1"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Cedilab - 6 ave 9-18 zona 10 edificio Sixtino II 6to nivel oficina 608 ala 1",
+                                          "name":  "Cedilab",
+                                          "address":  "edificio Sixtino II, 6 avenida 9-18 zona 10, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.6031875,
+                                          "lon":  -90.5105676,
+                                          "place_id":  "ChIJ7Yu30EKjiYURGtw6imznG74",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ7Yu30EKjiYURGtw6imznG74"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681c3",
+        "partner_category":  "Proveedores de servicios  complementarios",
+        "partner_name":  "INTERAMERICAN CAR RENTAL",
+        "partner_services":  [
+                                 "renta de vehÃ­culos"
+                             ],
+        "partner_phone_number":  [
+                                     "22141800"
+                                 ],
+        "partner_whatsapp":  [
+                                 "22141800"
+                             ],
+        "partner_locations":  [
+                                  "1a. Calle 5-20, Zona 13",
+                                  "9 Avenida 14-75 Z.13 Aeropuerto Internacional La Aurora, parqueo 3er. Nivel. Tel. 22141815"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "INTERAMERICAN CAR RENTAL - 1a. Calle 5-20, Zona 13",
+                                          "name":  "InterAmerican Car Rental",
+                                          "address":  "1A Calle 5-20, Cdad. de Guatemala 01013, Guatemala",
+                                          "lat":  14.6030461,
+                                          "lon":  -90.5294062,
+                                          "place_id":  "ChIJv6tJvl-hiYURFx2bZACewnA",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJv6tJvl-hiYURFx2bZACewnA"
+                                      },
+                                      {
+                                          "query":  "INTERAMERICAN CAR RENTAL - 9 Avenida 14-75 Z.13 Aeropuerto Internacional La Aurora, parqueo 3er. Nivel. Tel. 22141815",
+                                          "name":  "InterAmerican Car Rental Aeropuerto",
+                                          "address":  "9 Avenida 14-75 Zona 13 Aeropuerto Internacional La Aurora, parqueo tercer nivel oficina No. EEO-3-1 Ciudad de Guatemala, 01013, Guatemala",
+                                          "lat":  14.5881266,
+                                          "lon":  -90.53074749999999,
+                                          "place_id":  "ChIJZZX7fDahiYURq_WIbjnI3wE",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJZZX7fDahiYURq_WIbjnI3wE"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681c2",
+        "partner_category":  "Proveedores de servicios  complementarios",
+        "partner_name":  "IBIOMED",
+        "partner_services":  [
+                                 "proveedor de insumos mÃ©dicos"
+                             ],
+        "partner_phone_number":  [
+                                     "57489721"
+                                 ],
+        "partner_whatsapp":  [
+                                 "57489721"
+                             ],
+        "partner_locations":  [
+                                  "Sixtino I, 6ta avenida 6-63 zona 10"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "IBIOMED - Sixtino I, 6ta avenida 6-63 zona 10",
+                                          "name":  "Edificio Sixtino 1",
+                                          "address":  "6A Avenida 6-63, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6068331,
+                                          "lon":  -90.51000309999999,
+                                          "place_id":  "ChIJL2QKv8ujiYURzMX3cTBojk4",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJL2QKv8ujiYURzMX3cTBojk4"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681c1",
+        "partner_category":  "Spas",
+        "partner_name":  "San Gregorio Hotel y Spa",
+        "partner_services":  [
+                                 "hospedaje",
+                                 "restaurante",
+                                 "eventos",
+                                 "spa masaje relajante",
+                                 "masaje sueco",
+                                 "masaje con piedras calientes",
+                                 "masaje deportivo",
+                                 "masaje linfÃ¡tico",
+                                 "masaje reafirmante",
+                                 "faciales facial efecto radiante",
+                                 "facial piel combinada",
+                                 "facial piel sensible",
+                                 "mÃ¡scarilla barro piel sensible",
+                                 "mascarilla oro cleopatra"
+                             ],
+        "partner_phone_number":  [
+                                     "66703535"
+                                 ],
+        "partner_whatsapp":  [
+                                 "53618440"
+                             ],
+        "partner_locations":  [
+                                  "Km. 29.5 Carretera a Santa Elena Barillas Villas Canales Lote No. 50 Vista al Lago"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "San Gregorio Hotel y Spa - Km. 29.5 Carretera a Santa Elena Barillas Villas Canales Lote No. 50 Vista al Lago",
+                                          "name":  "San Gregorio Hotel \u0026 Spa",
+                                          "address":  "KM 30 Carretera a Santa Elena Barillas,Lote #53, Ruta a Sta. Elena Barillas, Guatemala",
+                                          "lat":  14.4441357,
+                                          "lon":  -90.50048079999999,
+                                          "place_id":  "ChIJ24bKzROviYURkYjcPWffriE",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ24bKzROviYURkYjcPWffriE"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681c0",
+        "partner_category":  "Spas",
+        "partner_name":  "Santa Teresita Hotel \u0026 Spa Termal",
+        "partner_services":  [
+                                 "hospedaje",
+                                 "restaurante",
+                                 "piscinas",
+                                 "spa",
+                                 "circuito termal",
+                                 "sauna termal",
+                                 "masajes",
+                                 "tratamientos masaje kawilal",
+                                 "masaje relajante",
+                                 "masaje tejido profundo",
+                                 "quiromasaje",
+                                 "masaje prenatal",
+                                 "masaje holÃ­stico",
+                                 "eventos"
+                             ],
+        "partner_phone_number":  [
+                                     "66441000",
+                                     "66264000"
+                                 ],
+        "partner_whatsapp":  [
+                                 "66441000"
+                             ],
+        "partner_locations":  [
+                                  "Avenida Puente de la Gloria, Riveras del RÃ­o Michatoya, AmatitlÃ¡n, Guatemala"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Santa Teresita Hotel \u0026 Spa Termal - Avenida Puente de la Gloria, Riveras del RÃ­o Michatoya, AmatitlÃ¡n, Guatemala",
+                                          "name":  "Santa Teresita Hotel y Spa Termal",
+                                          "address":  "Riveras del RÃ­o Michatoya, Puente de la Gloria, AmatitlÃ¡n, Guatemala",
+                                          "lat":  14.4841645,
+                                          "lon":  -90.61466399999999,
+                                          "place_id":  "ChIJ_xWG7REIiYURbnu-D-_JLdI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ_xWG7REIiYURbnu-D-_JLdI"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681bf",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Multimedica SololÃ¡",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "emergencias",
+                                 "ginecologÃ­a y obstetricia",
+                                 "cirugÃ­a gastrointestinal",
+                                 "traumatologÃ­a",
+                                 "ortopedÃ­a",
+                                 "psiquiatrÃ­a",
+                                 "pediatrÃ­a",
+                                 "oncologÃ­a",
+                                 "video cirugÃ­a",
+                                 "medicina interna",
+                                 "cirugÃ­a general"
+                             ],
+        "partner_phone_number":  [
+                                     "35706582"
+                                 ],
+        "partner_whatsapp":  [
+                                 "35706582"
+                             ],
+        "partner_locations":  [
+                                  "9 AVENIDA 11-65 ZONA 2, SololÃ¡"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Multimedica SololÃ¡ - 9 AVENIDA 11-65 ZONA 2, SololÃ¡",
+                                          "name":  "Hospital Privado Multimedica SololÃ¡",
+                                          "address":  "9 Avenida 11-65, SololÃ¡, Guatemala",
+                                          "lat":  14.7696735,
+                                          "lon":  -91.18089169999999,
+                                          "place_id":  "ChIJTSuOdrJNiYUROvvOPb06rn8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJTSuOdrJNiYUROvvOPb06rn8"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681be",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "DIAGNOSTIXS",
+        "partner_services":  [
+                                 "centro de diagnÃ³stico de alta calidad",
+                                 "servicios de laboratorio clÃ­nico",
+                                 "diagnÃ³stico por imÃ¡genes",
+                                 "servicios mÃ©dicos de cardiologÃ­a",
+                                 "servicios mÃ©dicos para la mujer",
+                                 "mamografÃ­a",
+                                 "mamografÃ­a con tomosÃ­ntesis",
+                                 "ultrasonido pÃ©lvico",
+                                 "obstÃ©trico",
+                                 "pÃ©lvico 3d/4d",
+                                 "ultrasonido mamario tridimensional 3d",
+                                 "ecocardiograma transtorÃ¡cico",
+                                 "ecocardiograma transtorÃ¡cico con strain",
+                                 "ecocardiograma transesofÃ¡gico 3d/4d",
+                                 "ecuestres con banda",
+                                 "electrocardiograma",
+                                 "doppler carotideo",
+                                 "monitoreo de presiÃ³n arterial",
+                                 "prueba de esfuerzo convencional",
+                                 "prueba de esfuerzo cardiopulmonar"
+                             ],
+        "partner_phone_number":  [
+                                     "25096222"
+                                 ],
+        "partner_whatsapp":  [
+                                 "25096222"
+                             ],
+        "partner_locations":  [
+                                  "Edificio Integra Medical Center, 9a calle 4-52, Zona 10, Torre 2, Nivel 1."
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "DIAGNOSTIXS - Edificio Integra Medical Center, 9a calle 4-52, Zona 10, Torre 2, Nivel 1.",
+                                          "name":  "Edificio Integra Medical Center",
+                                          "address":  "clÃ­nica 711, 9 calle 4-52, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6041323,
+                                          "lon":  -90.51141179999999,
+                                          "place_id":  "ChIJ3w9sgpujiYURKD5H57YvjwY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ3w9sgpujiYURKD5H57YvjwY"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681bd",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "MEDHOS",
+        "partner_services":  [
+                                 "centro para procedimientos ambulatorios",
+                                 "biopsia",
+                                 "cirugÃ­a endocrina",
+                                 "cirugÃ­a especializada de mano",
+                                 "cirugÃ­a general",
+                                 "cirugÃ­a laparoscÃ³pica",
+                                 "cirugÃ­a vascular",
+                                 "gastroenterologÃ­a",
+                                 "ginecologÃ­a",
+                                 "ginecologÃ­a oncolÃ³gica",
+                                 "neurocirugÃ­a",
+                                 "otorrinolaringologÃ­a",
+                                 "pediatrÃ­a",
+                                 "radiologÃ­a intervencionista",
+                                 "traumatologÃ­a"
+                             ],
+        "partner_phone_number":  [
+                                     "25096222"
+                                 ],
+        "partner_whatsapp":  [
+                                 "25096222"
+                             ],
+        "partner_locations":  [
+                                  "Edificio Integra Medical Center, 9a calle 4-52, Zona 10, Torre 2, Nivel 6."
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "MEDHOS - Edificio Integra Medical Center, 9a calle 4-52, Zona 10, Torre 2, Nivel 6.",
+                                          "name":  "Edificio Integra Medical Center",
+                                          "address":  "clÃ­nica 711, 9 calle 4-52, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6041323,
+                                          "lon":  -90.51141179999999,
+                                          "place_id":  "ChIJ3w9sgpujiYURKD5H57YvjwY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ3w9sgpujiYURKD5H57YvjwY"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681bc",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Nasir",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "laboratorio"
+                             ],
+        "partner_phone_number":  [
+                                     "78670800"
+                                 ],
+        "partner_whatsapp":  [
+                                 "55747725"
+                             ],
+        "partner_locations":  [
+                                  "KILOMETRO 37.5 CARRETERA INTERAMERICANA ZONA 0 COLONIA MANZANALES LOTE 24"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Nasir - KILOMETRO 37.5 CARRETERA INTERAMERICANA ZONA 0 COLONIA MANZANALES LOTE 24",
+                                          "name":  "Hospital Nasir de Humanity First",
+                                          "address":  "First NÃºmero 24, Avenida Humanity, 03017, Guatemala",
+                                          "lat":  14.6486719,
+                                          "lon":  -90.70494579999999,
+                                          "place_id":  "ChIJffc-zM8MiYURdWImcXTmf-M",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJffc-zM8MiYURdWImcXTmf-M"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681bb",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Maranatha",
+        "partner_services":  [
+                                 "servicios mÃ©dicos",
+                                 "servicios quirÃºrgicos",
+                                 "servicios quirÃºrgicos de cirugÃ­a bariÃ¡trica",
+                                 "unidad de cuidados intensivos",
+                                 "pediatria",
+                                 "sala cuna",
+                                 "consulta mÃ©dica",
+                                 "laboratorio clÃ­nico",
+                                 "estudios de imagen (rayos x y ultrasonido)",
+                                 "hospitalizaciones",
+                                 "sala de operaciones",
+                                 "unidad de cuidados intensivos pediÃ¡trico"
+                             ],
+        "partner_phone_number":  [
+                                     "22855200"
+                                 ],
+        "partner_whatsapp":  [
+                                 "48123102"
+                             ],
+        "partner_locations":  [
+                                  "13 Calle 14-69 zona 13"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Maranatha - 13 Calle 14-69 zona 13",
+                                          "name":  "Hospital Maranatha",
+                                          "address":  "13 Calle 15, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.5849114,
+                                          "lon":  -90.52313629999999,
+                                          "place_id":  "ChIJ_4wYTw-iiYURPZp9YSkCpno",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ_4wYTw-iiYURPZp9YSkCpno"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681ba",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Grupo Hospitalario La Paz",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "laboratorio",
+                                 "diagnÃ³sticos",
+                                 "neurofisiologÃ­a",
+                                 "maternidad",
+                                 "endoscopia",
+                                 "neonatologÃ­a",
+                                 "unidad de cuidados intensivos",
+                                 "pediatria",
+                                 "patologÃ­a",
+                                 "emergencias",
+                                 "farmacia",
+                                 "nutriciÃ³n",
+                                 "banco de sangre"
+                             ],
+        "partner_phone_number":  [
+                                     "22170300",
+                                     "1747"
+                                 ],
+        "partner_whatsapp":  [
+                                 "22099550"
+                             ],
+        "partner_locations":  [
+                                  "10 calle 2-31 zona 14 ",
+                                  "Hospital Carretera a El Salvador. Km. 22.3 Carrt. A El Salvador. Tel. 66708300",
+                                  "17 Av. 28-01, Z.11 Tel. 22184200",
+                                  "3ra. Calle Final 10-70 Z.10 Tel. 22101200",
+                                  "Km. 13.8 Calz. Roosevelt Z. 3 Mixco Tel. 23246300",
+                                  "8a. Ave. 2-48 Z.1 Tel. 22170800",
+                                  "4ta. Calle 23-61, Z.3. Quetzaltenango. Tel. 79630700"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - 10 calle 2-31 zona 14 ",
+                                          "name":  "La Paz, Grupo Hospitalario - Zona 14",
+                                          "address":  "10A Calle 2-31 Ciudad de Ciudad de Guatemala, 01014, Guatemala",
+                                          "lat":  14.5853687,
+                                          "lon":  -90.5188464,
+                                          "place_id":  "ChIJg1FxquejiYURUHWKjOltATQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJg1FxquejiYURUHWKjOltATQ"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - Hospital Carretera a El Salvador. Km. 22.3 Carrt. A El Salvador. Tel. 66708300",
+                                          "name":  "Grupo Hospitalario La Paz Carretera a El Salvador",
+                                          "address":  "Carr. a El Salvador, El Pajonal, Guatemala",
+                                          "lat":  14.5008967,
+                                          "lon":  -90.4818097,
+                                          "place_id":  "ChIJ8SfeqCaliYUR60GxsvMKOp8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ8SfeqCaliYUR60GxsvMKOp8"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - 17 Av. 28-01, Z.11 Tel. 22184200",
+                                          "name":  "Centro Hospitalario La Paz zona 11",
+                                          "address":  "17 Avenida 28-01, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.601854,
+                                          "lon":  -90.562679,
+                                          "place_id":  "ChIJFWpTkgKhiYURvO1N1PwXj9A",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJFWpTkgKhiYURvO1N1PwXj9A"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - 3ra. Calle Final 10-70 Z.10 Tel. 22101200",
+                                          "name":  "Centro Hospitalario LA PAZ zona 10 SERMESA",
+                                          "address":  "JF6V+5RV, 3a. Calle Final 10-70, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6104977,
+                                          "lon":  -90.5053231,
+                                          "place_id":  "ChIJj_IZEWqjiYURA9AWzGZTAT4",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJj_IZEWqjiYURA9AWzGZTAT4"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - Km. 13.8 Calz. Roosevelt Z. 3 Mixco Tel. 23246300",
+                                          "name":  "Hospital La Paz Eskala",
+                                          "address":  "Centro Comercial Eskala Roosevelt, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.6359811,
+                                          "lon":  -90.58241489999999,
+                                          "place_id":  "ChIJEXni4D-giYURg_vyCZ_MS8Y",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJEXni4D-giYURg_vyCZ_MS8Y"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - 8a. Ave. 2-48 Z.1 Tel. 22170800",
+                                          "name":  "Grupo Hospitalario La Paz Carretera a El Salvador",
+                                          "address":  "Carr. a El Salvador, El Pajonal, Guatemala",
+                                          "lat":  14.5008967,
+                                          "lon":  -90.4818097,
+                                          "place_id":  "ChIJ8SfeqCaliYUR60GxsvMKOp8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ8SfeqCaliYUR60GxsvMKOp8"
+                                      },
+                                      {
+                                          "query":  "Grupo Hospitalario La Paz - 4ta. Calle 23-61, Z.3. Quetzaltenango. Tel. 79630700",
+                                          "name":  "Hospital La Paz",
+                                          "address":  "RFVC+VVH, 24 Avenida, Quetzaltenango, Guatemala",
+                                          "lat":  14.8446866,
+                                          "lon":  -91.5277588,
+                                          "place_id":  "ChIJkzq9ngOYjoURRmbSe4t6AHQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJkzq9ngOYjoURRmbSe4t6AHQ"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b9",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "ATENUN \nAtenciÃ³n Unica, S.A.",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "laboratorio"
+                             ],
+        "partner_phone_number":  [
+                                     "77293636"
+                                 ],
+        "partner_whatsapp":  [
+                                 "77293636"
+                             ],
+        "partner_locations":  [
+                                  "Km 37.2 ruta a San Vicente de Pacaya, Parque Industrial Michatoya Palin Escuintla."
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ATENUN \nAtenciÃ³n Unica, S.A. - Km 37.2 ruta a San Vicente de Pacaya, Parque Industrial Michatoya Palin Escuintla.",
+                                          "name":  "Parque Industrial MICHATOYA",
+                                          "address":  "C88M+9R4, PalÃ­n, Guatemala",
+                                          "lat":  14.4158827,
+                                          "lon":  -90.6654081,
+                                          "place_id":  "ChIJQ8zZ5poGiYUREx-1y13rF-o",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJQ8zZ5poGiYUREx-1y13rF-o"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b8",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "MEDCARE",
+        "partner_services":  [
+                                 "medicina familiar",
+                                 "medicina general",
+                                 "medicina interna",
+                                 "otorrinolaringologÃ­a",
+                                 "cardiologÃ­a",
+                                 "ginecologÃ­a",
+                                 "clÃ­nica de nutriciÃ³n",
+                                 "clÃ­nica de psicologÃ­a",
+                                 "laboratorio clÃ­nico microbiolÃ³gico",
+                                 "ultrasonido",
+                                 "Ã³ptica",
+                                 "audiometrÃ­a",
+                                 "ultrasonido doppler color",
+                                 "espirometrÃ­a",
+                                 "electrocardiograma",
+                                 "evaluaciones preventivas"
+                             ],
+        "partner_phone_number":  [
+                                     "23544200"
+                                 ],
+        "partner_whatsapp":  [
+                                 "31677994"
+                             ],
+        "partner_locations":  [
+                                  "6 Avenida 9-18 Zona 10 Edificio Sixtino 2, Nivel 8 Of.# 808 ala 1",
+                                  "7ma. Avenida 9-64 Edif. Zona MÃ©dica Nivel 5, Oficinas 521 - 522",
+                                  "Calzada Roosevelt 22-43 Z.11, Edificio Tikal Futura Torre Sol, Nivel 7 Oficina 7-A",
+                                  "AvÃ©nida Las AmÃ©ricas 7-62 Z.3, Edificio Torre Pradera Xela Nivel 1, Local 112",
+                                  "3ra. Avenida 2-54 Z.2, Nivel 2, Edificio Torre Fuerte, Oficina 202. Chimaltenango"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "MEDCARE - 6 Avenida 9-18 Zona 10 Edificio Sixtino 2, Nivel 8 Of.# 808 ala 1",
+                                          "name":  "Promedix Sixtino II",
+                                          "address":  "6a. Avenida 9-18 zona 10 Local 6 Guatemala, 01010, Guatemala",
+                                          "lat":  14.6039594,
+                                          "lon":  -90.5106966,
+                                          "place_id":  "ChIJj1G6cLSjiYUR-LdLfpWJ5b0",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJj1G6cLSjiYUR-LdLfpWJ5b0"
+                                      },
+                                      {
+                                          "query":  "MEDCARE - 7ma. Avenida 9-64 Edif. Zona MÃ©dica Nivel 5, Oficinas 521 - 522",
+                                          "name":  "Zona MÃ©dica",
+                                          "address":  "7A Avenida 9-64, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6039634,
+                                          "lon":  -90.5186742,
+                                          "place_id":  "ChIJp4Sf9KGjiYURNEy_1rcX6gI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJp4Sf9KGjiYURNEy_1rcX6gI"
+                                      },
+                                      {
+                                          "query":  "MEDCARE - Calzada Roosevelt 22-43 Z.11, Edificio Tikal Futura Torre Sol, Nivel 7 Oficina 7-A",
+                                          "name":  "MEDCARE",
+                                          "address":  "Calzada Roosevelt 22-43 Zona 11 Edificio Tikal Futura Torre Sol Nivel 7 Oficina 7-A Guatemala, 01011, Guatemala",
+                                          "lat":  14.6229211,
+                                          "lon":  -90.553682,
+                                          "place_id":  "ChIJ10nRPiihiYURYf0K-zhTqGc",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ10nRPiihiYURYf0K-zhTqGc"
+                                      },
+                                      {
+                                          "query":  "MEDCARE - AvÃ©nida Las AmÃ©ricas 7-62 Z.3, Edificio Torre Pradera Xela Nivel 1, Local 112",
+                                          "name":  "Medcare de Guatemala",
+                                          "address":  "6A Avenida 918, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6040732,
+                                          "lon":  -90.5107599,
+                                          "place_id":  "ChIJCX7Jyo-jiYURxY4dXk3FmfE",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJCX7Jyo-jiYURxY4dXk3FmfE"
+                                      },
+                                      {
+                                          "query":  "MEDCARE - 3ra. Avenida 2-54 Z.2, Nivel 2, Edificio Torre Fuerte, Oficina 202. Chimaltenango",
+                                          "name":  "EDIFICIO TORRE FUERTE",
+                                          "address":  "3 Avenida 2-54, Chimaltenango, Guatemala",
+                                          "lat":  14.6623114,
+                                          "lon":  -90.8170966,
+                                          "place_id":  "ChIJjVndF0RtiYURvohGYmxWcC8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJjVndF0RtiYURvohGYmxWcC8"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b7",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Ãngeles",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "laboratorio",
+                                 "anÃ¡lisis clÃ­nicos",
+                                 "pruebas de laboratorio",
+                                 "biologÃ­a molecular",
+                                 "diagnÃ³stico por imÃ¡genes",
+                                 "radiologÃ­a",
+                                 "emergencias",
+                                 "encamamiento",
+                                 "clÃ­nicas mÃ©dicas",
+                                 "maternidad",
+                                 "unidad de cuidados intensivos",
+                                 "sala de operaciones",
+                                 "cirugÃ­as menores",
+                                 "cirugÃ­a general",
+                                 "cirugÃ­a pediÃ¡trica",
+                                 "cirugÃ­a plÃ¡stica",
+                                 "medicina preventiva",
+                                 "neurocirugÃ­a",
+                                 "cirugÃ­a cardiaca",
+                                 "traumatologÃ­a",
+                                 "banco de sangre",
+                                 "radiologÃ­a e imagenes",
+                                 "resonancia magnetica",
+                                 "tomografÃ­as",
+                                 "ultrasonido",
+                                 "mamografÃ­a",
+                                 "rayos x",
+                                 "pruebas individuales",
+                                 "perfiles especificos",
+                                 "clÃ­nicas mÃ©dicas"
+                             ],
+        "partner_phone_number":  [
+                                     "22058100",
+                                     "22058112 "
+                                 ],
+        "partner_whatsapp":  [
+                                 "54215151"
+                             ],
+        "partner_locations":  [
+                                  "2a avenida 14-74 zona 1"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Ãngeles - 2a avenida 14-74 zona 1",
+                                          "name":  "Hospital Ãngeles",
+                                          "address":  "2A Av. 14-74, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.6344984,
+                                          "lon":  -90.51937629999999,
+                                          "place_id":  "ChIJYTEGdCKiiYURrF8UYl9TU4Q",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJYTEGdCKiiYURrF8UYl9TU4Q"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b6",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Centro MÃ©dico",
+        "partner_services":  [
+                                 "servicios mÃ©dicos hospitalarios",
+                                 "biologÃ­a molecular",
+                                 "centro del dolo",
+                                 "cuidados paliativos",
+                                 "centro de la mujer",
+                                 "consulta externa",
+                                 "laboratorio",
+                                 "laboratorio clÃ­nico microbiolÃ³gico",
+                                 "medicina fÃ­sica y rehabilitaciÃ³n",
+                                 "unidad de emergencia y trauma ocular",
+                                 "unidad de fisiologÃ­a gastrointestinal y piso pÃ©lvico",
+                                 "central de esterilizaciÃ³n",
+                                 "central de esterilizaciÃ³n",
+                                 "mamografÃ­a",
+                                 "angiÃ³grafo",
+                                 "unidad hepato-pancreato-biliar",
+                                 "emergencias"
+                             ],
+        "partner_phone_number":  [
+                                     "22794949"
+                                 ],
+        "partner_whatsapp":  [
+                                 "30509100"
+                             ],
+        "partner_locations":  [
+                                  "6a. ave. 3-47 Zona 10"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Centro MÃ©dico - 6a. ave. 3-47 Zona 10",
+                                          "name":  "Centro MÃ©dico",
+                                          "address":  "6A Avenida 3-47, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6103801,
+                                          "lon":  -90.5101904,
+                                          "place_id":  "ChIJR9VyPcujiYURhE-i24vTWlY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJR9VyPcujiYURhE-i24vTWlY"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b5",
+        "partner_category":  "Hospitales y Centros Ambulatorios",
+        "partner_name":  "Hospital Herrera Llerandi",
+        "partner_services":  [
+                                 "diagnÃ³stico por imÃ¡genes",
+                                 "laboratorio clÃ­nico",
+                                 "emergencias",
+                                 "encamamiento",
+                                 "unidad de cuidados intensivos",
+                                 "maternidad",
+                                 "sala cuna virtual",
+                                 "cardiologÃ­a invasiva",
+                                 "cardiologÃ­a no invasiva",
+                                 "pediatria",
+                                 "cirugÃ­a",
+                                 "endoscopia gastrointestinal",
+                                 "hemodiÃ¡lisis",
+                                 "pre-admisiÃ³n de pacientes",
+                                 "chequeos mÃ©dicos",
+                                 "transplante de mÃ©dula osea",
+                                 "transplante de riÃ±on"
+                             ],
+        "partner_phone_number":  [
+                                     "23845959",
+                                     "23320444"
+                                 ],
+        "partner_whatsapp":  [
+                                 "37690220"
+                             ],
+        "partner_locations":  [
+                                  "6a. Avenida 8-71 Zona 10, Ciudad Guatemala"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Hospital Herrera Llerandi - 6a. Avenida 8-71 Zona 10, Ciudad Guatemala",
+                                          "name":  "Hospital Herrera Llerandi",
+                                          "address":  "6A Avenida 8-71, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6050846,
+                                          "lon":  -90.51004429999999,
+                                          "place_id":  "ChIJpWyCZcmjiYURAqvPuqiZMCI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJpWyCZcmjiYURAqvPuqiZMCI"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b4",
+        "partner_category":  "Centros de Especialidades",
+        "partner_name":  "Advance UrologÃ­a",
+        "partner_services":  [
+                                 "servicios medicos de urologÃ­a",
+                                 "tratamiento quirurgico",
+                                 "cirugÃ­a mÃ­nima invasiva",
+                                 "enfermedades de transmisiÃ³n sexual",
+                                 "infertilidad o paternidad satisfecha",
+                                 "problemas de funciÃ³n sexual",
+                                 "incontinencia urinaria",
+                                 "tratamiento de prostata",
+                                 "tratamiento de riÃ±ones",
+                                 "cÃ¡lculos de las vÃ­as urinarias",
+                                 "cÃ¡ncer de vÃ­as urinarias",
+                                 "infecciones urinarias"
+                             ],
+        "partner_phone_number":  [
+                                     "22205980"
+                                 ],
+        "partner_whatsapp":  [
+                                 "35740434"
+                             ],
+        "partner_locations":  [
+                                  "6 avenida 3-22, zona 10, Edificio Centro MÃ©dico 2, Oficina 610. Guatemala, Guatemala.",
+                                  "8va. Avenida 3-27 A Z.4, CobÃ¡n, Alta Verapaz"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Advance UrologÃ­a - 6 avenida 3-22, zona 10, Edificio Centro MÃ©dico 2, Oficina 610. Guatemala, Guatemala.",
+                                          "name":  "Advance Centro de Urologia",
+                                          "address":  "Sexto Nivel, Edificio Centro MÃ©dico 2, 6 Avenida 3-22, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.5892854,
+                                          "lon":  -90.51267089999999,
+                                          "place_id":  "ChIJqwvBL9GjiYUReBN-vZPVC6Y",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJqwvBL9GjiYUReBN-vZPVC6Y"
+                                      },
+                                      {
+                                          "query":  "Advance UrologÃ­a - 8va. Avenida 3-27 A Z.4, CobÃ¡n, Alta Verapaz",
+                                          "name":  "ClÃ­nica UrolÃ³gica Especializada CobÃ¡n",
+                                          "address":  "14 avenida 1-11, CobÃ¡n, Guatemala",
+                                          "lat":  15.4711139,
+                                          "lon":  -90.3829823,
+                                          "place_id":  "ChIJI13B4ExHioURWqEpu15t2_A",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJI13B4ExHioURWqEpu15t2_A"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b3",
+        "partner_category":  "Centros de Especialidades",
+        "partner_name":  "Integra CÃ¡ncer Institute",
+        "partner_services":  [
+                                 "diagnÃ³sticos y tratamientos de cÃ¡ncer personalizados e integrales",
+                                 "quimioterapias",
+                                 "terapias dirigidas",
+                                 "radioterapia",
+                                 "cirugÃ­a",
+                                 "cuidados paliativos",
+                                 "manejo del dolor",
+                                 "nutriciÃ³n oncolÃ³gica",
+                                 "psico-oncologÃ­a",
+                                 "rehabilitaciÃ³n"
+                             ],
+        "partner_phone_number":  [
+                                     "22790939"
+                                 ],
+        "partner_whatsapp":  [
+                                 "22790939"
+                             ],
+        "partner_locations":  [
+                                  "9 calle 4-52 zona 10, Edificio Integra Medical Center, Torre 1, Nivel 7"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Integra CÃ¡ncer Institute - 9 calle 4-52 zona 10, Edificio Integra Medical Center, Torre 1, Nivel 7",
+                                          "name":  "INTEGRA Cancer Institute",
+                                          "address":  "9 calle 4-52 zona 10, Edificio Integra 7mo. Nivel Guatemala Guatemala, 01010, Guatemala",
+                                          "lat":  14.6042059,
+                                          "lon":  -90.5112953,
+                                          "place_id":  "ChIJuWBDFgSjiYUR6rQmpe1qwhY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJuWBDFgSjiYUR6rQmpe1qwhY"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b2",
+        "partner_category":  "Centros de Especialidades",
+        "partner_name":  "Centro Integral de RehabilitaciÃ³n REHAB",
+        "partner_services":  [
+                                 "fisioterapia",
+                                 "electroterapia",
+                                 "masoterapÃ­a",
+                                 "laserterapÃ­a",
+                                 "hipertemia profunda",
+                                 "tratamiento con parafina",
+                                 "tanque de hidroterapia",
+                                 "gimnasio",
+                                 "Ã¡rea de pesas y bandas elÃ¡sticas",
+                                 "gimnasia adulto mayor",
+                                 "descargas deportivas",
+                                 "hipopresivas",
+                                 "escuela de columna",
+                                 "capacitaciones lesiÃ³n cero",
+                                 "terapia a domicilio",
+                                 "rehabilitaciÃ³n pelviperineal"
+                             ],
+        "partner_phone_number":  [
+                                     "22697145"
+                                 ],
+        "partner_whatsapp":  [
+                                 "54042801"
+                             ],
+        "partner_locations":  [
+                                  "6a avenida 6-63 zona 10, Edificio Sixtino 1, Of. 806, Nivel 8"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Centro Integral de RehabilitaciÃ³n REHAB - 6a avenida 6-63 zona 10, Edificio Sixtino 1, Of. 806, Nivel 8",
+                                          "name":  "REHAB GUATEMALA",
+                                          "address":  "6a. avenida 6-63 zona 10, edificio sixtino 1, 8vo nivel, clÃ­nica 806 Guatemala, 00502, Guatemala",
+                                          "lat":  14.6069669,
+                                          "lon":  -90.50989539999999,
+                                          "place_id":  "ChIJn3o0DEOjiYURtEcOTF793Xg",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJn3o0DEOjiYURtEcOTF793Xg"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b1",
+        "partner_category":  "ClÃ­nicas de OftalmologÃ­a",
+        "partner_name":  "VISUALIZA",
+        "partner_services":  [
+                                 "oftalmologÃ­a",
+                                 "segmento anterior",
+                                 "glaucoma",
+                                 "retina y vÃ­treo",
+                                 "oftalmologÃ­a pediÃ¡trica",
+                                 "oculoplÃ¡stica",
+                                 "baja visiÃ³n",
+                                 "optometrÃ­a",
+                                 "Ã³ptica",
+                                 "cirugÃ­a de catarata",
+                                 "cirugia refractiva",
+                                 "procedimientos lÃ¡ser",
+                                 "cirugÃ­a de retina",
+                                 "cirugÃ­a plÃ¡stica ocular",
+                                 "diagnÃ³stico ocular",
+                                 "consulta externa oftalmologica",
+                                 "protesis oculares",
+                                 "lentes de contacto especiales",
+                                 "centro diabÃ©tico",
+                                 "mÃ©dico internista",
+                                 "clÃ­nica dental",
+                                 "clÃ­nica de nutriciÃ³n",
+                                 "clÃ­nica de psicologÃ­a",
+                                 "clÃ­nica audiometrÃ­a"
+                             ],
+        "partner_phone_number":  [
+                                     "24140800"
+                                 ],
+        "partner_whatsapp":  [
+                                 "47738893"
+                             ],
+        "partner_locations":  [
+                                  "5ta Avenida 11-44, zona 9, Ciudad de Guatemala ",
+                                  "6ta. Calle 15-19 Z. 3 Quetzaltenango. Tel. 77635993",
+                                  "Hospital OftalmolÃ³gico Viasualiza Pescatore, 4ta. Avenida y 17 Calle, Barrio 3 de Abril, San Benito PetÃ©n. PBX. 79264746 / 54 Emergencias 49356872",
+                                  "3ra. Calle 4-32 Zona 2, Chimaltenango / Tel. 77910921",
+                                  "Centro DiabÃ©tico , 4ta. Avenida A, 11-08 Z.9 Tel. 24140900",
+                                  "2da. Avenida Z. 1 Barberena, Tel. 49436276",
+                                  "3ra. Avenida 0-37 Z.1, Edif. Villa Antigua, Huehuetenango. Tel. 30060832",
+                                  "6ta. Avenida 1-24 Z.1 San Pedro SacatepÃ©quez, San Marcos. Tel. 30140296",
+                                  "6ta. Avenida 6-42 Z. 4, Salida al QuichÃ©, TotonicapÃ¡n. Tel. 77664587",
+                                  "4ta. Calle A 7-49 Z.1, Barrio El Centro. Tel. 79650928",
+                                  "Barrio Del Centro Z. 1, Ã¡rea de Salud 8210, SayaxchÃ©, Tel 30140325",
+                                  "5ta. Avenida 3-66 Z. 3. CobÃ¡n, Tel. 30248418",
+                                  "Calle Real L.35 Zona 0, Jocotenango. Tel. 30132254.",
+                                  "7ma. Calle 5-04 Zona 1, Frente al Parque Central, Mazatenango. Tel. 30252655",
+                                  "3ra. Avenida 5-20 Z.1 Escuintla. Tel. 30238030",
+                                  "Barrio El Porvenir, Guastatoya. Tel. 30158807",
+                                  "Complejo Comercial, Pasaje Real, Barrio El Centro, Calle de los Bomberos, Joyabaj. Tel. 30017038",
+                                  "Zona 0, CantÃ³n Tikajay, Nebaj. Tel. 30150123",
+                                  "Calle Principal Las Flores, Pachalum El QuichÃ©, Tel. 30238000",
+                                  "Carretera a PatzÃºn Km. 92, Escuela El Molino. FundaciÃ³n Esperanza, TecpÃ¡n. Tel. 30015995",
+                                  "5ta. Calle A 5-00, Calle Cuyo Aquino Chiquimula. Tel. 3086476"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "VISUALIZA - 5ta Avenida 11-44, zona 9, Ciudad de Guatemala ",
+                                          "name":  "Visualiza ClÃ­nica Privada",
+                                          "address":  "5A Avenida 11-44, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6027386,
+                                          "lon":  -90.52319870000001,
+                                          "place_id":  "ChIJQbO7ItejiYURtNRdry_VGJI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJQbO7ItejiYURtNRdry_VGJI"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 6ta. Calle 15-19 Z. 3 Quetzaltenango. Tel. 77635993",
+                                          "name":  "ClÃ­nica Visualiza Quetzaltenango",
+                                          "address":  "6a Calle 15-19, Quetzaltenango, Guatemala",
+                                          "lat":  14.8459489,
+                                          "lon":  -91.5196368,
+                                          "place_id":  "ChIJn9VGR46jjoURLWKiyttbRvY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJn9VGR46jjoURLWKiyttbRvY"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Hospital OftalmolÃ³gico Viasualiza Pescatore, 4ta. Avenida y 17 Calle, Barrio 3 de Abril, San Benito PetÃ©n. PBX. 79264746 / 54 Emergencias 49356872",
+                                          "name":  "VISUALIZA - CLÃNICA SOCIAL",
+                                          "address":  "4A Avenida A 11-54, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6023442,
+                                          "lon":  -90.52258379999999,
+                                          "place_id":  "ChIJ1YWzoEWjiYURcQTxxvo1zQU",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ1YWzoEWjiYURcQTxxvo1zQU"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 3ra. Calle 4-32 Zona 2, Chimaltenango / Tel. 77910921",
+                                          "name":  "Centro de visiÃ³n Chimaltenango Visualiza",
+                                          "address":  "M57M+2MF, Chimaltenango, Guatemala",
+                                          "lat":  14.6625597,
+                                          "lon":  -90.8158405,
+                                          "place_id":  "ChIJoV0jmddtiYURa67x30Eolwo",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJoV0jmddtiYURa67x30Eolwo"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Centro DiabÃ©tico , 4ta. Avenida A, 11-08 Z.9 Tel. 24140900",
+                                          "name":  "Centro diabÃ©tico Visualiza",
+                                          "address":  "4A Avenida A 11-08, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6031641,
+                                          "lon":  -90.52243879999999,
+                                          "place_id":  "ChIJny_Ucq-jiYURdHUVtgeAHww",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJny_Ucq-jiYURdHUVtgeAHww"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 2da. Avenida Z. 1 Barberena, Tel. 49436276",
+                                          "name":  "Visualiza Barberena",
+                                          "address":  "2da. avenida, Barberena 06002, Guatemala",
+                                          "lat":  14.3077865,
+                                          "lon":  -90.36406649999999,
+                                          "place_id":  "ChIJO8TmzO61iYURW2vctHrrNoM",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJO8TmzO61iYURW2vctHrrNoM"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 3ra. Avenida 0-37 Z.1, Edif. Villa Antigua, Huehuetenango. Tel. 30060832",
+                                          "name":  "ClÃ­nica Visualiza Huehuetenango",
+                                          "address":  "8GFJ+55C, Huehuetenango, Guatemala",
+                                          "lat":  15.3229114,
+                                          "lon":  -91.4695995,
+                                          "place_id":  "ChIJe3tfvHEVjIURBNVrFMJYo6A",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJe3tfvHEVjIURBNVrFMJYo6A"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 6ta. Avenida 1-24 Z.1 San Pedro SacatepÃ©quez, San Marcos. Tel. 30140296",
+                                          "name":  "ClÃ­nica Visualiza San Marcos",
+                                          "address":  "9Âª calle 3-27 zona 1 Calle Real San Marcos, 12001, Guatemala",
+                                          "lat":  14.9643874,
+                                          "lon":  -91.7912918,
+                                          "place_id":  "ChIJbU7uXpyBjoURF5RM1MKO_BI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJbU7uXpyBjoURF5RM1MKO_BI"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 6ta. Avenida 6-42 Z. 4, Salida al QuichÃ©, TotonicapÃ¡n. Tel. 77664587",
+                                          "name":  "ClÃ­nica Visualiza TotonicapÃ¡n",
+                                          "address":  "WJ6R+46G, RN-1, TotonicapÃ¡n, Guatemala",
+                                          "lat":  14.910244,
+                                          "lon":  -91.3594042,
+                                          "place_id":  "ChIJDeOpHiuvjoURzQSQGVOOhZU",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJDeOpHiuvjoURzQSQGVOOhZU"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 4ta. Calle A 7-49 Z.1, Barrio El Centro. Tel. 79650928",
+                                          "name":  "VISUALIZA - CLÃNICA SOCIAL",
+                                          "address":  "4A Avenida A 11-54, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6023442,
+                                          "lon":  -90.52258379999999,
+                                          "place_id":  "ChIJ1YWzoEWjiYURcQTxxvo1zQU",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ1YWzoEWjiYURcQTxxvo1zQU"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Barrio Del Centro Z. 1, Ã¡rea de Salud 8210, SayaxchÃ©, Tel 30140325",
+                                          "name":  "ClÃ­nica Visualiza SayaxchÃ©",
+                                          "address":  "GRG5+XR7, SayaxchÃ©, Guatemala",
+                                          "lat":  16.5274001,
+                                          "lon":  -90.19046689999999,
+                                          "place_id":  "ChIJ-b_mcLCzioURjg2BZx3aJ_g",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ-b_mcLCzioURjg2BZx3aJ_g"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 5ta. Avenida 3-66 Z. 3. CobÃ¡n, Tel. 30248418",
+                                          "name":  "ClÃ­nica Visualiza CobÃ¡n",
+                                          "address":  "5a Avenida 3-66, CobÃ¡n, Guatemala",
+                                          "lat":  15.4685162,
+                                          "lon":  -90.3697231,
+                                          "place_id":  "ChIJvaC9j01BioURnkWs8_znifI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJvaC9j01BioURnkWs8_znifI"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Calle Real L.35 Zona 0, Jocotenango. Tel. 30132254.",
+                                          "name":  "Centro de VisiÃ³n Jocotenango Visualiza",
+                                          "address":  "C. Real de Jocotenango 36, Antigua Guatemala, Guatemala",
+                                          "lat":  14.5736393,
+                                          "lon":  -90.7417545,
+                                          "place_id":  "ChIJOYD9WgANiYUR9yMU0yfBtzM",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJOYD9WgANiYUR9yMU0yfBtzM"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 7ma. Calle 5-04 Zona 1, Frente al Parque Central, Mazatenango. Tel. 30252655",
+                                          "name":  "ClÃ­nica Visualiza Mazatenango",
+                                          "address":  "Mazatenango, Guatemala",
+                                          "lat":  14.5338775,
+                                          "lon":  -91.50295969999999,
+                                          "place_id":  "ChIJveIEUMvDjoURzsa6kW-d6jQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJveIEUMvDjoURzsa6kW-d6jQ"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 3ra. Avenida 5-20 Z.1 Escuintla. Tel. 30238030",
+                                          "name":  "ClÃ­nica Visualiza Escuintla",
+                                          "address":  "3a.Avenida 5-20, Escuintla, Guatemala",
+                                          "lat":  14.3037126,
+                                          "lon":  -90.7859379,
+                                          "place_id":  "ChIJ55X2ITsdiYURL-Oeag2H8q8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ55X2ITsdiYURL-Oeag2H8q8"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Barrio El Porvenir, Guastatoya. Tel. 30158807",
+                                          "name":  "ClÃ­nica Visualiza Guastatoya",
+                                          "address":  "VW4H+9WR, RD-PRO-10, Guastatoya, Guatemala",
+                                          "lat":  14.8559652,
+                                          "lon":  -90.0702432,
+                                          "place_id":  "ChIJdaUYCqH9iYURezA10xYLN2E",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJdaUYCqH9iYURezA10xYLN2E"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Complejo Comercial, Pasaje Real, Barrio El Centro, Calle de los Bomberos, Joyabaj. Tel. 30017038",
+                                          "name":  "CENTRO COMERCIAL PASAJE REAL",
+                                          "address":  "Cra 3 #12 36, IbaguÃ©, Tolima, Colombia",
+                                          "lat":  4.443383799999999,
+                                          "lon":  -75.2405739,
+                                          "place_id":  "ChIJr7hLWRPFOI4RBR-rxESumWg",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJr7hLWRPFOI4RBR-rxESumWg"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Zona 0, CantÃ³n Tikajay, Nebaj. Tel. 30150123",
+                                          "name":  "Centro de VisiÃ³n Nebaj Visualiza",
+                                          "address":  "Nebaj, Guatemala",
+                                          "lat":  15.4030741,
+                                          "lon":  -91.1443887,
+                                          "place_id":  "ChIJdewmIwD1i4UR1gH_IEQkwAY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJdewmIwD1i4UR1gH_IEQkwAY"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Calle Principal Las Flores, Pachalum El QuichÃ©, Tel. 30238000",
+                                          "name":  null,
+                                          "address":  null,
+                                          "lat":  null,
+                                          "lon":  null,
+                                          "place_id":  null,
+                                          "maps_url":  null
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - Carretera a PatzÃºn Km. 92, Escuela El Molino. FundaciÃ³n Esperanza, TecpÃ¡n. Tel. 30015995",
+                                          "name":  "Centro de visiÃ³n Chimaltenango Visualiza",
+                                          "address":  "M57M+2MF, Chimaltenango, Guatemala",
+                                          "lat":  14.6625597,
+                                          "lon":  -90.8158405,
+                                          "place_id":  "ChIJoV0jmddtiYURa67x30Eolwo",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJoV0jmddtiYURa67x30Eolwo"
+                                      },
+                                      {
+                                          "query":  "VISUALIZA - 5ta. Calle A 5-00, Calle Cuyo Aquino Chiquimula. Tel. 3086476",
+                                          "name":  "Visualiza ClÃ­nica Privada",
+                                          "address":  "5A Avenida 11-44, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.6027386,
+                                          "lon":  -90.52319870000001,
+                                          "place_id":  "ChIJQbO7ItejiYURtNRdry_VGJI",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJQbO7ItejiYURtNRdry_VGJI"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681b0",
+        "partner_category":  "CirugÃ­a PlÃ¡stica y EstÃ©tica",
+        "partner_name":  "ElÃ¡n Med Center",
+        "partner_services":  [
+                                 "clÃ­nica especializada en menopausia y andropausia",
+                                 "tratamientos para el sistema hormonal",
+                                 "metabolismo",
+                                 "sueroterapÃ­a",
+                                 "nutriciÃ³n especializada y anti-aging"
+                             ],
+        "partner_phone_number":  [
+                                     "22965986",
+                                     "22965987"
+                                 ],
+        "partner_whatsapp":  [
+                                 "59347990"
+                             ],
+        "partner_locations":  [
+                                  "16 calle 06-17 zona 10, Edificio PialÃ©, Oficina 604"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ElÃ¡n Med Center - 16 calle 06-17 zona 10, Edificio PialÃ©, Oficina 604",
+                                          "name":  "ClÃ­nica Anti-Aging ElÃ¡n Med Center",
+                                          "address":  "Edificio PialÃ©, 16 Calle 6-17 Zona 10, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.5948291,
+                                          "lon":  -90.5113617,
+                                          "place_id":  "ChIJ32Jqr8ajiYUREkY40aNMFTQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ32Jqr8ajiYUREkY40aNMFTQ"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681af",
+        "partner_category":  "CirugÃ­a PlÃ¡stica y EstÃ©tica",
+        "partner_name":  "Nugenesis Plastic Surgery",
+        "partner_services":  [
+                                 "cirugÃ­a plÃ¡stica",
+                                 "cirugÃ­a reconstructiva",
+                                 "cirugÃ­a estÃ©tica",
+                                 "cirugÃ­a de cejas",
+                                 "cirugÃ­a de parpados",
+                                 "cirugÃ­a de orejas",
+                                 "cirugÃ­a de mejillas",
+                                 "otorrinoplastÃ­a",
+                                 "lifting facial",
+                                 "botox",
+                                 "rellenos faciales",
+                                 "cirugÃ­a de busto",
+                                 "aumento de busto",
+                                 "levantamiento de busto",
+                                 "reducciÃ³n de busto",
+                                 "reconstrucciÃ³n de busto",
+                                 "cirugÃ­as de contorno corporal",
+                                 "liposucciÃ³n",
+                                 "abdominoplastÃ­a",
+                                 "cirugÃ­a de gluteos",
+                                 "aumento",
+                                 "levantamiento de gluteos",
+                                 "reducciÃ³n de gluteos",
+                                 "braquiplastÃ­a"
+                             ],
+        "partner_phone_number":  [
+                                     "22790931",
+                                     "22790935",
+                                     "22790936"
+                                 ],
+        "partner_whatsapp":  [
+                                 "22790931"
+                             ],
+        "partner_locations":  [
+                                  "9 calle 4-52 zona 10 Edificio Integra Medical Center, oficina 302-304 Guatemala, 01010"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Nugenesis Plastic Surgery - 9 calle 4-52 zona 10 Edificio Integra Medical Center, oficina 302-304 Guatemala, 01010",
+                                          "name":  "Nugenesis Plastic Surgery",
+                                          "address":  "9 calle 4-52 zona 10 edificio Integra Medical Center, oficina 302-304 Guatemala, 01010, Guatemala",
+                                          "lat":  14.6041257,
+                                          "lon":  -90.511584,
+                                          "place_id":  "ChIJkV9xL8mjiYUR0HI_2WYMwh4",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJkV9xL8mjiYUR0HI_2WYMwh4"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681ae",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "ClÃ­nica Dental Odontoafre",
+        "partner_services":  [
+                                 "servicios dentales odontolÃ³gicos",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "ortodoncia",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "77657970"
+                                 ],
+        "partner_whatsapp":  [
+                                 "57556144"
+                             ],
+        "partner_locations":  [
+                                  "12 Avenida 4-87 Z.1, Huehuetenango"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ClÃ­nica Dental Odontoafre - 12 Avenida 4-87 Z.1, Huehuetenango",
+                                          "name":  "Odontoafre",
+                                          "address":  "JFF3+RRR, 12 Avenida, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.624614,
+                                          "lon":  -90.5454755,
+                                          "place_id":  "ChIJeWgPPTSiiYUR9ergcyKhgmU",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJeWgPPTSiiYUR9ergcyKhgmU"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681ad",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "ClÃ­nicas La GuardÃ­a",
+        "partner_services":  [
+                                 "diagnÃ³stico radiolÃ³gico",
+                                 "limpieza dental",
+                                 "carillas",
+                                 "coronas",
+                                 "endodoncia",
+                                 "implantes dentales",
+                                 "odontopediatrÃ­a",
+                                 "ortodoncia",
+                                 "protesis fijas",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "77621220"
+                                 ],
+        "partner_whatsapp":  [
+                                 "42157508"
+                             ],
+        "partner_locations":  [
+                                  "AVENIDA SANTANDER, PLAZA ATITLÃN, LOCALES 11, 12, 13 Y 14, PANAJACHEL, SOLOLÃ"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ClÃ­nicas La GuardÃ­a - AVENIDA SANTANDER, PLAZA ATITLÃN, LOCALES 11, 12, 13 Y 14, PANAJACHEL, SOLOLÃ",
+                                          "name":  "ClÃ­nicas Dentales La Guardia Panajachel",
+                                          "address":  "Avenida Santader, Plaza AtitlÃ¡n, Locales 3 Y 4, Panajachel, SololÃ¡ Ciudad de Guatemala, 07010, Guatemala",
+                                          "lat":  14.741237,
+                                          "lon":  -91.1588422,
+                                          "place_id":  "ChIJh0sF369LiYURV02ow7LNHts",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJh0sF369LiYURV02ow7LNHts"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681ac",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "DENTIS",
+        "partner_services":  [
+                                 "diseÃ±o de sonrisa",
+                                 "implantes dentales",
+                                 "odontologÃ­a general",
+                                 "limpieza de dientes",
+                                 "rechinido de dientes",
+                                 "ortodoncia invisible",
+                                 "invisalign",
+                                 "brackets dentales",
+                                 "ortodoncia",
+                                 "blanqueamiento dental",
+                                 "estÃ©tica dental",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "49501111"
+                                 ],
+        "partner_whatsapp":  [
+                                 "49501111"
+                             ],
+        "partner_locations":  [
+                                  "Edificio Integra 2, 9 Calle 4-52, 3er. Nivel, Oficina 317"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "DENTIS - Edificio Integra 2, 9 Calle 4-52, 3er. Nivel, Oficina 317",
+                                          "name":  "Edificio Integra Medical Center",
+                                          "address":  "clÃ­nica 711, 9 calle 4-52, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6041323,
+                                          "lon":  -90.51141179999999,
+                                          "place_id":  "ChIJ3w9sgpujiYURKD5H57YvjwY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ3w9sgpujiYURKD5H57YvjwY"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681ab",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "ISMILE",
+        "partner_services":  [
+                                 "diseÃ±o de sonrisa",
+                                 "tratamiento de canales",
+                                 "odontolodÃ­a general",
+                                 "ortodoncia",
+                                 "odontopediatrÃ­a",
+                                 "blanqueamiento dental",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "25090450"
+                                 ],
+        "partner_whatsapp":  [
+                                 "31064927"
+                             ],
+        "partner_locations":  [
+                                  "Unicentro, 19 calle 5-47 zona 10,"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ISMILE - Unicentro, 19 calle 5-47 zona 10,",
+                                          "name":  "Ismile - Dentista Guatemala",
+                                          "address":  "Unicentro, 19 Calle 5-47, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.5925618,
+                                          "lon":  -90.5120737,
+                                          "place_id":  "ChIJa2sR28OjiYURp1Ya4XpM924",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJa2sR28OjiYURp1Ya4XpM924"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681aa",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Duo Dental Group",
+        "partner_services":  [
+                                 "servicios dentales",
+                                 "carillas",
+                                 "invisalign",
+                                 "implantes dentales",
+                                 "diseÃ±o de sonrisa",
+                                 "odontopediatrÃ­a",
+                                 "ortodoncia",
+                                 "tratamientos de canales",
+                                 "emergencias dentales",
+                                 "emergencias dentales a niÃ±os"
+                             ],
+        "partner_phone_number":  [
+                                     "22994141"
+                                 ],
+        "partner_whatsapp":  [
+                                 "42153664"
+                             ],
+        "partner_locations":  [
+                                  "4.Âª calle 6-47, zona 9"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Duo Dental Group - 4.Âª calle 6-47, zona 9",
+                                          "name":  "Duo Dental Group",
+                                          "address":  "4 Calle 6-47, Cdad. de Guatemala 01009, Guatemala",
+                                          "lat":  14.611001,
+                                          "lon":  -90.5177764,
+                                          "place_id":  "ChIJAYOdQbyjiYURftmkEAoJkMg",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJAYOdQbyjiYURftmkEAoJkMg"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a9",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "G SMILE",
+        "partner_services":  [
+                                 "servicios dentales odontolÃ³gicos",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "ortodoncia en general",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "50526056"
+                                 ],
+        "partner_whatsapp":  [
+                                 "55270557"
+                             ],
+        "partner_locations":  [
+                                  "20 AVENIDA 2-22 ZONA 3, EDIFICIO COVADONGA, 2DO. NIVEL, OFICINA 203 QUETZALTENANGO ",
+                                  "CantÃ³n 0, zona 0. Interior ClÃ­nicas Granados, NentÃ³n. Huehuetenango. TelefÃ³no 40838548"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "G SMILE - 20 AVENIDA 2-22 ZONA 3, EDIFICIO COVADONGA, 2DO. NIVEL, OFICINA 203 QUETZALTENANGO ",
+                                          "name":  "Edificio Covadonga",
+                                          "address":  "20 Avenida 2-22, Quetzaltenango 00901, Guatemala",
+                                          "lat":  14.843307,
+                                          "lon":  -91.524056,
+                                          "place_id":  "ChIJHyVujmCZjoURxJ9IFxWzeLA",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJHyVujmCZjoURxJ9IFxWzeLA"
+                                      },
+                                      {
+                                          "query":  "G SMILE - CantÃ³n 0, zona 0. Interior ClÃ­nicas Granados, NentÃ³n. Huehuetenango. TelefÃ³no 40838548",
+                                          "name":  "Dra. Graciela (ClÃ­nicas Granados)",
+                                          "address":  "NentÃ³n, Huehuetenango 01305, Guatemala",
+                                          "lat":  15.8013011,
+                                          "lon":  -91.7547634,
+                                          "place_id":  "ChIJBbxmUGH_jIURMMYFtrvgRUo",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJBbxmUGH_jIURMMYFtrvgRUo"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a8",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Dental Core",
+        "partner_services":  [
+                                 "odontologÃ­a integral y especializada",
+                                 "endodoncia",
+                                 "periodoncia",
+                                 "odontopediatrÃ­a",
+                                 "estÃ©tica dental",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "ortodoncia avanzada",
+                                 "ortodoncia",
+                                 "alineadores invisalign",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "22353004"
+                                 ],
+        "partner_whatsapp":  [
+                                 "41835895"
+                             ],
+        "partner_locations":  [
+                                  "12 CALLE 1-25, ZONA 10, EDIF. GEMINIS 10, 2do. NIVEL, LOCAL 214B"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Dental Core - 12 CALLE 1-25, ZONA 10, EDIF. GEMINIS 10, 2do. NIVEL, LOCAL 214B",
+                                          "name":  null,
+                                          "address":  null,
+                                          "lat":  null,
+                                          "lon":  null,
+                                          "place_id":  null,
+                                          "maps_url":  null
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a7",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "ClÃ­nicas SonrÃ­e",
+        "partner_services":  [
+                                 "servicios dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "24447878"
+                                 ],
+        "partner_whatsapp":  [
+                                 "24447878"
+                             ],
+        "partner_locations":  [
+                                  "Diagonal 6, 13-01 Z.10 Planta Baja, Nueva Fase",
+                                  "Centro Comercial Naranjo Mall, Bulevar El Naranjo, 24 Calle 10-00 Z.4 Mixco, Local S1-08/09",
+                                  "Centro Comercial Portales, Km. 4.5 Ruta al AtlÃ¡ntico 3-20, Z.17, Nivel 1",
+                                  "Centro Comercial Pradera Xela, Av. Las AmÃ©ricas 7-12 Quetzaltenango",
+                                  "Centro Comercial Flores del Lago, Km. 29.5 AmatitlÃ¡n, Locales 4 y 5",
+                                  "Centro Comercial Miraflores, 21 Avenida 4-32 Z.11, Planta Baja"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Diagonal 6, 13-01 Z.10 Planta Baja, Nueva Fase",
+                                          "name":  "ClÃ­nicas Dentales SonrÃ­e",
+                                          "address":  "20 calle 25-85, Zona 10, Ciudad De Guatemala, C.C. Pradera 01010, Guatemala",
+                                          "lat":  14.5795785,
+                                          "lon":  -90.4948354,
+                                          "place_id":  "ChIJa4KngZCjiYURTBdAKjdGmnk",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJa4KngZCjiYURTBdAKjdGmnk"
+                                      },
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Centro Comercial Naranjo Mall, Bulevar El Naranjo, 24 Calle 10-00 Z.4 Mixco, Local S1-08/09",
+                                          "name":  "ClÃ­nicas Dentales SonrÃ­e",
+                                          "address":  "Boulevar El Naranjo, 24 calle 10-00, Zona 4, El Naranjo, Mixco, C.C. Naranjo Mall 01057, Guatemala",
+                                          "lat":  14.6507273,
+                                          "lon":  -90.5420889,
+                                          "place_id":  "ChIJwZgeIOehiYURIzyRo-5SG_U",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJwZgeIOehiYURIzyRo-5SG_U"
+                                      },
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Centro Comercial Portales, Km. 4.5 Ruta al AtlÃ¡ntico 3-20, Z.17, Nivel 1",
+                                          "name":  "ClÃ­nicas Dentales SonrÃ­e",
+                                          "address":  "Km 4.5 Ruta al AtlÃ¡ntico 3-20, Zona 17, Ciudad De Guatemala, C.C. Portales, Zona 17 01017, Guatemala",
+                                          "lat":  14.6483113,
+                                          "lon":  -90.4821544,
+                                          "place_id":  "ChIJz_UpEoaiiYURqpoe1O_DZF0",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJz_UpEoaiiYURqpoe1O_DZF0"
+                                      },
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Centro Comercial Pradera Xela, Av. Las AmÃ©ricas 7-12 Quetzaltenango",
+                                          "name":  "Centros Comerciales Pradera Xela",
+                                          "address":  "Av. Las Americas 7-12, Quetzaltenango, Guatemala",
+                                          "lat":  14.8495002,
+                                          "lon":  -91.5346976,
+                                          "place_id":  "ChIJTUuXOxqYjoURo1qUrk8cdIg",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJTUuXOxqYjoURo1qUrk8cdIg"
+                                      },
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Centro Comercial Flores del Lago, Km. 29.5 AmatitlÃ¡n, Locales 4 y 5",
+                                          "name":  "ClÃ­nicas Dentales SonrÃ­e",
+                                          "address":  "Km 29.5 CA-9, AmatitlÃ¡n, C.C. Flores del Lago, AmatitlÃ¡n 01063, Guatemala",
+                                          "lat":  14.4702377,
+                                          "lon":  -90.6386469,
+                                          "place_id":  "ChIJEeAsnyoGiYURxeHSPGh7Ayc",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJEeAsnyoGiYURxeHSPGh7Ayc"
+                                      },
+                                      {
+                                          "query":  "ClÃ­nicas SonrÃ­e - Centro Comercial Miraflores, 21 Avenida 4-32 Z.11, Planta Baja",
+                                          "name":  "ClÃ­nicas Dentales SonrÃ­e",
+                                          "address":  "Calzada Roosevelt 22-43, Zona 11, Ciudad De Guatemala, C.C. Tikal Futura 01011, Guatemala",
+                                          "lat":  14.6231554,
+                                          "lon":  -90.553563,
+                                          "place_id":  "ChIJSxfJ0K-hiYURfPH9Iuot9lU",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJSxfJ0K-hiYURfPH9Iuot9lU"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a6",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Vitalmed OdontologÃ­a",
+        "partner_services":  [
+                                 "odontologÃ­a",
+                                 "servicios dentales",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "23399210"
+                                 ],
+        "partner_whatsapp":  [
+                                 "38268176"
+                             ],
+        "partner_locations":  [
+                                  "8 CALLE PONIENTE 80 ZONA 0 ANTIGUA-00, ZONA 0"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Vitalmed OdontologÃ­a - 8 CALLE PONIENTE 80 ZONA 0 ANTIGUA-00, ZONA 0",
+                                          "name":  "Vitalmed",
+                                          "address":  "Carretera a Ciudad Vieja casa No 80, Guatemala",
+                                          "lat":  14.5513839,
+                                          "lon":  -90.7408449,
+                                          "place_id":  "ChIJYYTdhIMPiYURhDE7c76tSDc",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJYYTdhIMPiYURhDE7c76tSDc"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a5",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "RÃ­e Genial",
+        "partner_services":  [
+                                 "odontologÃ­a preventiva",
+                                 "odontologÃ­a restaurativa",
+                                 "prÃ³tesis parciales fijas",
+                                 "prÃ³tesis totales",
+                                 "prÃ³tesis parciales removibles",
+                                 "atenciÃ³n especializada a niÃ±os y adultos mayores",
+                                 "ortodoncia",
+                                 "cirugÃ­a oral",
+                                 "tratamientos de conductos radiculares",
+                                 "blanqueamiento dental",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "22286665",
+                                     "24380262"
+                                 ],
+        "partner_whatsapp":  [
+                                 "30413030"
+                             ],
+        "partner_locations":  [
+                                  "2 Calle 36-61 zona 7 Condominio Arboleda Casa 52",
+                                  "RÃ­e Genial Z. 10 (Frente a Oakland Mall) Diagonal seis 13-08 Edif. RodrÃ­guez, Oficina 108",
+                                  "RÃ­e Genial Z.4 de Mixco. 6ta. Calle A 0-30 Montserrat 1, Edificio Grupo de Profesionales"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "RÃ­e Genial - 2 Calle 36-61 zona 7 Condominio Arboleda Casa 52",
+                                          "name":  "RÃ­e Genial Calzada Mateo Flores",
+                                          "address":  "Fuera de Garita, 36-61 2a. Calle Calzada Mateo Flores, Casa 52 Condominio Arboleda, Cdad. de Guatemala 01007, Guatemala",
+                                          "lat":  14.6338921,
+                                          "lon":  -90.56606579999999,
+                                          "place_id":  "ChIJA22l9EqgiYUR9dhrOPE8PHQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJA22l9EqgiYUR9dhrOPE8PHQ"
+                                      },
+                                      {
+                                          "query":  "RÃ­e Genial - RÃ­e Genial Z. 10 (Frente a Oakland Mall) Diagonal seis 13-08 Edif. RodrÃ­guez, Oficina 108",
+                                          "name":  "RÃ­e Genial Zona 10",
+                                          "address":  "Muebles Excelencia, Diag. 6 13-08, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.5979429,
+                                          "lon":  -90.5080318,
+                                          "place_id":  "ChIJO3F4ujejiYURA8lNMEf1X8w",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJO3F4ujejiYURA8lNMEf1X8w"
+                                      },
+                                      {
+                                          "query":  "RÃ­e Genial - RÃ­e Genial Z.4 de Mixco. 6ta. Calle A 0-30 Montserrat 1, Edificio Grupo de Profesionales",
+                                          "name":  "RÃ­e Genial ClÃ­nica Dental",
+                                          "address":  "6ta. Calle A 0-30 Montserrat 1, Zona 4 de Mixco, Montserrat 1, Bulevar San NicolÃ¡s, Cdad. de Guatemala 01057, Guatemala",
+                                          "lat":  14.6539601,
+                                          "lon":  -90.57581449999999,
+                                          "place_id":  "ChIJbY4F6yagiYURJJynUJyEsks",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJbY4F6yagiYURJJynUJyEsks"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a4",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Centro Dental Kyrios",
+        "partner_services":  [
+                                 "endodoncia",
+                                 "odontologÃ­a preventiva",
+                                 "ortodoncia",
+                                 "prÃ³tesis",
+                                 "rehabilitaciÃ³n oral",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "odontopediatrÃ­a",
+                                 "periodoncia",
+                                 "implantes dentales",
+                                 "estÃ©tica dental",
+                                 "cirugÃ­a maxilofacial"
+                             ],
+        "partner_phone_number":  [
+                                     "24255657"
+                                 ],
+        "partner_whatsapp":  [
+                                 "42794922"
+                             ],
+        "partner_locations":  [
+                                  "C.C. Tikal Futura, Torre Sol, Nivel 10, Zona 11. Ciudad de Guatemala"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Centro Dental Kyrios - C.C. Tikal Futura, Torre Sol, Nivel 10, Zona 11. Ciudad de Guatemala",
+                                          "name":  "Centro Dental Kyrios",
+                                          "address":  "22-43, Centro Comercial Tikal Futura Torre Sol N-10, Cdad. de Guatemala, Guatemala",
+                                          "lat":  14.6233834,
+                                          "lon":  -90.5533107,
+                                          "place_id":  "ChIJU1VKMqWhiYUR9EQzyR3PFhQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJU1VKMqWhiYUR9EQzyR3PFhQ"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a3",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Clidenth",
+        "partner_services":  [
+                                 "servicios dentales odontolÃ³gicos",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "implantes dentales",
+                                 "ortodoncia",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "77647496"
+                                 ],
+        "partner_whatsapp":  [
+                                 "46437121"
+                             ],
+        "partner_locations":  [
+                                  "6ta Avenida 9-54, Colonia El Bosque, Edificio Moriah, Zona 5, en Huehuetenango, Guatemala."
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Clidenth - 6ta Avenida 9-54, Colonia El Bosque, Edificio Moriah, Zona 5, en Huehuetenango, Guatemala.",
+                                          "name":  "CLIDENTH",
+                                          "address":  "8G6C+Q4W, Calz. Kaibil Balam, Huehuetenango, Guatemala",
+                                          "lat":  15.3119966,
+                                          "lon":  -91.4795561,
+                                          "place_id":  "ChIJSSkhCCsUjIURP0CXZTcymGo",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJSSkhCCsUjIURP0CXZTcymGo"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a2",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Facultad OdontologÃ­a UFM",
+        "partner_services":  [
+                                 "odontologÃ­a",
+                                 "servicios dentales",
+                                 "emergencias dentales"
+                             ],
+        "partner_phone_number":  [
+                                     "23387850",
+                                     "23387853"
+                                 ],
+        "partner_whatsapp":  [
+                                 "23387850"
+                             ],
+        "partner_locations":  [
+                                  "6a. Calle Manuel Ayau 7-11 zona 10"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Facultad OdontologÃ­a UFM - 6a. Calle Manuel Ayau 7-11 zona 10",
+                                          "name":  "Facultad de Odontologia UFM",
+                                          "address":  "6A Calle 7-11, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6077671,
+                                          "lon":  -90.5090444,
+                                          "place_id":  "ChIJ3xIHTsqjiYUR4aSehFxTlUY",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ3xIHTsqjiYUR4aSehFxTlUY"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a1",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "GrupoDent",
+        "partner_services":  [
+                                 "endodoncia",
+                                 "odontologÃ­a preventiva",
+                                 "ortodoncia",
+                                 "prÃ³tesis",
+                                 "rehabilitaciÃ³n oral",
+                                 "odontologÃ­a cosmÃ©tica",
+                                 "odontopediatrÃ­a",
+                                 "periodoncia",
+                                 "implantes dentales",
+                                 "estÃ©tica dental",
+                                 "cirugÃ­a maxilofacial"
+                             ],
+        "partner_phone_number":  [
+                                     "22699800"
+                                 ],
+        "partner_whatsapp":  [
+                                 "55912695"
+                             ],
+        "partner_locations":  [
+                                  "6a. Av. 6-63, Zona 10, Planta Baja, Local 4"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "GrupoDent - 6a. Av. 6-63, Zona 10, Planta Baja, Local 4",
+                                          "name":  "GrupoDent Sixtino",
+                                          "address":  "planta baja, Sixtino I, 6A Avenida 6-63, Cdad. de Guatemala 01010, Guatemala",
+                                          "lat":  14.6069768,
+                                          "lon":  -90.5097026,
+                                          "place_id":  "ChIJ0_nOycujiYURmcpW4O4kbTQ",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJ0_nOycujiYURmcpW4O4kbTQ"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb444681a0",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Centro Dental San Lucas",
+        "partner_services":  [
+                                 "odontologÃ­a de adultos",
+                                 "odontogeriatria",
+                                 "odontopediatrÃ­a",
+                                 "ortodoncia",
+                                 "endodoncia",
+                                 "periodoncia",
+                                 "cirugÃ­a maxilofacial",
+                                 "tratamientos estÃ©ticos",
+                                 "emergencias dentales",
+                                 "emergencias dentales en niÃ±os"
+                             ],
+        "partner_phone_number":  [
+                                     "40635851",
+                                     "40053818"
+                                 ],
+        "partner_whatsapp":  [
+                                 "40635851"
+                             ],
+        "partner_locations":  [
+                                  "Km. 29.9, Carr. Interamericana Plaza San Lucas, 2do. Nivel, Local 45, San Lucas SacatepÃ©quez"
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Centro Dental San Lucas - Km. 29.9, Carr. Interamericana Plaza San Lucas, 2do. Nivel, Local 45, San Lucas SacatepÃ©quez",
+                                          "name":  "Centro Dental San Lucas",
+                                          "address":  "3000, Km. 29.9 Carretera Interamericana San Lucas Sacatepequez C.C San Lucas 03008, Guatemala",
+                                          "lat":  14.6089315,
+                                          "lon":  -90.6651153,
+                                          "place_id":  "ChIJWZx9HJ0LiYUR9kEKjR9KHvk",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJWZx9HJ0LiYUR9kEKjR9KHvk"
+                                      }
+                                  ],
+        "is_active":  true,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    },
+    {
+        "_id":  "69a6380a6476e4cb4446819f",
+        "partner_category":  "ClÃ­nicas Dentales",
+        "partner_name":  "Centro Dental",
+        "partner_services":  [
+                                 "tratamiento de prevenciÃ³n",
+                                 "diagnÃ³stico dental",
+                                 "rellenos",
+                                 "coronas",
+                                 "rehabilitaciÃ³n oral",
+                                 "cirugÃ­a maxilofacial",
+                                 "odontopediatrÃ­a",
+                                 "implantes dentales",
+                                 "ortodoncia",
+                                 "laboratorio dental",
+                                 "emergencias dentales",
+                                 "emergencias dentales a niÃ±os",
+                                 "sangrado de encÃ­as",
+                                 "dolor dental",
+                                 "dolor mandibular"
+                             ],
+        "partner_phone_number":  [
+                                     "23857777"
+                                 ],
+        "partner_whatsapp":  [
+                                 "54179839"
+                             ],
+        "partner_locations":  [
+                                  "Edificio MultimÃ©dica Vista Hermosa Blvd. Vista Hermosa I 25-19, Zona 15. Niveles 1 y 2."
+                              ],
+        "partner_geo_locations":  [
+                                      {
+                                          "query":  "Centro Dental - Edificio MultimÃ©dica Vista Hermosa Blvd. Vista Hermosa I 25-19, Zona 15. Niveles 1 y 2.",
+                                          "name":  "Centro Dental",
+                                          "address":  "Boulevard Vista Hermosa I 25-19, zona 15, Cdad. de Guatemala 01015, Guatemala",
+                                          "lat":  14.5824378,
+                                          "lon":  -90.4849638,
+                                          "place_id":  "ChIJWYo6zF2jiYURwQ7n1MaO0w8",
+                                          "maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Google\u0026query_place_id=ChIJWYo6zF2jiYURwQ7n1MaO0w8"
+                                      }
+                                  ],
+        "is_active":  false,
+        "is_active_updated_at":  "2026-07-01T03:56:48.836000"
+    }
+]

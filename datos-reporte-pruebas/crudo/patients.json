@@ -1,0 +1,306 @@
+﻿[
+    {
+        "_id":  "6a8e538a94fea269693d136b",
+        "phone_number":  "447710173736",
+        "country_code":  null,
+        "country_name":  "Unknown",
+        "created_at":  "2026-08-26T02:46:34.998000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-08-27T21:19:31.776000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6a88d4ffe619634cf26256e4",
+        "phone_number":  "50231064927",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-08-21T22:45:19.334000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-08-21T22:45:19.351000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6a88ab76e619634cf2621735",
+        "phone_number":  "50254215151",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-08-21T19:48:06.355000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-08-21T19:55:39.718000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6a88a6a7e619634cf2620b67",
+        "phone_number":  "50240635851",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-08-21T19:27:35.087000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-08-21T19:27:35.108000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6a8759ffe619634cf25e63de",
+        "phone_number":  "50230187062",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-08-20T19:48:15.943000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.5873507,
+                         "lon":  -90.5299832,
+                         "text_description":  "Coordinates 14.5873507, -90.5299832",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "nausea",
+                         "stomach pain"
+                     ],
+        "updated_at":  "2026-08-20T19:49:02.932000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6a347980bd594525632d2117",
+        "phone_number":  "50237942465",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-06-18T23:04:32.235000",
+        "language":  "Portuguese",
+        "location":  {
+                         "lat":  14.583276748657,
+                         "lon":  -90.523452758789,
+                         "text_description":  "Coordinates 14.583276748657, -90.523452758789",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "leg pain",
+                         "fracture"
+                     ],
+        "updated_at":  "2026-06-18T23:08:39.205000",
+        "urgency":  null
+    },
+    {
+        "_id":  "69bc616735577d1bf4780f47",
+        "phone_number":  "50240593910",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-03-19T20:49:43.733000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.6341178,
+                         "lon":  -90.5189284,
+                         "text_description":  "Coordinates 14.6341178, -90.5189284",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "motorcycle accident injury",
+                         "fracture"
+                     ],
+        "updated_at":  "2026-03-20T16:08:32.914000",
+        "urgency":  null
+    },
+    {
+        "_id":  "69bc5e0135577d1bf4774d4f",
+        "phone_number":  "50245659475",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-03-19T20:35:13.157000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  15.783471,
+                         "lon":  -90.23075899999999,
+                         "text_description":  "Guatemala",
+                         "location_type":  "text"
+                     },
+        "symptoms":  [
+                         "nausea",
+                         "left arm pain"
+                     ],
+        "updated_at":  "2026-03-19T20:39:25.795000",
+        "urgency":  null
+    },
+    {
+        "_id":  "69b2d35cd353461e1a05cda3",
+        "phone_number":  "50243940001",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-03-12T14:53:16.058000",
+        "language":  null,
+        "location":  {
+                         "lat":  14.591865539551,
+                         "lon":  -90.511825561523,
+                         "text_description":  "Coordinates 14.591865539551, -90.511825561523",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "tooth pain"
+                     ],
+        "updated_at":  "2026-03-12T19:14:13.776000",
+        "urgency":  null
+    },
+    {
+        "_id":  "69a735c059868109d26b6a04",
+        "phone_number":  "50250163252",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-03-03T19:25:52.617000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.5918828,
+                         "lon":  -90.5064431,
+                         "text_description":  "Coordinates 14.5918828, -90.5064431",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "sagging breasts"
+                     ],
+        "updated_at":  "2026-03-03T19:28:05.362000",
+        "urgency":  null
+    },
+    {
+        "_id":  "6994a6e176a148f50a109c52",
+        "phone_number":  "50254592158",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-02-17T17:35:29.368000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.583472251892,
+                         "lon":  -90.523338317871,
+                         "text_description":  "Coordinates 14.583472251892, -90.523338317871",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "fracture",
+                         "stomach pain"
+                     ],
+        "updated_at":  "2026-08-26T01:58:44.878000",
+        "urgency":  null
+    },
+    {
+        "_id":  "696fb3b48805e801b1a00a8d",
+        "phone_number":  "50257489721",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-01-20T16:56:20.828000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+                         "twisted ankle",
+                         "foot pain"
+                     ],
+        "updated_at":  "2026-01-20T16:58:12.911000",
+        "urgency":  null
+    },
+    {
+        "_id":  "696f90108805e801b1971da1",
+        "phone_number":  "50254062704",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2026-01-20T14:24:16.115000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.5833204,
+                         "lon":  -90.5235312,
+                         "text_description":  "Coordinates 14.5833204, -90.5235312",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-05-21T19:59:36.013000",
+        "urgency":  null
+    },
+    {
+        "_id":  "68f131ece05ac02077557adb",
+        "phone_number":  "50242143866",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2025-10-16T17:57:00.291000",
+        "language":  null,
+        "location":  {
+                         "lat":  14.583492,
+                         "lon":  -90.5237074,
+                         "text_description":  "Coordinates 14.583492, -90.5237074",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+                         "toothache"
+                     ],
+        "updated_at":  "2026-02-25T02:26:28.573000",
+        "urgency":  null
+    },
+    {
+        "_id":  "68db343261bc981afb222185",
+        "phone_number":  "50239952529",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2025-09-30T01:36:50.948000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  14.600029945374,
+                         "lon":  -90.512077331543,
+                         "text_description":  "Coordinates 14.600029945374, -90.512077331543",
+                         "location_type":  "gps"
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-07-08T17:28:17.044000",
+        "urgency":  null
+    },
+    {
+        "_id":  "68d0a133918851cb883c51ff",
+        "phone_number":  "50258792752",
+        "country_code":  502,
+        "country_name":  "Guatemala",
+        "created_at":  "2025-09-22T01:06:59.264000",
+        "language":  "Spanish",
+        "location":  {
+                         "lat":  null,
+                         "lon":  null,
+                         "text_description":  null
+                     },
+        "symptoms":  [
+
+                     ],
+        "updated_at":  "2026-07-29T14:43:35.123000",
+        "urgency":  null
+    }
+]
