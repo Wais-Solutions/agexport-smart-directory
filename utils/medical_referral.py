@@ -42,9 +42,6 @@ TOP_K = 2
 # `partner_verifications`) are notified through this number instead.
 REFERRAL_FALLBACK_NUMBER = "50237942465"
 REFERRAL_TEMPLATE_NAME = "bot_referral_notification"
-# TEMPORAL (pruebas): si tiene valor, TODAS las notificaciones van a este número.
-# Poner en None para enviar al número verificado del partner / REFERRAL_FALLBACK_NUMBER.
-REFERRAL_TEST_NUMBER: str | None = "50258792752"
 
 # ---------------------------------------------------------------------------
 # Model (lazy-loaded)
@@ -692,7 +689,7 @@ async def notify_partners_of_referral(
         recipient = verified_phone or REFERRAL_FALLBACK_NUMBER
 
         await send_template_message(
-            recipient_number=REFERRAL_TEST_NUMBER or recipient,
+            recipient_number=recipient,
             template_name=REFERRAL_TEMPLATE_NAME,
             parameters=[
                 sender_id,
@@ -707,9 +704,7 @@ async def notify_partners_of_referral(
             "partner_name": partner_name,
             "partner_id": str(partner.get("_id")),
             "recipient": recipient,
-            "partner_verified": verified_phone is not None,
-            "test_number_override": REFERRAL_TEST_NUMBER,
-        })
+            "partner_verified": verified_phone is not None,        })
 
 
 async def save_referrals(
