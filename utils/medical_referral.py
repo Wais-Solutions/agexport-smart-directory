@@ -38,6 +38,14 @@ EMERGENCY_KEYWORDS = (
 # How many top partners to return
 TOP_K = 2
 
+# Referral notifications: partners whose WhatsApp is not verified (not present in
+# `partner_verifications`) are notified through this number instead.
+REFERRAL_FALLBACK_NUMBER = "50237942465"
+REFERRAL_TEMPLATE_NAME = "bot_referral_notification"
+# TEMPORAL (pruebas): si tiene valor, TODAS las notificaciones van a este número.
+# Poner en None para enviar al número verificado del partner / REFERRAL_FALLBACK_NUMBER.
+REFERRAL_TEST_NUMBER: str | None = "50258792752"
+
 # ---------------------------------------------------------------------------
 # Model (lazy-loaded)
 # ---------------------------------------------------------------------------
@@ -614,6 +622,96 @@ async def update_conversation_recommendation(sender_id: str, recommendation) -> 
     )
 
 
+def _clean_template_param(value: str) -> str:
+    """WhatsApp rejects template parameters with newlines, tabs or 4+ consecutive spaces."""
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _get_verified_partner_whatsapp(partner: dict) -> str | None:
+    """
+    Return the partner's first WhatsApp number that appears in `partner_verifications`
+    (normalized with the same 502 prefix used by the verification flow), or None.
+    """
+    from routers.verification import format_phone
+    from utils.db_tools import db
+
+    formatted = [format_phone(n) for n in (partner.get("partner_whatsapp") or []) if n]
+    if not formatted:
+        return None
+
+    verified = {
+        v["verified_phone"]
+        for v in db["partner_verifications"].find(
+            {"verified_phone": {"$in": formatted}}, {"verified_phone": 1}
+        )
+    }
+    return next((phone for phone in formatted if phone in verified), None)
+
+
+async def _build_spanish_notification_fields(symptoms_text: str | None, patient_language: str | None) -> tuple[str, str]:
+    """Translate the symptoms and the patient's language name to Spanish for the partner template."""
+    from utils.translation import translate_message
+
+    symptoms_es = (
+        await translate_message(symptoms_text, "Spanish")
+        if symptoms_text else "No especificados"
+    )
+    language_es = (
+        await translate_message(f"Language: {patient_language}", "Spanish")
+        if patient_language else "Desconocido"
+    )
+    # "Language: English" → "Idioma: Inglés" → "Inglés" (the label gives the LLM context)
+    language_es = language_es.split(":", 1)[-1]
+
+    return _clean_template_param(symptoms_es), _clean_template_param(language_es)
+
+
+async def notify_partners_of_referral(
+    sender_id: str,
+    partners: list[dict],
+    symptoms: list[str],
+    patient_language: str | None,
+) -> None:
+    """
+    Send the `bot_referral_notification` template for each referred partner.
+      - Partner with a verified WhatsApp → sent to that verified number.
+      - Otherwise → sent to REFERRAL_FALLBACK_NUMBER.
+    All variables go in Spanish; the partner name is appended to the symptoms variable
+    so the recipient (especially the fallback number) knows which partner it was for.
+    """
+    from utils.whatsapp import send_template_message
+
+    symptoms_es, language_es = await _build_spanish_notification_fields(
+        ", ".join(symptoms) if symptoms else None,
+        patient_language,
+    )
+
+    for partner in partners:
+        partner_name = _clean_template_param(partner.get("partner_name")) or "Sin nombre"
+        verified_phone = _get_verified_partner_whatsapp(partner)
+        recipient = verified_phone or REFERRAL_FALLBACK_NUMBER
+
+        await send_template_message(
+            recipient_number=REFERRAL_TEST_NUMBER or recipient,
+            template_name=REFERRAL_TEMPLATE_NAME,
+            parameters=[
+                sender_id,
+                f"{symptoms_es} | Referido a: {partner_name}",
+                language_es,
+            ],
+            language_code="es",
+        )
+
+        log_to_db("INFO", "Referral notification sent", {
+            "sender_id": sender_id,
+            "partner_name": partner_name,
+            "partner_id": str(partner.get("_id")),
+            "recipient": recipient,
+            "partner_verified": verified_phone is not None,
+            "test_number_override": REFERRAL_TEST_NUMBER,
+        })
+
+
 async def save_referrals(
     sender_id: str,
     partners: list[dict],
@@ -624,12 +722,10 @@ async def save_referrals(
     """Persist referral records and notify partners via WhatsApp template."""
     try:
         from utils.db_tools import db, get_conversation
-        from utils.whatsapp import send_template_message
 
         referrals = db["referrals"]
         conversation = get_conversation(sender_id)
         patient_language = (conversation.get("language", "Unknown") if conversation else "Unknown")
-        symptoms_text = ", ".join(symptoms) if symptoms else "Not specified"
 
         records = []
         for partner in partners:
@@ -685,22 +781,12 @@ async def save_referrals(
 
         if records:
             referrals.insert_many(records)
-
-            for partner in partners:
-                partner_whatsapp = "50258792752"  # partner.get("partner_whatsapp", [None])[0]
-                if partner_whatsapp:
-                    await send_template_message(
-                        recipient_number=partner_whatsapp,
-                        template_name="bot_referral_notification",
-                        parameters=[sender_id, symptoms_text, patient_language],
-                        language_code="es",
-                    )
-                else:
-                    log_to_db("ERROR", "Partner has no WhatsApp number, notification not sent", {
-                        "sender_id": sender_id,
-                        "partner_name": partner.get("partner_name"),
-                        "partner_id": str(partner.get("_id")),
-                    })
+            await notify_partners_of_referral(
+                sender_id,
+                partners,
+                symptoms,
+                conversation.get("language") if conversation else None,
+            )
 
         return True
 
